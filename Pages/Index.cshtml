@@ -1,0 +1,30 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome @Model.Mailboxes.Count</h1>
+
+    @foreach(var mailbox in Model.Mailboxes){
+        <blockquote>
+            <h2>@mailbox.Key</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Text</th>
+                    </tr>
+                </thead>
+                @foreach(var message in mailbox.Value){
+                    <tr>
+                        <td>@message.Subject</td>
+                        <td>@message.TextBody</td>
+                        
+                    </tr>
+                }
+            </table>
+        </blockquote>
+    }
+</div>

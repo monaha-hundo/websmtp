@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "dgSpecHash": "yuRJyrkJNPDJ3Ibq5ZoPfq8JtfbcrOZsYZm8CsBbE4qcnMGOt8uo4S4tMv62SLtKfK8hl9y2gT3KESaEteDkLw==",
+  "success": true,
+  "projectFilePath": "/home/yvan/Desktop/websmtp/websmtp.csproj",
+  "expectedPackageFiles": [
+    "/home/yvan/.nuget/packages/bouncycastle.cryptography/2.2.1/bouncycastle.cryptography.2.2.1.nupkg.sha512",
+    "/home/yvan/.nuget/packages/mimekit/4.1.0/mimekit.4.1.0.nupkg.sha512",
+    "/home/yvan/.nuget/packages/smtpserver/9.0.3/smtpserver.9.0.3.nupkg.sha512",
+    "/home/yvan/.nuget/packages/system.formats.asn1/7.0.0/system.formats.asn1.7.0.0.nupkg.sha512",
+    "/home/yvan/.nuget/packages/system.io.pipelines/4.7.2/system.io.pipelines.4.7.2.nupkg.sha512",
+    "/home/yvan/.nuget/packages/system.runtime.compilerservices.unsafe/6.0.0/system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
+    "/home/yvan/.nuget/packages/system.security.cryptography.pkcs/7.0.2/system.security.cryptography.pkcs.7.0.2.nupkg.sha512",
+    "/home/yvan/.nuget/packages/system.text.encoding.codepages/7.0.0/system.text.encoding.codepages.7.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
