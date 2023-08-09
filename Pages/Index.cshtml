@@ -4,27 +4,57 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome @Model.Mailboxes.Count</h1>
+<div class="text-center" data-bs-theme="dark">
+    <h1 class="display-4">websmtp (@Model.Messages.Count)</h1>
 
-    @foreach(var mailbox in Model.Mailboxes){
-        <blockquote>
-            <h2>@mailbox.Key</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Subject</th>
-                        <th>Text</th>
-                    </tr>
-                </thead>
-                @foreach(var message in mailbox.Value){
-                    <tr>
-                        <td>@message.Subject</td>
-                        <td>@message.TextBody</td>
-                        
-                    </tr>
-                }
-            </table>
-        </blockquote>
-    }
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>To</th>
+                <th>From</th>
+                <th>Size</th>
+                <th></th>
+            </tr>
+        </thead>
+        @foreach (var message in Model.Messages.Values)
+        {
+            <tr>
+                <td class="text-nowrap">@message.Subject</td>
+                <td>@message.To</td>
+                <td>@message.From</td>
+                <td>@(message.Size)b</td>
+                <td>
+                    <a class="btn btn-secondary" href="/View?msgId=@message.Id" target="msg-view"
+                        onclick="openwMsgView()">View</a>
+                </td>
+            </tr>
+        }
+    </table>
+
+    <section id="msg" style="display: none;">
+        <iframe id="msg-view" name="msg-view" style="width: 100%; height: 100px;" src="data:text/html;base64,PGh0bWwgc3R5bGU9ImJhY2tncm91bmQ6IHJnYigzMywgMzcsIDQxKTsiPjwvaHRtbD4K"></iframe>
+        <a class="btn btn-secondary" href="about:blank" target="msg-view" onclick="closeMsgView()">Close</a>
+    </section>
 </div>
+
+@section Scripts{
+    <script>
+        function openwMsgView() {
+            console.log('ta mère');
+            let sectionEl = document.querySelector('#msg');
+            sectionEl.style.display = 'block';
+        }
+        function closeMsgView() {
+            console.log('ta mère');
+            let sectionEl = document.querySelector('#msg');
+            sectionEl.style.display = 'none';
+        }
+        function handleMessage(event) {
+            if (event.origin != "https://localhost:7095") { return; }
+            let height = event.data.split(':')[1];
+            document.querySelector('#msg-view').style.height = height + 'px';
+        }
+        window.addEventListener('message', handleMessage, false);
+    </script>
+}

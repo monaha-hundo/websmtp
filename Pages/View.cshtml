@@ -1,0 +1,48 @@
+@page
+@model MessageViewModel
+@{
+    Layout = "_LayoutEmpty";
+    ViewData["Title"] = "Home page";
+}
+
+
+    <table class="msg-view table table-striped table-bordered">
+        <tr>
+            <td>Id</td>
+            <td>@Model.Message.Id</td>
+        </tr>
+        <tr>
+            <td>From</td>
+            <td>@Model.Message.From</td>
+        </tr>
+        <tr>
+            <td>To</td>
+            <td>@Model.Message.To</td>
+        </tr>
+        <tr>
+            <td>Subject</td>
+            <td>@Model.Message.Subject</td>
+        </tr>
+        <tr>
+            <td>Message</td>
+            <td>
+                <pre style="max-width: 80vw; padding: 0; margin: 0;">@Model.Message.TextContent</pre>
+            </td>
+        </tr>
+    </table>
+
+<style>
+    table.msg-view {
+        width: 100%;
+    }
+
+    table.msg-view tr td.header {
+        max-width: 320px;
+    }
+</style>
+
+@section Scripts{
+    <script>
+        window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, 'https://localhost:7095/');
+    </script>
+}

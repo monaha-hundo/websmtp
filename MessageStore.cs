@@ -4,14 +4,9 @@ using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
 
-public interface IReadableStore
+public class MessageStore : IMessageStore, IReadableMessageStore
 {
-    public ConcurrentDictionary<string, List<MimeKit.MimeMessage>> All();
-}
-
-public class MessageStore : IMessageStore, IReadableStore
-{
-    public static ConcurrentDictionary<string, List<MimeKit.MimeMessage>> _messages = new();
+    public static ConcurrentDictionary<Guid, Message> _messages = new();
 
     private readonly ILogger<MessageStore> _logger;
     public MessageStore(ILogger<MessageStore> logger)
@@ -19,16 +14,24 @@ public class MessageStore : IMessageStore, IReadableStore
         _logger = logger;
     }
 
-    public ConcurrentDictionary<string, List<MimeKit.MimeMessage>> All()
+    public ConcurrentDictionary<Guid, Message> All()
     {
         return _messages;
     }
+    public Message Single(Guid msgId)
+    {
+        if (_messages.TryGetValue(msgId, out Message message))
+        {
+            return message;
+        }
+        throw new Exception("Message does not exist");
+    }
 
     public async Task<SmtpResponse> SaveAsync(
-        SmtpServer.ISessionContext context,
-        SmtpServer.IMessageTransaction transaction,
-        System.Buffers.ReadOnlySequence<byte> buffer,
-        System.Threading.CancellationToken cancellationToken)
+        ISessionContext context,
+        IMessageTransaction transaction,
+        ReadOnlySequence<byte> buffer,
+        CancellationToken cancellationToken)
     {
         using var stream = new MemoryStream();
 
@@ -40,36 +43,47 @@ public class MessageStore : IMessageStore, IReadableStore
 
         stream.Position = 0;
 
-        //_logger.LogInformation(await new StreamReader(stream).ReadToEndAsync());
+        var rawMessage = await new StreamReader(stream).ReadToEndAsync()
+            ?? throw new Exception("Could not read message.");
 
-        //stream.Position = 0;
+        stream.Position = 0;
 
-        var message = await MimeKit.MimeMessage.LoadAsync(stream, cancellationToken);
-
-        //_logger.LogInformation(message.GetTextBody(MimeKit.Text.TextFormat.Text));
-
-        foreach (var address in message.To)
+        var mimeMessage = await MimeKit.MimeMessage.LoadAsync(stream, cancellationToken);
+        var textContent = mimeMessage.GetTextBody(MimeKit.Text.TextFormat.Text);
+        //var attachements = mimeMessage.Attachments.Select(a => new Tupple(a.ContentId, a.))
+        var messageToStore = new Message
         {
-            var addr = address.ToString();
-            var existingMailbox = _messages.ContainsKey(addr);
-            if (existingMailbox)
-            {
-                _messages[addr].Add(message);
-            }
-            else
-            {
-                var newMailbox = new List<MimeKit.MimeMessage>() { message };
-                var added = _messages.TryAdd(addr, newMailbox);
-                if (added)
-                {
-                    _logger.LogInformation($"Message added to mailbox: '{addr}'.");
-                }
-                else
-                {
-                    _logger.LogCritical($"Message could not be added to a mailbox: '{addr}'.");
-                }
-            }
-        }
+            Subject = mimeMessage.Subject,
+            From = string.Join(',', mimeMessage.From.Select(f => f.ToString())),
+            To = string.Join(',', mimeMessage.To.Select(f => f.ToString())),
+            TextContent = textContent,
+            Raw = rawMessage
+        };
+
+        _messages.TryAdd(messageToStore.Id, messageToStore);
+
+        // foreach (var address in message.To)
+        // {
+        //     var addr = address.ToString();
+        //     var existingMailbox = _messages.ContainsKey(addr);
+        //     if (existingMailbox)
+        //     {
+        //         _messages[addr].Add(message);
+        //     }
+        //     else
+        //     {
+        //         var newMailbox = new List<MimeKit.MimeMessage>() { message };
+        //         var added = _messages.TryAdd(addr, newMailbox);
+        //         if (added)
+        //         {
+        //             _logger.LogInformation($"Message added to mailbox: '{addr}'.");
+        //         }
+        //         else
+        //         {
+        //             _logger.LogCritical($"Message could not be added to a mailbox: '{addr}'.");
+        //         }
+        //     }
+        // }
 
         return SmtpResponse.Ok;
     }

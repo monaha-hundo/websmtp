@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 builder.Services.AddTransient<IMessageStore, MessageStore>();
-builder.Services.AddTransient<IReadableStore, MessageStore>();
+builder.Services.AddTransient<IReadableMessageStore, MessageStore>();
 builder.Services.AddHostedService<SmtpBackgroundServerService>();
 
 var app = builder.Build();
