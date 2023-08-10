@@ -4,12 +4,13 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center" data-bs-theme="dark">
-    <h1 class="display-4">websmtp (@Model.Messages.Count)</h1>
+<div  data-bs-theme="dark">
+    <p class="display-6">websmtp mailbox (@Model.Messages.Count)</p>
 
     <table class="table table-striped table-bordered">
         <thead>
             <tr>
+                <th>Received</th>
                 <th>Subject</th>
                 <th>To</th>
                 <th>From</th>
@@ -20,6 +21,7 @@
         @foreach (var message in Model.Messages.Values)
         {
             <tr>
+                <td>@message.ReceivedOn</td>
                 <td class="text-nowrap">@message.Subject</td>
                 <td>@message.To</td>
                 <td>@message.From</td>

@@ -50,13 +50,20 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 
         var mimeMessage = await MimeKit.MimeMessage.LoadAsync(stream, cancellationToken);
         var textContent = mimeMessage.GetTextBody(MimeKit.Text.TextFormat.Text);
-        //var attachements = mimeMessage.Attachments.Select(a => new Tupple(a.ContentId, a.))
+
+        var attachments = mimeMessage.Attachments
+            .Where(a=>a.IsAttachment)
+            .Select(a => new MessageAttachement(a))
+            .ToList();
+
         var messageToStore = new Message
         {
+            ReceivedOn = mimeMessage.Date,
             Subject = mimeMessage.Subject,
             From = string.Join(',', mimeMessage.From.Select(f => f.ToString())),
             To = string.Join(',', mimeMessage.To.Select(f => f.ToString())),
             TextContent = textContent,
+            Attachements = attachments,
             Raw = rawMessage
         };
 

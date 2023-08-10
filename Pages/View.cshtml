@@ -12,6 +12,10 @@
             <td>@Model.Message.Id</td>
         </tr>
         <tr>
+            <td>Received-On</td>
+            <td>@Model.Message.</td>
+        </tr>
+        <tr>
             <td>From</td>
             <td>@Model.Message.From</td>
         </tr>
@@ -24,11 +28,17 @@
             <td>@Model.Message.Subject</td>
         </tr>
         <tr>
-            <td>Message</td>
+            <td>Text-Content</td>
             <td>
                 <pre style="max-width: 80vw; padding: 0; margin: 0;">@Model.Message.TextContent</pre>
             </td>
         </tr>
+        @* <tr>
+            <td>Source</td>
+            <td>
+                <pre style="max-width: 80vw; padding: 0; margin: 0;">@Model.Message.Raw</pre>
+            </td>
+        </tr> *@
     </table>
 
 <style>
