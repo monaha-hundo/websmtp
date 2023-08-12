@@ -4,39 +4,93 @@
     ViewData["Title"] = "Home page";
 }
 
-<div  data-bs-theme="dark">
-    <p class="display-6">websmtp mailbox (@Model.Messages.Count)</p>
+<div data-bs-theme="dark">
+    <div class="h1">websmtp</div>
+    <a href="/?onlyNew=true" style="margin-bottom: 1em; padding: 0.5em; font-size: large;"
+        class="badge text-bg-success h2 text-decoration-none">New: @Model.New
+    </a>
+    <a href="/?onlyNew=false" style="margin-bottom: 1em; padding: 0.5em; font-size: large;"
+        class="badge  text-bg-primary h2 text-decoration-none">All: @Model.Total
+    </a>
 
-    <table class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>Received</th>
-                <th>Subject</th>
-                <th>To</th>
-                <th>From</th>
-                <th>Size</th>
-                <th></th>
-            </tr>
-        </thead>
-        @foreach (var message in Model.Messages.Values)
+    <select class="form-select d-inline" style="width: auto;">
+        <option selected>All mailboxes (@Model.Mailboxes.Count)</option>
+        @if (Model.Mailboxes?.Count > 0)
         {
-            <tr>
-                <td>@message.ReceivedOn</td>
-                <td class="text-nowrap">@message.Subject</td>
-                <td>@message.To</td>
-                <td>@message.From</td>
-                <td>@(message.Size)b</td>
-                <td>
-                    <a class="btn btn-secondary" href="/View?msgId=@message.Id" target="msg-view"
-                        onclick="openwMsgView()">View</a>
-                </td>
-            </tr>
+            foreach (var mailbox in Model.Mailboxes)
+            {
+                <option value="@mailbox">@mailbox</option>
+            }
         }
-    </table>
+    </select>
+    <a href="/?onlyNew=true" style="margin-bottom: 1em; padding: 0.5em; font-size: large;"
+        class="badge text-bg-secondary h2 text-decoration-none">Reload
+    </a>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th class="">Read</th>
+                    <th class="">Received</th>
+                    <th class="">Subject</th>
+                    <th class="">To</th>
+                    <th class="">From</th>
+                    <th class="">Size</th>
+                    <th class=""></th>
+                </tr>
+            </thead>
+            @foreach (var message in Model.Messages.Values)
+            {
+                <tr>
+                    <td id="msg-read-mark-@message.Id">@(message.Read ? "#" : "")</td>
+                    <td>@message.ReceivedOn</td>
+                    <td class="text-nowrap">@message.Subject</td>
+                    <td>@message.To</td>
+                    <td>@message.From</td>
+                    <td>@(message.Size)b</td>
+                    <td>
+                        <a class="btn btn-secondary" href="/View?msgId=@message.Id" target="msg-view"
+                            onclick="openwMsgView()">View</a>
+                        <button class="btn btn-secondary" href="/?markAsReadMsgId=@message.Id" target="msg-view"
+                            onclick="markMessageAsRead('@message.Id')">Mark as read</button>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+
+    <nav  style="width: auto; display: inline-block;">
+        <ul class="pagination">
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @for(int pageNb = 1; pageNb <= Model.Pages; pageNb++){
+            <li class="page-item"><a class="page-link" 
+                href="/?onlyNew=@Model.OnlyNew&page=@pageNb&perPage=@Model.PerPage">@pageNb</a></li>
+            }
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+        <select class="form-select d-inline" style="width: auto;">
+            <option selected="@(Model.PerPage == 5)">5</option>
+            <option selected="@(Model.PerPage == 50)">50</option>
+            <option selected="@(Model.PerPage == 100)">100</option>
+            <option selected="@(Model.PerPage == 500)">500</option>
+            <option selected="@(Model.PerPage == 1000)">1000</option>
+        </select>
 
     <section id="msg" style="display: none;">
-        <iframe id="msg-view" name="msg-view" style="width: 100%; height: 100px;" src="data:text/html;base64,PGh0bWwgc3R5bGU9ImJhY2tncm91bmQ6IHJnYigzMywgMzcsIDQxKTsiPjwvaHRtbD4K"></iframe>
         <a class="btn btn-secondary" href="about:blank" target="msg-view" onclick="closeMsgView()">Close</a>
+        <iframe id="msg-view" name="msg-view" style="width: 100%; height: 100px;"
+            src="data:text/html;base64,PGh0bWwgc3R5bGU9ImJhY2tncm91bmQ6IHJnYigzMywgMzcsIDQxKTsiPjwvaHRtbD4K"></iframe>
     </section>
 </div>
 
@@ -57,6 +111,17 @@
             let height = event.data.split(':')[1];
             document.querySelector('#msg-view').style.height = height + 'px';
         }
+        async function markMessageAsRead(msgId) {
+            const response = await fetch(`/?markAsReadMsgId=${msgId}`);
+            const result = await response.text();
+            const success = result == "200";
+            console.log(success);
+            if (success) {
+                const checkMarkEl = document.getElementById('msg-read-mark-' + msgId);
+                checkMarkEl.textContent = '#';
+            }
+        }
+
         window.addEventListener('message', handleMessage, false);
     </script>
 }

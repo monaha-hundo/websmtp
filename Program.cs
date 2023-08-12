@@ -1,4 +1,5 @@
 
+using Microsoft.AspNetCore.Mvc;
 using SmtpServer;
 using SmtpServer.Storage;
 
@@ -20,5 +21,14 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapGet("/api/messages/count", (
+    [FromServices] IReadableMessageStore messages,
+    [FromQuery] bool? onlyNew
+) =>
+{
+    var msgCount = messages.Count(onlyNew ?? false);
+    return msgCount;
+});
 
 app.Run();

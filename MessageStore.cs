@@ -18,6 +18,50 @@ public class MessageStore : IMessageStore, IReadableMessageStore
     {
         return _messages;
     }
+
+    public Dictionary<Guid, Message> Latest(
+        bool onlyNew = true,
+        int page = 1,
+        int perPage = 5)
+    {
+        if (onlyNew)
+        {
+            return _messages.Values
+                .OrderByDescending(msg => msg.ReceivedOn)
+                .Where(msg => msg.Read == !onlyNew)
+                .Skip((page - 1) * perPage)
+                .Take(perPage)
+                .ToDictionary(msg => msg.Id);
+        }
+
+        return _messages.Values
+            .OrderByDescending(msg => msg.ReceivedOn)
+            .Skip((page - 1) * perPage)
+            .Take(perPage)
+            .ToDictionary(msg => msg.Id);
+    }
+
+    public int Count(bool onlyNew = false)
+    {
+        if (onlyNew)
+        {
+            return _messages.Values.Count(msg => !msg.Read);
+        }
+        else
+        {
+            return _messages.Values.Count();
+        }
+    }
+
+    public List<string> Mailboxes()
+    {
+        return _messages.Values
+            .Select(msg => msg.To)
+            .GroupBy(from => from)
+            .Select(fromGrp => fromGrp.First())
+            .ToList();
+    }
+
     public Message Single(Guid msgId)
     {
         if (_messages.TryGetValue(msgId, out Message message))
@@ -52,7 +96,7 @@ public class MessageStore : IMessageStore, IReadableMessageStore
         var textContent = mimeMessage.GetTextBody(MimeKit.Text.TextFormat.Text);
 
         var attachments = mimeMessage.Attachments
-            .Where(a=>a.IsAttachment)
+            .Where(a => a.IsAttachment)
             .Select(a => new MessageAttachement(a))
             .ToList();
 
@@ -93,5 +137,10 @@ public class MessageStore : IMessageStore, IReadableMessageStore
         // }
 
         return SmtpResponse.Ok;
+    }
+
+    public void MarkAsRead(Guid msgId)
+    {
+        _messages[msgId].Read = true;
     }
 }

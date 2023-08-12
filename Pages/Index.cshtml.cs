@@ -11,7 +11,20 @@ public class IndexModel : PageModel
     private readonly ILogger<IndexModel> _logger;
     private readonly IReadableMessageStore _messageStore;
 
-    public ConcurrentDictionary<Guid, Message> Messages { get; set; }
+    public Dictionary<Guid, Message> Messages { get; set; }
+    public List<string> Mailboxes { get; set; }
+    public int New { get; set; }
+    public int Total { get; set; }
+    public int Pages { get; set; } = 1;
+
+    [FromQuery]
+    public bool OnlyNew { get; set; } = true;
+
+    [FromQuery]
+    public int PerPage { get; set; } = 5;
+
+    [FromQuery]
+    public int Page { get; set; }
 
     public IndexModel(ILogger<IndexModel> logger,
     IReadableMessageStore messageStore)
@@ -20,8 +33,30 @@ public class IndexModel : PageModel
         _messageStore = messageStore ?? throw new ArgumentNullException(nameof(messageStore));
     }
 
-    public void OnGet()
+    public IActionResult OnGet(
+        [FromQuery] Guid? markAsReadMsgId)
     {
-        Messages = _messageStore.All();
+
+        if (markAsReadMsgId.HasValue)
+        {
+            _messageStore.MarkAsRead(markAsReadMsgId.Value);
+            return new JsonResult(200);
+        }
+
+        Mailboxes = _messageStore.Mailboxes();
+        Messages = _messageStore.Latest(OnlyNew, Page, PerPage);
+        New = _messageStore.Count(onlyNew: true);
+        Total = _messageStore.Count(onlyNew: false);
+        if (OnlyNew == true)
+        {
+            Pages = Convert.ToInt32(Math.Ceiling(Decimal.Divide(New, PerPage)));
+        }
+        else
+        {
+            Pages = Convert.ToInt32(Math.Ceiling(Decimal.Divide(Total, PerPage)));
+        }
+        if (Pages == 0) Pages = 1;
+
+        return Page();
     }
 }

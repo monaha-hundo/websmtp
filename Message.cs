@@ -9,6 +9,7 @@ public class Message
     public string Raw { get; set; } = string.Empty;
     public List<MessageAttachement> Attachements { get; set; } = new();
     public int Size => System.Text.Encoding.Default.GetByteCount(Raw);
+    public bool Read { get; set; }
 }
 
 public class MessageAttachement

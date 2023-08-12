@@ -13,7 +13,7 @@
         </tr>
         <tr>
             <td>Received-On</td>
-            <td>@Model.Message.</td>
+            <td>@Model.Message.ReceivedOn</td>
         </tr>
         <tr>
             <td>From</td>
@@ -33,12 +33,12 @@
                 <pre style="max-width: 80vw; padding: 0; margin: 0;">@Model.Message.TextContent</pre>
             </td>
         </tr>
-        @* <tr>
+        <tr>
             <td>Source</td>
             <td>
-                <pre style="max-width: 80vw; padding: 0; margin: 0;">@Model.Message.Raw</pre>
+                <pre style="padding: 0; margin: 0;">@Model.Message.Raw</pre>
             </td>
-        </tr> *@
+        </tr>
     </table>
 
 <style>
