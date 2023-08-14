@@ -9,7 +9,7 @@
     <table class="msg-view table table-striped table-bordered">
         <tr>
             <td>Id</td>
-            <td>@Model.Message.Id</td>
+            <td>@Model.MsgId</td>
         </tr>
         <tr>
             <td>Received-On</td>
@@ -28,9 +28,26 @@
             <td>@Model.Message.Subject</td>
         </tr>
         <tr>
+            <td>Attachements</td>
+            <td>
+                @foreach(var attachment in Model.Message.Attachements){
+                    <a  class="badge  text-bg-primary"
+                    download="@attachment.Filename"
+                    href='data:@(Html.Raw(attachment.MimeType+";base64,"+attachment.Content))'>
+                    @attachment.Filename</a>
+                }
+            </td>
+        </tr>
+        <tr>
             <td>Text-Content</td>
             <td>
-                <pre style="max-width: 80vw; padding: 0; margin: 0;">@Model.Message.TextContent</pre>
+                @Model.Message.TextContent
+            </td>
+        </tr>
+        <tr>
+            <td>HTML-Content</td>
+            <td>
+                <iframe style="width: 100%; height: 320px;" src="data:text/html;base64,@Html.Raw(Model.Message.HtmlContent)"></iframe>
             </td>
         </tr>
         <tr>
@@ -53,6 +70,6 @@
 
 @section Scripts{
     <script>
-        window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, 'https://localhost:7095/');
+        window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin);
     </script>
 }

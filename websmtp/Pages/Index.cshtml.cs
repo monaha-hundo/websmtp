@@ -11,8 +11,8 @@ public class IndexModel : PageModel
     private readonly ILogger<IndexModel> _logger;
     private readonly IReadableMessageStore _messageStore;
 
-    public Dictionary<Guid, Message> Messages { get; set; }
-    public List<string> Mailboxes { get; set; }
+    public List<Message> Messages { get; set; } = new();
+    public List<string> Mailboxes { get; set; } = new();
     public int New { get; set; }
     public int Total { get; set; }
     public int Pages { get; set; } = 1;
@@ -24,7 +24,7 @@ public class IndexModel : PageModel
     public int PerPage { get; set; } = 5;
 
     [FromQuery]
-    public int Page { get; set; }
+    public int CurrentPage { get; set; } = 1;
 
     public IndexModel(ILogger<IndexModel> logger,
     IReadableMessageStore messageStore)
@@ -34,7 +34,7 @@ public class IndexModel : PageModel
     }
 
     public IActionResult OnGet(
-        [FromQuery] Guid? markAsReadMsgId)
+        [FromQuery] int? markAsReadMsgId)
     {
 
         if (markAsReadMsgId.HasValue)
@@ -44,7 +44,7 @@ public class IndexModel : PageModel
         }
 
         Mailboxes = _messageStore.Mailboxes();
-        Messages = _messageStore.Latest(OnlyNew, Page, PerPage);
+        Messages = _messageStore.Latest(OnlyNew, CurrentPage, PerPage);
         New = _messageStore.Count(onlyNew: true);
         Total = _messageStore.Count(onlyNew: false);
         if (OnlyNew == true)
