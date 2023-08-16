@@ -100,6 +100,13 @@ public class MessageStore : IMessageStore, IReadableMessageStore
         var textContent = mimeMessage.GetTextBody(MimeKit.Text.TextFormat.Text);
         var htmlContent = mimeMessage.HtmlBody;
 
+        htmlContent = htmlContent?.Replace("</body>", $@"
+                         <script>
+                            setInterval(()=>window.parent.postMessage({{ ""type"": ""frame-resized"", ""value"": document.documentElement.clientHeight  }}, '*'), 100);
+                         </script>
+                         </body>
+                    ");
+
         var bodyParts = mimeMessage.BodyParts
             .Where(a => !string.IsNullOrEmpty(a.ContentId))
             .Select(a => new MessageAttachement(a))
@@ -112,18 +119,22 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 
         var attachments = bodyParts.Concat(realAttachments).ToList();
 
-        foreach (var attachment in attachments.Where(a=>!string.IsNullOrWhiteSpace(a.ContentId)))
+        foreach (var attachment in attachments.Where(a => !string.IsNullOrWhiteSpace(a.ContentId)))
         {
             var indexOfCid = htmlContent.IndexOf(attachment.ContentId);
             var foundCid = indexOfCid > -1;
             if (foundCid)
             {
                 htmlContent = htmlContent.Replace(
-                    "cid:"+attachment.ContentId, 
+                    "cid:" + attachment.ContentId,
                     string.Format("data:{0};base64,{1}", attachment.MimeType, attachment.Content));
             }
         }
 
+        var base64HtmlContent = htmlContent != null ?
+            Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(htmlContent))
+            : null;
+            
         var messageToStore = new Message
         {
             ReceivedOn = mimeMessage.Date,
@@ -131,7 +142,7 @@ public class MessageStore : IMessageStore, IReadableMessageStore
             From = string.Join(',', mimeMessage.From.Select(f => f.ToString())),
             To = string.Join(',', mimeMessage.To.Select(f => f.ToString())),
             TextContent = textContent,
-            HtmlContent = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(htmlContent)),
+            HtmlContent = base64HtmlContent,
             Attachements = attachments,
             Raw = rawMessage
         };

@@ -5,7 +5,6 @@
     ViewData["Title"] = "Home page";
 }
 
-
     <table class="msg-view table table-striped table-bordered">
         <tr>
             <td>Id</td>
@@ -47,13 +46,15 @@
         <tr>
             <td>HTML-Content</td>
             <td>
-                <iframe style="width: 100%; height: 320px;" src="data:text/html;base64,@Html.Raw(Model.Message.HtmlContent)"></iframe>
+                <button class="btn btn-primary" onclick="showHtmlContent(this)">Show / Hide</button>
+                <iframe id="html-content" style="width: 100%; display: none;" src="data:text/html;base64,@Html.Raw(Model.Message.HtmlContent)"></iframe>
             </td>
         </tr>
         <tr>
             <td>Source</td>
             <td>
-                <pre style="padding: 0; margin: 0;">@Model.Message.Raw</pre>
+                <button class="btn btn-primary" onclick="showSource(this)">Show / Hide</button>
+                <pre id="source-content" style="display: none; padding: 0; margin: 0;">@Model.Message.Raw</pre>
             </td>
         </tr>
     </table>
@@ -70,6 +71,35 @@
 
 @section Scripts{
     <script>
-        window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin);
+        function showHtmlContent(el){
+            var el = document.getElementById("html-content");
+            let isVisible = el.style.display == 'block';
+            let visibility = isVisible ? 'none' : 'block';
+            el.style.display = visibility;
+        }
+        function showSource(el){
+            var el = document.getElementById("source-content");
+            let isVisible = el.style.display == 'block';
+            let visibility = isVisible ? 'none' : 'block';
+            el.style.display = visibility;
+        }
+    </script>
+    <script>
+        setInterval(()=>window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
+    </script>
+    <script type="text/javascript">
+        window.addEventListener('message', receiveMessage, false);
+
+        function receiveMessage(evt) {
+            console.log("Got message: " + JSON.stringify(evt.data) + " from origin: " + evt.origin);
+            // Do we trust the sender of this message?
+            //if (evt.origin !== "https://localhost:44335") {
+            //    return;
+            //}
+
+            if (evt.data.type === "frame-resized") {
+                document.getElementById("html-content").style.height = evt.data.value + "px";
+            }
+        }
     </script>
 }
