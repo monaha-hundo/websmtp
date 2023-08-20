@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - websmtp</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/websmtp.styles.css" asp-append-version="true" />
 </head>
 <body style="min-height: 100%; height: 100%">
 
     <div class="container-fluid" style="min-height: 100%; padding: 0;">
-        <main role="main" class="pb-3" style="min-height: 100%; display: flex; flex-direction: flex-column; justify-items: center;">
+        <main role="main" class="pb-3" style="min-height: 100%; display: flex; flex-direction: column; justify-items: center;">
             @RenderBody()
         </main>
     </div>

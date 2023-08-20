@@ -17,3 +17,12 @@ html {
 body {
   min-height: 100%;
 }
+
+table td{
+  vertical-align: middle;
+}
+
+.sidebar{
+  flex: 0 0 220px;
+  padding: 0 1em 0 0;
+}

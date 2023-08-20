@@ -3,10 +3,13 @@ using System.Collections.Concurrent;
 using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
+using websmtp;
 
 public class MessageStore : IMessageStore, IReadableMessageStore
 {
-    public static List<Message> _messages = new List<Message>(1000);
+    private static ConcurrentDictionary<Guid, Message> _messagesDict = new ConcurrentDictionary<Guid, Message>();
+
+    //public static List<Message> _messages => _messagesDict.Values.ToList();
 
     private readonly ILogger<MessageStore> _logger;
     public MessageStore(ILogger<MessageStore> logger)
@@ -16,26 +19,37 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 
     public List<Message> All()
     {
-        return _messages;
+        return _messagesDict.Values.ToList();
     }
 
     public List<Message> Latest(
         bool onlyNew = true,
         int page = 1,
-        int perPage = 5)
+        int perPage = 5,
+        string? filterByHost = null,
+        string? filterByUser = null)
     {
+
         if (onlyNew)
         {
-            return _messages
+            return _messagesDict.Values
                 .OrderByDescending(msg => msg.ReceivedOn)
                 .Where(msg => msg.Read == !onlyNew)
+                .Where(msg => string.IsNullOrWhiteSpace(filterByHost)
+                    ? true : msg.To.Contains(filterByHost))
+                .Where(msg => string.IsNullOrWhiteSpace(filterByUser)
+                    ? true : msg.To.Contains(filterByUser + '@'))
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .ToList();
         }
 
-        return _messages
+        return _messagesDict.Values
             .OrderByDescending(msg => msg.ReceivedOn)
+                .Where(msg => string.IsNullOrWhiteSpace(filterByHost)
+                    ? true : msg.To.Contains(filterByHost))
+                .Where(msg => string.IsNullOrWhiteSpace(filterByUser)
+                    ? true : msg.To.Contains(filterByUser + '@'))
             .Skip((page - 1) * perPage)
             .Take(perPage)
             .ToList();
@@ -45,33 +59,38 @@ public class MessageStore : IMessageStore, IReadableMessageStore
     {
         if (onlyNew)
         {
-            return _messages.Count(msg => !msg.Read);
+            return _messagesDict.Values.Count(msg => !msg.Read);
         }
         else
         {
-            return _messages.Count;
+            return _messagesDict.Count;
         }
     }
 
-    public List<string> Mailboxes()
+    public Dictionary<string, List<string>> Mailboxes()
     {
-        lock (_messages)
-        {
-            return _messages
-                .Select(msg => msg.To)
-                .GroupBy(from => from)
-                .Select(fromGrp => fromGrp.First())
-                .ToList();
-        }
+        var mailboxes = _messagesDict.Values
+            .Select(msg => new { Host = msg.To.Split('@')[1], User = msg.To.Split('@')[0] })
+            .GroupBy(msg => msg.Host)
+            .ToDictionary(
+                hostGrp => hostGrp.First().Host,
+                hostGrp => hostGrp.Select(hg => hg.User)
+                    .GroupBy(u => u)
+                    .Select(grp => grp.First())
+                    .ToList())
+            ?? throw new Exception("Could not generate mailboxes.");
+
+        return mailboxes;
     }
 
-    public Message Single(int msgId)
+    public Message Single(Guid msgId)
     {
-        if (_messages[msgId] != null)
-        {
-            return _messages[msgId];
-        }
-        throw new Exception("Message does not exist");
+        return _messagesDict[msgId];
+    }
+
+    public void MarkAsRead(Guid msgId)
+    {
+        _messagesDict[msgId].Read = true;
     }
 
     public async Task<SmtpResponse> SaveAsync(
@@ -90,73 +109,21 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 
         stream.Position = 0;
 
-        using var streamReader = new StreamReader(stream);
-        var rawMessage = await streamReader.ReadToEndAsync()
-            ?? throw new Exception("Could not read message.");
+        var msgBytes = stream.ToArray();
 
-        stream.Position = 0;
+        var newGuid = Guid.NewGuid();
 
-        var mimeMessage = await MimeKit.MimeMessage.LoadAsync(stream, cancellationToken);
-        var textContent = mimeMessage.GetTextBody(MimeKit.Text.TextFormat.Text);
-        var htmlContent = mimeMessage.HtmlBody;
-
-        htmlContent = htmlContent?.Replace("</body>", $@"
-                         <script>
-                            setInterval(()=>window.parent.postMessage({{ ""type"": ""frame-resized"", ""value"": document.documentElement.clientHeight  }}, '*'), 100);
-                         </script>
-                         </body>
-                    ");
-
-        var bodyParts = mimeMessage.BodyParts
-            .Where(a => !string.IsNullOrEmpty(a.ContentId))
-            .Select(a => new MessageAttachement(a))
-            .ToList();
-
-        var realAttachments = mimeMessage.Attachments
-            //.Where(a => a.IsAttachment)
-            .Select(a => new MessageAttachement(a))
-            .ToList();
-
-        var attachments = bodyParts.Concat(realAttachments).ToList();
-
-        foreach (var attachment in attachments.Where(a => !string.IsNullOrWhiteSpace(a.ContentId)))
-        {
-            var indexOfCid = htmlContent.IndexOf(attachment.ContentId);
-            var foundCid = indexOfCid > -1;
-            if (foundCid)
-            {
-                htmlContent = htmlContent.Replace(
-                    "cid:" + attachment.ContentId,
-                    string.Format("data:{0};base64,{1}", attachment.MimeType, attachment.Content));
-            }
-        }
-
-        var base64HtmlContent = htmlContent != null ?
-            Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(htmlContent))
-            : null;
-            
-        var messageToStore = new Message
-        {
-            ReceivedOn = mimeMessage.Date,
-            Subject = mimeMessage.Subject,
-            From = string.Join(',', mimeMessage.From.Select(f => f.ToString())),
-            To = string.Join(',', mimeMessage.To.Select(f => f.ToString())),
-            TextContent = textContent,
-            HtmlContent = base64HtmlContent,
-            Attachements = attachments,
-            Raw = rawMessage
-        };
-
-        lock (_messages)
-        {
-            _messages.Add(messageToStore);
-        }
+        var newMessage = new Message(newGuid, msgBytes);
+        _messagesDict.TryAdd(newGuid, newMessage);
+        // var maxRetry = 3;
+        //var retries = 0;
+        // while (!_messagesDict.TryAdd(newGuid, newMessage) && retries <= maxRetry)
+        // {
+        //     retries++`
+        //     await Task.Delay(100);
+        // }
 
         return SmtpResponse.Ok;
     }
 
-    public void MarkAsRead(int msgId)
-    {
-        _messages[msgId].Read = true;
-    }
 }

@@ -5,59 +5,65 @@
     ViewData["Title"] = "Home page";
 }
 
-    <table class="msg-view table table-striped table-bordered">
-        <tr>
-            <td>Id</td>
-            <td>@Model.MsgId</td>
-        </tr>
-        <tr>
-            <td>Received-On</td>
-            <td>@Model.Message.ReceivedOn</td>
-        </tr>
-        <tr>
-            <td>From</td>
-            <td>@Model.Message.From</td>
-        </tr>
-        <tr>
-            <td>To</td>
-            <td>@Model.Message.To</td>
-        </tr>
-        <tr>
-            <td>Subject</td>
-            <td>@Model.Message.Subject</td>
-        </tr>
-        <tr>
-            <td>Attachements</td>
-            <td>
-                @foreach(var attachment in Model.Message.Attachements){
-                    <a  class="badge  text-bg-primary"
-                    download="@attachment.Filename"
-                    href='data:@(Html.Raw(attachment.MimeType+";base64,"+attachment.Content))'>
-                    @attachment.Filename</a>
+<div class="">
+    <h3 class="m-3">@Model.Message.Subject</h3>
+    <div class="border rounded p-3">
+        <div style="display: flex; justify-content: space-between">
+            <div class="my-1">
+                <span style="font-weight: bold; display: inline-block; min-width: 50px">From:</span>
+                @Model.Message.From
+            </div>
+            <div class="my-1">@Model.Message.ReceivedOn.Date.ToLongDateString()</div>
+        </div>
+        <div style="display: flex; justify-content: space-between">
+            <div>
+
+                <span style="font-weight: 900; display: inline-block; min-width: 50px">To:</span>
+                @Model.Message.To
+            </div>
+            @if (Model.Message.Attachements.Count > 0)
+            {
+                <div class="my-1">
+                    <div class="pill">
+                        <i class="bi bi-paperclip"></i>
+                        @Model.Message.Attachements.Count
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="btn-group mt-2" role="group" aria-label="Basic example">
+            <button type="button" class="btn btn-secondary"><i class="bi bi-envelope"></i></button>
+            <button type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
+            <button type="button" class="btn btn-secondary"><i class="bi bi-tag"></i></button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Message.HtmlContent))
+        {
+
+            <iframe id="html-content" class="mt-2" style="width: 100%; "
+                src="/api/messages/@(Model.Message.Id).html"></iframe>
+        }
+        else
+        {
+            <div class="mt-2">@Model.Message.TextContent</div>
+        }
+
+        @if (Model.Message.Attachements.Count > 0)
+        {
+            <div class="mt-2">
+                @foreach (var att in Model.Message.Attachements)
+                {
+                    <a class="badge rounded-pill text-bg-primary p-2"
+                        href="/api/messages/@Model.Message.Id/attachements/@att.Filename">
+
+                        <i class="bi bi-paperclip"></i>
+                        @att.Filename</a>
                 }
-            </td>
-        </tr>
-        <tr>
-            <td>Text-Content</td>
-            <td>
-                @Model.Message.TextContent
-            </td>
-        </tr>
-        <tr>
-            <td>HTML-Content</td>
-            <td>
-                <button class="btn btn-primary" onclick="showHtmlContent(this)">Show / Hide</button>
-                <iframe id="html-content" style="width: 100%; display: none;" src="data:text/html;base64,@Html.Raw(Model.Message.HtmlContent)"></iframe>
-            </td>
-        </tr>
-        <tr>
-            <td>Source</td>
-            <td>
-                <button class="btn btn-primary" onclick="showSource(this)">Show / Hide</button>
-                <pre id="source-content" style="display: none; padding: 0; margin: 0;">@Model.Message.Raw</pre>
-            </td>
-        </tr>
-    </table>
+            </div>
+        }
+    </div>
+</div>
 
 <style>
     table.msg-view {
@@ -71,13 +77,13 @@
 
 @section Scripts{
     <script>
-        function showHtmlContent(el){
+        function showHtmlContent(el) {
             var el = document.getElementById("html-content");
             let isVisible = el.style.display == 'block';
             let visibility = isVisible ? 'none' : 'block';
             el.style.display = visibility;
         }
-        function showSource(el){
+        function showSource(el) {
             var el = document.getElementById("source-content");
             let isVisible = el.style.display == 'block';
             let visibility = isVisible ? 'none' : 'block';
@@ -85,7 +91,7 @@
         }
     </script>
     <script>
-        setInterval(()=>window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
+        setInterval(() => window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
     </script>
     <script type="text/javascript">
         window.addEventListener('message', receiveMessage, false);

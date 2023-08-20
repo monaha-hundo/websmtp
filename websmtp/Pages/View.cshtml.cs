@@ -9,7 +9,7 @@ namespace websmtp.Pages;
 public class MessageViewModel : PageModel
 {
     [FromQuery]
-    public int MsgId { get; set; }
+    public Guid MsgId { get; set; }
     private readonly ILogger<IndexModel> _logger;
     private readonly IReadableMessageStore _messageStore;
 
