@@ -71,6 +71,7 @@ public class UnitTest1
         var messages = new Faker<MailMessage>()
             .CustomInstantiator(f => new MailMessage(f.PickRandom(emailAddress), f.PickRandom(emailAddress)))
             .RuleFor(m => m.Body, (f) => f.Lorem.Paragraphs(2))
+            .RuleFor(m => m.Subject, (f) => f.Lorem.Sentence(10,6))
             .Generate(testEmailCount);
 
         // Execution

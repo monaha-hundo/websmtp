@@ -41,7 +41,7 @@
                             <li class="ms-16 d-flex" style="align-items: center;">
                                 <i class="bi bi-arrow-return-right ms-1 me-2"></i>
                                 <a class="mb-2 btn btn-primary d-inline-flex align-items-center rounded border-0 collapsed"
-                                    href="/?user=@recipient" style="flex: 1 1 auto;">
+                                    href="/?user=@recipient&host=@mailbox.Key" style="flex: 1 1 auto;">
                                     <i class="bi bi-person"></i>
                                     <span class="ms-2">@recipient</span>
                                 </a>
@@ -71,33 +71,25 @@
         border-bottom: 1pt solid var(--bs-border-color); 
         border-top-left-radius: var(--bs-border-radius);
         position: relative;">
-        <table class="table table-dark table-hover table-striped table-sm m-0" 
-            style="position: sticky; top: 0; z-index: 1;">
+        <table class="table table-dark table-hover table-striped table-sm m-0"
+            style="position: sticky; top: 0; z-index: 1; table-layout: fixed;">
             <thead>
                 <tr>
-                    <th>Received</th>
-                    <th>Subject</th>
-                    <th>To</th>
-                    <th>From</th>
-                    <th>Size</th>
-                    <th>Attch(s).</th>
-                    @* <th class=""></th> *@
+                    <th style="width: 130px">Received</th>
+                    <th style="width: calc((100% - 255px)+16%);">Subject</th>
+                    <th style="width: calc((100% - 255px)+16%);">To</th>
+                    <th style="width: calc((100% - 255px)+16%);">From</th>
+                    <th style="width: 75px">Size</th>
+                    <th style="width: 50px">
+                        <i class="bi bi-paperclip"></i>
+                    </th>
                 </tr>
             </thead>
         </table>
         <div class="table-responsive" style="max-heigh: 30vh; ">
 
-            <table class="table table-dark table-hover table-striped table-sm m-0">
-                @* <thead>
-                <tr>
-                <th style="position: sticky; top: 0; z-index: 1;" class="">Received</th>
-                <th style="position: sticky; top: 0; z-index: 1;" class="">Subject</th>
-                <th style="position: sticky; top: 0; z-index: 1;" class="">To</th>
-                <th style="position: sticky; top: 0; z-index: 1;" class="">From</th>
-                <th style="position: sticky; top: 0; z-index: 1;" class="">Size</th>
-                <th style="position: sticky; top: 0; z-index: 1;" class="">Attch(s).</th>
-                </tr>
-                </thead> *@
+            <table class="table table-fixed table-dark table-hover table-striped table-sm m-0 align-middle"
+                style="position: relative; table-layout: fixed;">
                 @if (Model.Messages.Count == 0)
                 {
                     <tr>
@@ -108,7 +100,8 @@
                 {
                     var message = Model.Messages[msgId];
                     <tr onclick="openwMsgView('/View?msgId=@message.Id')" style="cursor: pointer;">
-                        <td class="text-nowrap text-truncate">
+                        <td class="text-nowrap text-truncate" style="width: 130px;">
+                            <i class="bi bi-clock"></i>
                             @if (message.ReceivedOn.Date == DateTime.UtcNow.Date)
                             {
                                 <span>@message.ReceivedOn.ToString("HH:mm")</span>
@@ -118,11 +111,12 @@
                                 <span>@message.ReceivedOn.ToString("yyyy-MM-dd")</span>
                             }
                         </td>
-                        <td class="text-nowrap text-truncate">@message.Subject</td>
-                        <td class="text-nowrap text-truncate">@message.To</td>
-                        <td class="text-nowrap text-truncate">@message.From</td>
-                        <td class="text-nowrap text-truncate">@(message.Size)b</td>
-                        <td class="text-nowrap text-truncate">@(message.Attachements.Count)</td>
+                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">@message.Subject</td>
+                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">@message.To</td>
+                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">@message.From</td>
+                        <td class="text-nowrap text-truncate" style="width: 75px;"
+                        >@(Math.Round(decimal.Divide(message.Size,1024m)))k</td>
+                        <td class="text-nowrap text-truncate" style="width: 50px">@(message.Attachements.Count)</td>
                     </tr>
                 }
             </table>
