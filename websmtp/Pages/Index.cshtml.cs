@@ -26,7 +26,7 @@ public class IndexModel : PageModel
     public bool OnlyNew { get; set; } = true;
 
     [FromQuery]
-    public int PerPage { get; set; } = 5;
+    public int PerPage { get; set; } = 5000;
 
     [FromQuery]
     public int CurrentPage { get; set; } = 1;

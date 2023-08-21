@@ -63,8 +63,13 @@ public class UnitTest1
         // test data generation
         Console.WriteLine("Generating test data...");
         var testEmailCount = 1000;
+
+        var emailAddress = new Faker<string>()
+            .CustomInstantiator(f=> f.Internet.Email())
+            .Generate(10);
+
         var messages = new Faker<MailMessage>()
-            .CustomInstantiator(f => new MailMessage(f.Internet.Email(), f.Internet.Email()))
+            .CustomInstantiator(f => new MailMessage(f.PickRandom(emailAddress), f.PickRandom(emailAddress)))
             .RuleFor(m => m.Body, (f) => f.Lorem.Paragraphs(2))
             .Generate(testEmailCount);
 
