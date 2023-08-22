@@ -77,8 +77,8 @@
                 <tr>
                     <th style="width: 130px">Received</th>
                     <th style="width: calc((100% - 255px)+16%);">Subject</th>
-                    <th style="width: calc((100% - 255px)+16%);">To</th>
                     <th style="width: calc((100% - 255px)+16%);">From</th>
+                    <th style="width: calc((100% - 255px)+16%);">To</th>
                     <th style="width: 75px">Size</th>
                     <th style="width: 50px">
                         <i class="bi bi-paperclip"></i>
@@ -111,9 +111,16 @@
                                 <span>@message.ReceivedOn.ToString("yyyy-MM-dd")</span>
                             }
                         </td>
-                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">@message.Subject</td>
-                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">@message.To</td>
-                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">@message.From</td>
+                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">
+                            <i class="bi bi-tag"></i>
+                            @message.Subject
+                            </td>
+                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">
+                            <i class="bi bi-envelope-paper"></i>
+                            @message.From</td>
+                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">
+                            <i class="bi bi-inbox"></i>
+                            @message.To</td>
                         <td class="text-nowrap text-truncate" style="width: 75px;"
                         >@(Math.Round(decimal.Divide(message.Size,1024m)))k</td>
                         <td class="text-nowrap text-truncate" style="width: 50px">@(message.Attachements.Count)</td>

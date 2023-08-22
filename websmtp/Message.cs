@@ -113,7 +113,8 @@ namespace websmtp
         public MessageAttachement(MimeEntity mimeEntity)
         {
             MimeType = mimeEntity?.ContentType?.MimeType ?? "application/octet-stream";
-            Filename = mimeEntity?.ContentDisposition.FileName
+            Filename = mimeEntity.ContentType.Name
+                ?? mimeEntity?.ContentDisposition.FileName
                 ?? mimeEntity.ContentId;
             ContentId = mimeEntity.ContentId;
             using var tempMemory = new MemoryStream();
