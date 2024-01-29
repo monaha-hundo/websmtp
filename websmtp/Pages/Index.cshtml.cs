@@ -20,10 +20,10 @@ public class IndexModel : PageModel
     [FromQuery]
     public string? Host { get; set; }
     [FromQuery]
-    public string? User { get; set; }
+    new public string? User { get; set; }
 
     [FromQuery]
-    public bool OnlyNew { get; set; } = true;
+    public bool OnlyNew { get; set; } = false;
 
     [FromQuery]
     public int PerPage { get; set; } = 5000;

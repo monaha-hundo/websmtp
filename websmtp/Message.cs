@@ -1,22 +1,43 @@
+using System.Buffers;
 using MimeKit;
 
 namespace websmtp
 {
     public class Message
     {
-        public Guid Id { get; set; }
-        public byte[] Raw { get; set; }
+        public Guid Id { get; set; } = Guid.Empty;
+        public byte[] Raw { get; set; } = [];
         public DateTimeOffset ReceivedOn { get; set; } = DateTimeOffset.Now;
         public int Size => Raw.Length;
 
-        public Message(Guid id, byte[] raw)
+        public string Subject { get; set; } = string.Empty;
+
+        public string From { get; set; } = string.Empty;
+
+        public string Sender { get; set; } = string.Empty;
+
+        public string To { get; set; } = string.Empty;
+
+        public string TextContent { get; set; } = string.Empty;
+
+        public string? HtmlContent { get; set; }
+
+        public List<MessageAttachement> Attachements { get; set; } = [];
+        public bool Read { get; set; }
+
+        public Message()
+        {
+
+        }
+
+        public Message(Guid id, ReadOnlySequence<byte> buffer)
         {
             Id = id;
-            Raw = raw;
+            Raw = buffer.ToArray<byte>();
             ReceivedOn = DateTimeOffset.UtcNow;
 
             using var memory = new MemoryStream(Raw);
-            var _mimeMessage = MimeMessage.Load(memory);
+            using var _mimeMessage = MimeMessage.Load(memory) ?? throw new Exception("Could not parse message.");
 
             Subject = _mimeMessage.Subject;
 
@@ -24,7 +45,8 @@ namespace websmtp
                 ?? new List<string>(0);
 
             From = string.Join(',', allFrom);
-            Sender = _mimeMessage.Sender?.Address;
+
+            Sender = _mimeMessage.Sender?.Address ?? string.Empty;
 
             var allTo = _mimeMessage.To?.Select(f => f.ToString()).ToList()
                 ?? new List<string>(0);
@@ -36,10 +58,11 @@ namespace websmtp
 
             if (_mimeMessage.HtmlBody != null)
             {
-                var htmlContent = _mimeMessage.HtmlBody;
+                var htmlContent = _mimeMessage.HtmlBody
+                    ?? throw new Exception("Could not read message HtmlBody");
 
                 // make resizable, should really be handled with HTTP CSP
-                htmlContent = htmlContent?.Replace("</body>", $@"
+                htmlContent = htmlContent.Replace("</body>", $@"
                          <script>
                             setInterval(()=>window.parent.postMessage({{ ""type"": ""frame-resized"", ""value"": document.documentElement.clientHeight  }}, '*'), 100);
                          </script>
@@ -86,35 +109,20 @@ namespace websmtp
             }
         }
 
-        public string Subject { get; }
-
-        public string From { get; }
-
-        public string Sender { get; }
-
-        public string To { get; }
-
-        public string TextContent { get; }
-
-        public string? HtmlContent { get; }
-
-        public List<MessageAttachement> Attachements { get; } = new();
-        public bool Read { get; set; }
-
     }
 
     public class MessageAttachement
     {
-        public string Filename { get; set; }
-        public string MimeType { get; set; }
+        public string Filename { get; set; } = string.Empty;
+        public string MimeType { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-        public string ContentId { get; set; }
+        public string ContentId { get; set; } = string.Empty;
 
         public MessageAttachement(MimeEntity mimeEntity)
         {
-            MimeType = mimeEntity?.ContentType?.MimeType ?? "application/octet-stream";
+            MimeType = mimeEntity.ContentType.MimeType ?? "application/octet-stream";
             Filename = mimeEntity.ContentType.Name
-                ?? mimeEntity?.ContentDisposition.FileName
+                ?? mimeEntity.ContentDisposition.FileName
                 ?? mimeEntity.ContentId;
             ContentId = mimeEntity.ContentId;
             using var tempMemory = new MemoryStream();
@@ -124,6 +132,10 @@ namespace websmtp
             //var mimeBase64 = Convert.ToBase64String(mimeBytes);
             var phase2Bytes = System.Text.Encoding.Default.GetString(mimeBytes);
             Content = phase2Bytes;
+        }
+
+        public MessageAttachement()
+        {
         }
     }
 }

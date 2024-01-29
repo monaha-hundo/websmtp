@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
@@ -22,5 +22,10 @@
   <ItemGroup>
     <ProjectReference Include="..\websmtp\websmtp.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.Net.DisableIPv6" Value="true" />
+  </ItemGroup>
+
 
 </Project>

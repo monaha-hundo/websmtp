@@ -23,7 +23,6 @@ public class SmtpBackgroundServerService : IHostedService, IDisposable
     public Task StartAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Timed Hosted Service running.");
-
         _smtpServer.StartAsync(stoppingToken);
         return Task.CompletedTask;
 

@@ -1,5 +1,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
@@ -8,8 +10,6 @@ using websmtp;
 public class MessageStore : IMessageStore, IReadableMessageStore
 {
     private static ConcurrentDictionary<Guid, Message> _messagesDict = new ConcurrentDictionary<Guid, Message>();
-
-    //public static List<Message> _messages => _messagesDict.Values.ToList();
 
     private readonly ILogger<MessageStore> _logger;
     public MessageStore(ILogger<MessageStore> logger)
@@ -90,40 +90,70 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 
     public void MarkAsRead(Guid msgId)
     {
-        _messagesDict[msgId].Read = true;
+        var msg = _messagesDict[msgId];
+        msg.Read = true;
+        SaveMessage(msg);
     }
 
-    public async Task<SmtpResponse> SaveAsync(
+    public Task LoadMessages()
+    {
+        _logger.LogInformation("Loading previously received messages.");
+        var messageFiles = Directory.EnumerateFiles("messages");
+        messageFiles
+            .AsParallel()
+            .ForAll(msgFile =>
+            {
+                try
+                {
+                    _logger.LogInformation($"Processing message id #{msgFile}.");
+                    //var path = Path.Combine("messages", msgFile);
+                    var json = File.ReadAllText(msgFile);
+                    var msg = JsonConvert.DeserializeObject<Message>(json)
+                        ?? throw new Exception("Could not parse message.");
+                    if (!_messagesDict.TryAdd(msg.Id, msg))
+                    {
+                        throw new Exception("Could not add loaded message to dictionary.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogCritical($"Could load saved message id #{msgFile}: {ex.Message}");
+                    throw;
+                }
+            });
+        return Task.CompletedTask;
+    }
+
+    public Task<SmtpResponse> SaveAsync(
         ISessionContext context,
         IMessageTransaction transaction,
         ReadOnlySequence<byte> buffer,
         CancellationToken cancellationToken)
     {
-        await using var stream = new MemoryStream();
-
-        var position = buffer.GetPosition(0);
-        while (buffer.TryGet(ref position, out var memory))
+        try
         {
-            await stream.WriteAsync(memory, cancellationToken);
+            _logger.LogInformation("Received message, parsing & saving...");
+            var newGuid = Guid.NewGuid();
+            var newMessage = new Message(newGuid, buffer);
+            _messagesDict.TryAdd(newGuid, newMessage);
+            _logger.LogInformation($"Saved message id #{newGuid}.");
+            SaveMessage(newMessage);
+            return Task.FromResult(SmtpResponse.Ok);
         }
-
-        stream.Position = 0;
-
-        var msgBytes = stream.ToArray();
-
-        var newGuid = Guid.NewGuid();
-
-        var newMessage = new Message(newGuid, msgBytes);
-        _messagesDict.TryAdd(newGuid, newMessage);
-        // var maxRetry = 3;
-        //var retries = 0;
-        // while (!_messagesDict.TryAdd(newGuid, newMessage) && retries <= maxRetry)
-        // {
-        //     retries++`
-        //     await Task.Delay(100);
-        // }
-
-        return SmtpResponse.Ok;
+        catch (Exception ex)
+        {
+            _logger.LogCritical("Could not save incoming message: {0}", ex.Message);
+            return Task.FromResult(SmtpResponse.TransactionFailed);
+            throw;
+        }
     }
 
+    private void SaveMessage(Message message)
+    {
+        //var binaryGenerator = BinaryData.FromObjectAsJson(message);
+        //var binaryBackup = binaryGenerator.ToArray();
+        var json = JsonConvert.SerializeObject(message);
+        var path = Path.Combine("messages", message.Id.ToString("N"));
+        File.WriteAllText(path, json);
+    }
 }

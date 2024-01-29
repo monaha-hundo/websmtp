@@ -99,7 +99,10 @@
                 @for (int msgId = 0; msgId < Model.Messages.Count; msgId++)
                 {
                     var message = Model.Messages[msgId];
-                    <tr onclick="openwMsgView('/View?msgId=@message.Id')" style="cursor: pointer;">
+                    <tr onclick="openwMsgView('@message.Id')" 
+                        style="cursor: pointer;"
+                        class="@(message.Read ? "" : "unread")"
+                        msg-id="@message.Id">
                         <td class="text-nowrap text-truncate" style="width: 130px;">
                             <i class="bi bi-clock"></i>
                             @if (message.ReceivedOn.Date == DateTime.UtcNow.Date)
@@ -113,17 +116,22 @@
                         </td>
                         <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">
                             <i class="bi bi-tag"></i>
-                            @message.Subject
+                            <span>@message.Subject</span>
                             </td>
                         <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">
                             <i class="bi bi-envelope-paper"></i>
-                            @message.From</td>
+                            <span>@message.From</span>
+                            </td>
                         <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">
                             <i class="bi bi-inbox"></i>
-                            @message.To</td>
-                        <td class="text-nowrap text-truncate" style="width: 75px;"
-                        >@(Math.Round(decimal.Divide(message.Size,1024m)))k</td>
-                        <td class="text-nowrap text-truncate" style="width: 50px">@(message.Attachements.Count)</td>
+                            <span>@message.To</span>
+                            </td>
+                        <td class="text-nowrap text-truncate" style="width: 75px;">
+                            <span>@(Math.Round(decimal.Divide(message.Size,1024m)))k</span>
+                        </td>
+                        <td class="text-nowrap text-truncate" style="width: 50px">
+                            <span>@(message.Attachements.Count)</span>
+                        </td>
                     </tr>
                 }
             </table>
@@ -144,12 +152,12 @@
 
 @section Scripts{
     <script>
-        function openwMsgView(url) {
+        function openwMsgView(msgId) {
             let sectionEl = document.querySelector('#msg-view-container');
             sectionEl.style.display = 'block';
-            //const url = `/View?msgId=${message.id}`;
             let msgViewEl = document.getElementById('msg-view');
-            msgViewEl.setAttribute('src', url);
+            msgViewEl.setAttribute('src', '/View?msgId=' + msgId);
+            markMessageAsRead(msgId);
         }
         function closeMsgView() {
             let sectionEl = document.querySelector('#msg-view-container');
@@ -166,8 +174,12 @@
             const success = result == "200";
             console.log(success);
             if (success) {
-                const checkMarkEl = document.getElementById('msg-read-mark-' + msgId);
-                checkMarkEl.innerHTML = '<i class="bi bi-bookmark-check"></i>';
+                @* const checkMarkEl = document.getElementById('msg-read-mark-' + msgId);
+                checkMarkEl.innerHTML = '<i class="bi bi-bookmark-check"></i>'; *@
+                const selector = `tr[msg-id='${msgId}']`;
+                console.log(selector);
+                const checkMarkEl = document.querySelector(selector);
+                checkMarkEl.classList.remove('unread');
             }
         }
 

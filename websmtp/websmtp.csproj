@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <InternalsVisibleTo>test</InternalsVisibleTo>
@@ -9,7 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="MimeKit" Version="4.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SmtpServer" Version="9.0.3" />
+    <PackageReference Include="System.Memory.Data" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.Net.DisableIPv6" Value="true" />
   </ItemGroup>
 
 </Project>

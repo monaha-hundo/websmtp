@@ -9,4 +9,6 @@ public interface IReadableMessageStore
     public Message Single(Guid msgId);
     public void MarkAsRead(Guid msgId);
     public int Count(bool onlyNew = false);
+
+    public Task LoadMessages();
 }
