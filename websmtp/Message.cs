@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Collections.Frozen;
 using MimeKit;
 
 namespace websmtp
@@ -14,6 +15,9 @@ namespace websmtp
 
         public string From { get; set; } = string.Empty;
 
+        public string SenderName { get; set; } = string.Empty;
+        public string SenderAddress { get; set; } = string.Empty;
+
         public string Sender { get; set; } = string.Empty;
 
         public string To { get; set; } = string.Empty;
@@ -23,7 +27,12 @@ namespace websmtp
         public string? HtmlContent { get; set; }
 
         public List<MessageAttachement> Attachements { get; set; } = [];
+
         public bool Read { get; set; }
+
+        public MimeMessage? Reply { get; set; }
+
+        public bool Replied => Reply != null;
 
         public Message()
         {
@@ -45,8 +54,9 @@ namespace websmtp
                 ?? new List<string>(0);
 
             From = string.Join(',', allFrom);
-
-            Sender = _mimeMessage.Sender?.Address ?? string.Empty;
+            Sender = _mimeMessage.Sender?.Address ?? From;
+            SenderAddress = _mimeMessage.Sender?.Address ?? _mimeMessage.From.First().ToString(true);
+            SenderName = _mimeMessage.Sender?.Name ?? _mimeMessage.From.First().Name;
 
             var allTo = _mimeMessage.To?.Select(f => f.ToString()).ToList()
                 ?? new List<string>(0);

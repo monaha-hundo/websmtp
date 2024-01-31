@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Text.Json.Serialization;
+using MimeKit;
 using Newtonsoft.Json;
 using SmtpServer;
 using SmtpServer.Protocol;
@@ -55,6 +56,19 @@ public class MessageStore : IMessageStore, IReadableMessageStore
             .ToList();
     }
 
+    public List<Message> UnReplied()
+    {
+        return _messagesDict.Values
+                .OrderBy(msg => msg.ReceivedOn)
+                .Where(msg => !msg.Replied)
+                .ToList();
+    }
+    public void MarkAsReplied(Message msg, MimeMessage reply)
+    {
+        _messagesDict[msg.Id].Reply = reply;
+        SaveMessage(msg);
+    }
+
     public int Count(bool onlyNew = false)
     {
         if (onlyNew)
@@ -98,22 +112,24 @@ public class MessageStore : IMessageStore, IReadableMessageStore
     public Task LoadMessages()
     {
         _logger.LogInformation("Loading previously received messages.");
-        var messageFiles = Directory.EnumerateFiles("messages");
+        var messageFiles = Directory.GetFiles("messages");
+        _logger.LogInformation($"Found {messageFiles.Length} messages in store.");
+        var done = 0;
+        var sw = new System.Diagnostics.Stopwatch();
+        sw.Restart();
         messageFiles
             .AsParallel()
             .ForAll(msgFile =>
             {
                 try
                 {
-                    _logger.LogInformation($"Processing message id #{msgFile}.");
-                    //var path = Path.Combine("messages", msgFile);
                     var json = File.ReadAllText(msgFile);
-                    var msg = JsonConvert.DeserializeObject<Message>(json)
-                        ?? throw new Exception("Could not parse message.");
+                    var msg = JsonConvert.DeserializeObject<Message>(json) ?? throw new Exception("Could not parse message.");
                     if (!_messagesDict.TryAdd(msg.Id, msg))
                     {
                         throw new Exception("Could not add loaded message to dictionary.");
                     }
+                    done++;
                 }
                 catch (Exception ex)
                 {
@@ -121,6 +137,8 @@ public class MessageStore : IMessageStore, IReadableMessageStore
                     throw;
                 }
             });
+        sw.Stop();
+        _logger.LogInformation($"Loaded {done} off {messageFiles.Length} messages from store in {sw.ElapsedMilliseconds/1000}s.");
         return Task.CompletedTask;
     }
 
@@ -150,8 +168,6 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 
     private void SaveMessage(Message message)
     {
-        //var binaryGenerator = BinaryData.FromObjectAsJson(message);
-        //var binaryBackup = binaryGenerator.ToArray();
         var json = JsonConvert.SerializeObject(message);
         var path = Path.Combine("messages", message.Id.ToString("N"));
         File.WriteAllText(path, json);
