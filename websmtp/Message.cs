@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Collections.Frozen;
 using MimeKit;
+using Newtonsoft.Json;
 
 namespace websmtp
 {
@@ -8,17 +9,13 @@ namespace websmtp
     {
         public Guid Id { get; set; } = Guid.Empty;
         public byte[] Raw { get; set; } = [];
+
         public DateTimeOffset ReceivedOn { get; set; } = DateTimeOffset.Now;
         public int Size => Raw.Length;
 
         public string Subject { get; set; } = string.Empty;
 
         public string From { get; set; } = string.Empty;
-
-        public string SenderName { get; set; } = string.Empty;
-        public string SenderAddress { get; set; } = string.Empty;
-
-        public string Sender { get; set; } = string.Empty;
 
         public string To { get; set; } = string.Empty;
 
@@ -30,9 +27,24 @@ namespace websmtp
 
         public bool Read { get; set; }
 
-        public MimeMessage? Reply { get; set; }
 
-        public bool Replied => Reply != null;
+        public byte[] RawReply { get; set; } = [];
+
+        [JsonIgnore]
+        public MimeMessage? Reply
+        {
+            get
+            {
+                {
+                    if(RawReply.Length == 0) return null;
+                    using var memory = new MemoryStream(RawReply);
+                    return MimeMessage.Load(memory);
+                };
+            }
+        }
+
+        public bool Replied => RawReply != null 
+            && RawReply.Length > 0;
 
         public Message()
         {
@@ -54,9 +66,7 @@ namespace websmtp
                 ?? new List<string>(0);
 
             From = string.Join(',', allFrom);
-            Sender = _mimeMessage.Sender?.Address ?? From;
-            SenderAddress = _mimeMessage.Sender?.Address ?? _mimeMessage.From.First().ToString(true);
-            SenderName = _mimeMessage.Sender?.Name ?? _mimeMessage.From.First().Name;
+            //Sender = _mimeMessage.Sender?.Address ?? From;
 
             var allTo = _mimeMessage.To?.Select(f => f.ToString()).ToList()
                 ?? new List<string>(0);

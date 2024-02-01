@@ -10,7 +10,7 @@ public interface IReadableMessageStore
     public Dictionary<string,List<string>> Mailboxes();
     public Message Single(Guid msgId);
     public void MarkAsRead(Guid msgId);
-    public void MarkAsReplied(Message msg, MimeMessage reply);
+    public void MarkAsReplied(Message msg, byte[] reply);
     public int Count(bool onlyNew = false);
 
     public Task LoadMessages();

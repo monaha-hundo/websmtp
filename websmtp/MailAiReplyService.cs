@@ -14,16 +14,19 @@ public class MailAiReplyService : IHostedService, IDisposable
 {
     private readonly ILogger<MailAiReplyService> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IHostEnvironment _hostEnv;
     private readonly System.Timers.Timer _timer;
     private bool _working;
 
     public MailAiReplyService(ILogger<MailAiReplyService> logger,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        IHostEnvironment hostEnv)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _timer = new System.Timers.Timer(TimeSpan.FromSeconds(10));
         _timer.Elapsed += Timer_Elapsed;
+        _hostEnv = hostEnv;
     }
 
     private void Timer_Elapsed(object? sender, ElapsedEventArgs e)
@@ -40,7 +43,7 @@ public class MailAiReplyService : IHostedService, IDisposable
 
         if (!emailsToReplyTo.Any())
         {
-            _logger.LogInformation($"No unreplied emails found. Nothing to do.");
+            _logger.LogDebug($"No unreplied emails found. Nothing to do.");
             return;
         }
 
@@ -49,96 +52,95 @@ public class MailAiReplyService : IHostedService, IDisposable
         _working = true;
         foreach (var email in emailsToReplyTo)
         {
-            _logger.LogInformation($"Processing email #{email.Id}...");
-            var reply = SendReply(email);
-            emails.MarkAsReplied(email, reply);
+            _logger.LogTrace($"Processing email #{email.Id}...");
+            var replyBytes = GenerateAndSendReply(email);
+            emails.MarkAsReplied(email, replyBytes);
         }
         _working = false;
     }
 
-    public MimeMessage SendReply(Message originalEmail)
+    public byte[] GenerateAndSendReply(Message originalEmail)
     {
-        _logger.LogInformation($"init message..");
-        var message = new MimeMessage();
+        using var ogEmailStream = new MemoryStream(originalEmail.Raw);
+        using var ogEmail = MimeMessage.Load(ogEmailStream);
 
-        string toName, toEmail, fromName, fromEmail;
+        var to = ogEmail.From[0] as MailboxAddress ?? throw new Exception("Invalid 'from' field in OG email.");
+        var from = ogEmail.To[0] as MailboxAddress ?? throw new Exception("Invalid 'to' field in OG email."); ;
 
-        try
-        {
-            var regex = new Regex("(.{0,})\\<(.+)\\>");
-            var fromResult = regex.Match(originalEmail.From);
-            toName = fromResult.Groups[1].Value.Trim().Trim('"');
-            toEmail = fromResult.Groups[2].Value.Trim().Trim('"');
-
-            
-            var toResult = regex.Match(originalEmail.To);
-            fromName = toResult.Groups[1].Value.Trim().Trim('"');
-            fromEmail = toResult.Groups[2].Value.Trim().Trim('"');
-        }
-        catch (Exception ex)
-        {
-            _logger.LogCritical($"Ex: {ex.Message}.");
-            throw;
-        }
-
-        _logger.LogInformation($"init to mailBoxAddress... with '{toName}' + '{toEmail}'.");
-        var to = new MailboxAddress(toName, toEmail);
-        _logger.LogInformation($"add to address to message 'to' field.");
+        using var message = new MimeMessage();
         message.To.Add(to);
-        _logger.LogInformation($"add original originalEmail.To to address to message 'from' field.");
-        message.From.Add(new MailboxAddress(fromName, fromEmail));
-        _logger.LogInformation($"set subject");
+        message.From.Add(from);
         message.Subject = $"RE: {originalEmail.Subject}";
-        _logger.LogInformation($"set body");
         message.Body = new TextPart("plain")
         {
             @Text = "Let me think about it. (automatic reply by AI)"
         };
 
-        _logger.LogInformation($"Mx Lookup for {to.Domain}...");
+        _logger.LogDebug($"Mx Lookup for {to.Domain}...");
         var lookup = new LookupClient();
         var response = lookup.Query(to.Domain, QueryType.MX);
-        _logger.LogInformation($"Responses: {response.Answers.Count}");
+        _logger.LogDebug($"Responses: {response.Answers.Count}");
 
+        return SendGeneratedReply(message, response);
+    }
+
+    private byte[] SendGeneratedReply(MimeMessage message, IDnsQueryResponse response)
+    {
         var attempt = 0;
         foreach (MxRecord mxRecord in response.Answers)
         {
             attempt++;
             var exchange = mxRecord.Exchange.ToString().TrimEnd('.');
-            _logger.LogInformation($"Attempt #{attempt}: '{exchange}'.");
+            _logger.LogTrace($"Attempt #{attempt}: '{exchange}'.");
 
-            using var client = new SmtpClient();
             try
             {
-                client.Connect(exchange, 25, SecureSocketOptions.StartTls);
-                var result = client.Send(message);
-                _logger.LogInformation($"Attempt #{attempt}: sent through {exchange}.");
-                _logger.LogInformation(result);
-                return message;
+                if (_hostEnv.IsProduction())
+                {
+                    using var client = new SmtpClient();
+                    client.Connect(exchange, 25, SecureSocketOptions.StartTls);
+                    var result = client.Send(message);
+                    _logger.LogDebug($"Attempt #{attempt}: sent through {exchange}.");
+                    _logger.LogTrace(result);
+                }
+                else
+                {
+                    _logger.LogDebug($"(development env.) Not sending email but proceeding as if it were.");
+                }
+
+                using var memory = new MemoryStream();
+                message.WriteTo(memory);
+                var bytes = memory.ToArray();
+
+                return bytes;
             }
             catch (Exception ex)
             {
                 _logger.LogCritical($"Attempt #{attempt} failed: {ex.Message}.");
             }
         }
-        throw new Exception("Could not send AI generated reply.");
+        throw new Exception("Could not send generated reply.");
     }
 
     public Task StartAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Timed Hosted Service running.");
+        _logger.LogInformation("Starting Automatic Replies service.");
         _timer.Start();
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Timed Hosted Service is stopping.");
+        _logger.LogInformation("Shutting down Automatic Replies service.");
         _timer.Stop();
         return Task.CompletedTask;
     }
 
     public void Dispose()
     {
+        if (_timer != null)
+        {
+            _timer?.Dispose();
+        }
     }
 }

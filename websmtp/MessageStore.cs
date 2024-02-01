@@ -63,9 +63,10 @@ public class MessageStore : IMessageStore, IReadableMessageStore
                 .Where(msg => !msg.Replied)
                 .ToList();
     }
-    public void MarkAsReplied(Message msg, MimeMessage reply)
+    
+    public void MarkAsReplied(Message msg, byte[] reply)
     {
-        _messagesDict[msg.Id].Reply = reply;
+        _messagesDict[msg.Id].RawReply = reply;
         SaveMessage(msg);
     }
 

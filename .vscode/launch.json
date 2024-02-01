@@ -13,7 +13,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/websmtp/bin/Debug/net8.0/websmtp.dll",
+            "program": "${workspaceFolder}/websmtp/bin/Debug/net8.0/linux-x64/websmtp.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
