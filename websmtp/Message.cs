@@ -9,42 +9,39 @@ namespace websmtp
     {
         public Guid Id { get; set; } = Guid.Empty;
         public byte[] Raw { get; set; } = [];
-
         public DateTimeOffset ReceivedOn { get; set; } = DateTimeOffset.Now;
         public int Size => Raw.Length;
-
         public string Subject { get; set; } = string.Empty;
-
+        
+        /// <summary>
+        /// For display purposes only. Use <seealso cref="FromName"/> and <seealso cref="FromAddress"/> for data access.
+        /// </summary>
         public string From { get; set; } = string.Empty;
+        public string FromName { get; set; } = string.Empty;
+        public string FromAddress { get; set; } = string.Empty;
 
+        /// <summary>
+        /// For display purposes only. Use <seealso cref="ToName"/> and <seealso cref="ToAddress"/> for data access.
+        /// </summary>
         public string To { get; set; } = string.Empty;
+        public string ToName { get; set; } = string.Empty;
+        public string ToAddress { get; set; } = string.Empty;
 
         public string TextContent { get; set; } = string.Empty;
-
         public string? HtmlContent { get; set; }
-
         public List<MessageAttachement> Attachements { get; set; } = [];
-
         public bool Read { get; set; }
 
-
-        public byte[] RawReply { get; set; } = [];
-
-        [JsonIgnore]
-        public MimeMessage? Reply
-        {
-            get
-            {
-                {
-                    if(RawReply.Length == 0) return null;
-                    using var memory = new MemoryStream(RawReply);
-                    return MimeMessage.Load(memory);
-                };
-            }
-        }
-
-        public bool Replied => RawReply != null 
-            && RawReply.Length > 0;
+        public string? ReplySubject { get; set; }
+        public string? ReplyText { get; set; }
+        public string? ReplyHtml { get; set; }
+        public string? ReplyHtmlDecoded => Replied && ReplyHtml != null
+            ? System.Text.Encoding.Default.GetString(Convert.FromBase64String(ReplyHtml))
+            : string.Empty;
+        
+        public bool Replied => !string.IsNullOrWhiteSpace(ReplySubject)
+            && (!string.IsNullOrWhiteSpace(ReplyHtml)
+            ||  !string.IsNullOrWhiteSpace(ReplyText));
 
         public Message()
         {
@@ -66,12 +63,15 @@ namespace websmtp
                 ?? new List<string>(0);
 
             From = string.Join(',', allFrom);
-            //Sender = _mimeMessage.Sender?.Address ?? From;
-
+            FromName = _mimeMessage.From?.GetName() ?? throw new Exception("");
+            FromAddress = _mimeMessage.From?.GetAddress() ?? throw new Exception("");
+            
             var allTo = _mimeMessage.To?.Select(f => f.ToString()).ToList()
                 ?? new List<string>(0);
 
             To = string.Join(',', allTo);
+            ToName = _mimeMessage.To?.GetName() ?? throw new Exception("");
+            ToAddress = _mimeMessage.To?.GetAddress() ?? throw new Exception("");
 
             var textContent = _mimeMessage.GetTextBody(MimeKit.Text.TextFormat.Text);
             TextContent = textContent;
@@ -150,8 +150,8 @@ namespace websmtp
             mimeEntity.WriteTo(wat, tempMemory, true);
             var mimeBytes = tempMemory.ToArray();
             //var mimeBase64 = Convert.ToBase64String(mimeBytes);
-            var phase2Bytes = System.Text.Encoding.Default.GetString(mimeBytes);
-            Content = phase2Bytes;
+            var mimeString = System.Text.Encoding.Default.GetString(mimeBytes);
+            Content = mimeString;
         }
 
         public MessageAttachement()

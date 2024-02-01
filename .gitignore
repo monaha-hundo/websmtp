@@ -4,3 +4,6 @@ obj/*
 bin/*
 messages/*
 build/*
+build/
+websmtp/messages/
+websmtp/messages/*

@@ -12,13 +12,15 @@ public class SmtpBackgroundServerService : IHostedService, IDisposable
         _logger = logger;
         _serviceProvider = serviceProvider;
 
+        var hostEnv = _serviceProvider.GetRequiredService<IHostEnvironment>();
+
         var serverToServerOptions = new SmtpServerOptionsBuilder()
             .ServerName("localhost")
-            .Port(25)
+            .Port(hostEnv.IsProduction() ? 25 : 1025)
             .Build();
 
         _smtpServer = new SmtpServer.SmtpServer(serverToServerOptions, _serviceProvider);
-        
+
     }
 
     public Task StartAsync(CancellationToken stoppingToken)

@@ -6,7 +6,7 @@
 }
 
 <div class="">
-    <h3 class="m-3">@Model.Message.Subject</h3>
+    <h3 class="m-3 mt-6">@Model.Message.Subject</h3>
     <div class="border rounded p-3">
         <div style="display: flex; justify-content: space-between">
             <div class="my-1">
@@ -17,7 +17,6 @@
         </div>
         <div style="display: flex; justify-content: space-between">
             <div>
-
                 <span style="font-weight: 900; display: inline-block; min-width: 50px">To:</span>
                 @Model.Message.To
             </div>
@@ -32,15 +31,14 @@
             }
         </div>
 
-        <div class="btn-group mt-2" role="group" aria-label="Basic example">
+        @* <div class="btn-group mt-2" role="group" aria-label="Basic example">
             <button type="button" class="btn btn-secondary"><i class="bi bi-envelope"></i></button>
             <button type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
             <button type="button" class="btn btn-secondary"><i class="bi bi-tag"></i></button>
-        </div>
+        </div> *@
 
         @if (!string.IsNullOrEmpty(Model.Message.HtmlContent))
         {
-
             <iframe id="html-content" class="mt-2" style="width: 100%; "
                 src="/api/messages/@(Model.Message.Id).html"></iframe>
         }
@@ -63,6 +61,17 @@
             </div>
         }
     </div>
+    @if (Model.Message.Replied)
+    {
+        <h3 class="m-3">Automatic AI Reply</h3>
+        <div class="border rounded" style="padding-left: 10px !important; border-left: 10px solid #0b5ed7 !important">
+            <h4>Text</h4>
+            <pre>@Model.Message.ReplyHtml</pre>
+            <h4>HTML</h4>
+            <iframe id="html-content" class="mt-2" style="width: 100%; "
+                src="data:,@Model.Message.ReplyHtmlDecoded"></iframe>
+        </div>
+    }
 </div>
 
 <style>
@@ -75,7 +84,7 @@
     }
 </style>
 
-@section Scripts{
+@section Scripts {
     <script>
         function showHtmlContent(el) {
             var el = document.getElementById("html-content");

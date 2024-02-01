@@ -50,76 +50,94 @@ public class MailAiReplyService : IHostedService, IDisposable
         _logger.LogInformation($"Found {emailsToReplyTo.Count} emails to reply to.");
 
         _working = true;
-        foreach (var email in emailsToReplyTo)
+        try
         {
-            _logger.LogTrace($"Processing email #{email.Id}...");
-            var replyBytes = GenerateAndSendReply(email);
-            emails.MarkAsReplied(email, replyBytes);
+            foreach (var email in emailsToReplyTo)
+            {
+                _logger.LogTrace($"Processing email #{email.Id}...");
+                GenerateAndSendReply(email);
+                emails.SaveMessage(email);
+            }
         }
-        _working = false;
+        finally
+        {
+            _working = false;
+        }
     }
 
-    public byte[] GenerateAndSendReply(Message originalEmail)
+    public void GenerateAndSendReply(Message originalEmail)
     {
         using var ogEmailStream = new MemoryStream(originalEmail.Raw);
         using var ogEmail = MimeMessage.Load(ogEmailStream);
 
         var to = ogEmail.From[0] as MailboxAddress ?? throw new Exception("Invalid 'from' field in OG email.");
         var from = ogEmail.To[0] as MailboxAddress ?? throw new Exception("Invalid 'to' field in OG email."); ;
+        var subject = $"RE: {originalEmail.Subject}";
+        var text = "Let me think about it. (automatic reply by AI)";
 
         using var message = new MimeMessage();
         message.To.Add(to);
         message.From.Add(from);
-        message.Subject = $"RE: {originalEmail.Subject}";
-        message.Body = new TextPart("plain")
-        {
-            @Text = "Let me think about it. (automatic reply by AI)"
-        };
+        message.Subject = subject;
+        message.Body = new TextPart("plain") { @Text = text };
+
+        originalEmail.ReplySubject = subject;
+        originalEmail.ReplyText = text;
 
         _logger.LogDebug($"Mx Lookup for {to.Domain}...");
-        var lookup = new LookupClient();
-        var response = lookup.Query(to.Domain, QueryType.MX);
-        _logger.LogDebug($"Responses: {response.Answers.Count}");
 
-        return SendGeneratedReply(message, response);
+        var lookup = new LookupClient();
+        var response = _hostEnv.IsProduction()
+            ? lookup.Query(to.Domain, QueryType.MX).Answers.Select(anws => (anws as MxRecord).Exchange.ToString()).ToList()
+            : new List<string>(1) { "localhost" };
+
+        _logger.LogDebug($"Responses: {response.Count}");
+
+        SendGeneratedReply(originalEmail, message, response);
     }
 
-    private byte[] SendGeneratedReply(MimeMessage message, IDnsQueryResponse response)
+    private void SendGeneratedReply(Message originalEmail, MimeMessage message, List<string> response)
     {
         var attempt = 0;
-        foreach (MxRecord mxRecord in response.Answers)
+        foreach (var exchangeRecord in response)
         {
             attempt++;
-            var exchange = mxRecord.Exchange.ToString().TrimEnd('.');
-            _logger.LogTrace($"Attempt #{attempt}: '{exchange}'.");
 
             try
             {
                 if (_hostEnv.IsProduction())
                 {
+                    var exchange = exchangeRecord.TrimEnd('.');
+                    _logger.LogTrace($"Attempt #{attempt}: '{exchange}'.");
                     using var client = new SmtpClient();
                     client.Connect(exchange, 25, SecureSocketOptions.StartTls);
                     var result = client.Send(message);
                     _logger.LogDebug($"Attempt #{attempt}: sent through {exchange}.");
                     _logger.LogTrace(result);
                 }
+                else if (_hostEnv.IsDevelopment() && exchangeRecord == "localhost")
+                {
+                    _logger.LogTrace($"Transfering email locally");
+                    using var client = new SmtpClient();
+                    client.Connect("127.0.0.1", 1025, SecureSocketOptions.None);
+                    var result = client.Send(message);
+                }
                 else
                 {
                     _logger.LogDebug($"(development env.) Not sending email but proceeding as if it were.");
                 }
 
-                using var memory = new MemoryStream();
-                message.WriteTo(memory);
-                var bytes = memory.ToArray();
 
-                return bytes;
+                // using var memory = new MemoryStream();
+                // message.WriteTo(memory);
+                // var bytes = memory.ToArray();
+                //return bytes;
             }
             catch (Exception ex)
             {
                 _logger.LogCritical($"Attempt #{attempt} failed: {ex.Message}.");
             }
         }
-        throw new Exception("Could not send generated reply.");
     }
 
     public Task StartAsync(CancellationToken stoppingToken)

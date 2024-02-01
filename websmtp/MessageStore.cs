@@ -63,12 +63,6 @@ public class MessageStore : IMessageStore, IReadableMessageStore
                 .Where(msg => !msg.Replied)
                 .ToList();
     }
-    
-    public void MarkAsReplied(Message msg, byte[] reply)
-    {
-        _messagesDict[msg.Id].RawReply = reply;
-        SaveMessage(msg);
-    }
 
     public int Count(bool onlyNew = false)
     {
@@ -85,7 +79,7 @@ public class MessageStore : IMessageStore, IReadableMessageStore
     public Dictionary<string, List<string>> Mailboxes()
     {
         var mailboxes = _messagesDict.Values
-            .Select(msg => new { Host = msg.To.Split('@')[1], User = msg.To.Split('@')[0] })
+            .Select(msg => new { Host = msg.ToAddress.Split('@')[1], User = msg.ToAddress.Split('@')[0] })
             .GroupBy(msg => msg.Host)
             .ToDictionary(
                 hostGrp => hostGrp.First().Host,
@@ -155,7 +149,7 @@ public class MessageStore : IMessageStore, IReadableMessageStore
             var newGuid = Guid.NewGuid();
             var newMessage = new Message(newGuid, buffer);
             _messagesDict.TryAdd(newGuid, newMessage);
-            _logger.LogInformation($"Saved message id #{newGuid}.");
+            _logger.LogDebug($"Saved message id #{newGuid}.");
             SaveMessage(newMessage);
             return Task.FromResult(SmtpResponse.Ok);
         }
@@ -167,7 +161,7 @@ public class MessageStore : IMessageStore, IReadableMessageStore
         }
     }
 
-    private void SaveMessage(Message message)
+    public void SaveMessage(Message message)
     {
         var json = JsonConvert.SerializeObject(message);
         var path = Path.Combine("messages", message.Id.ToString("N"));

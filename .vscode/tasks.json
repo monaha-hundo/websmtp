@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/websmtp.sln",
+                "${workspaceFolder}/websmtp/websmtp.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/websmtp.sln",
+                "${workspaceFolder}/websmtp/websmtp.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/websmtp.sln"
+                "${workspaceFolder}/websmtp/websmtp.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

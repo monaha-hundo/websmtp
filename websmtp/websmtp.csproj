@@ -17,6 +17,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SmtpServer" Version="9.0.3" />
     <PackageReference Include="System.Memory.Data" Version="8.0.0" />
+    <PackageReference Include="System.Text.Encoding" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
