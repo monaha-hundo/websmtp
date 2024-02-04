@@ -18,24 +18,27 @@ body {
   min-height: 100%;
 }
 
-table td{
+table td {
   vertical-align: middle;
 }
 
-.sidebar{
+.sidebar {
   flex: 0 0 220px;
-  padding: 0 0.75em ;
+  padding: 0 0.75em;
 }
-table.table tbody tr.unread td{
+
+table.table tbody tr.unread td {
   font-weight: bolder;
   color: azure;
   position: relative;
-} 
+}
+
 table.table tbody tr.unread td * {
   position: relative;
-} 
+}
+
 table.table tbody tr.unread td::before {
-  
+
   content: ' ';
   position: absolute;
   top: 0;
@@ -44,4 +47,11 @@ table.table tbody tr.unread td::before {
   right: 0;
   background-color: #0b5bd3a1;
   z-index: 0;
-} 
+}
+
+.login-card {
+  margin: auto;
+  width: 100%;
+  max-width: 300px;
+  align-self: center;
+}

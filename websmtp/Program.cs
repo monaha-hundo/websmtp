@@ -4,13 +4,21 @@ using websmtp;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddAuthentication().AddCookie(otps => {
+    otps.LoginPath = "/login";
+});
+builder.Services.AddAuthorization();
 builder.Services.AddRazorPages();
 builder.Services.AddSingleton<IMessageStore, MessageStore>();
 builder.Services.AddTransient<IReadableMessageStore, MessageStore>();
 builder.Services.AddHostedService<SmtpBackgroundServerService>();
-builder.Services.AddHostedService<MailAiReplyService>();
+//builder.Services.AddHostedService<MailAiReplyService>();
 
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {

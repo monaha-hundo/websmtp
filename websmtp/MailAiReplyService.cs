@@ -88,12 +88,20 @@ public class MailAiReplyService : IHostedService, IDisposable
 
         var lookup = new LookupClient();
         var response = _hostEnv.IsProduction()
-            ? lookup.Query(to.Domain, QueryType.MX).Answers.Select(anws => (anws as MxRecord).Exchange.ToString()).ToList()
+            ? LookUpEmailMxRecords(to, lookup)
             : new List<string>(1) { "localhost" };
 
         _logger.LogDebug($"Responses: {response.Count}");
 
         SendGeneratedReply(originalEmail, message, response);
+    }
+
+    private static List<string> LookUpEmailMxRecords(MailboxAddress to, LookupClient lookup)
+    {
+        return lookup.Query(to.Domain, QueryType.MX).Answers
+        .Select(anws => anws as MxRecord ?? throw new Exception("Answer was not an MX Record..."))
+        .Select(anws => anws.Exchange.ToString())
+        .ToList();
     }
 
     private void SendGeneratedReply(Message originalEmail, MimeMessage message, List<string> response)
