@@ -35,9 +35,6 @@ namespace websmtp
         public string? ReplySubject { get; set; }
         public string? ReplyText { get; set; }
         public string? ReplyHtml { get; set; }
-        public string? ReplyHtmlDecoded => Replied && ReplyHtml != null
-            ? System.Text.Encoding.Default.GetString(Convert.FromBase64String(ReplyHtml))
-            : string.Empty;
         
         public bool Replied => !string.IsNullOrWhiteSpace(ReplySubject)
             && (!string.IsNullOrWhiteSpace(ReplyHtml)

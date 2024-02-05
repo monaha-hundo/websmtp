@@ -24,7 +24,7 @@ table td {
 
 .sidebar {
   flex: 0 0 220px;
-  padding: 0 0.75em;
+  padding: 0 0.75rem;
 }
 
 table.table tbody tr.unread td {
@@ -54,4 +54,17 @@ table.table tbody tr.unread td::before {
   width: 100%;
   max-width: 300px;
   align-self: center;
+}
+
+.btn-transparent-primary{
+  background: transparent;
+}
+
+.btn-transparent-primary:hover{
+  background: #0b5bd3a1;
+}
+.btn-transparent-primary:active,
+.btn-transparent-primary:focus
+{
+  background: #0d6efd;
 }

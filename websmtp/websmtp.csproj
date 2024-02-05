@@ -10,6 +10,12 @@
     <!-- <SelfContained>true</SelfContained> -->
   </PropertyGroup>
 
+  <!-- <ItemGroup>
+    <Content Include="wwwroot\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup> -->
+
   <ItemGroup>
     <PackageReference Include="DnsClient" Version="1.7.0" />
     <PackageReference Include="MailKit" Version="4.3.0" />

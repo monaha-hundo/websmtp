@@ -12,7 +12,17 @@
                 </div>
 
                 <form method="post">
-                    <p class="text-center">Please login</p>
+
+                    @Html.AntiForgeryToken()
+
+                    <p class="text-center" >Please login
+                    </p>
+
+                    @if(Model.Error){
+                        <p class="text-center my-4 red" style="color: red;">
+                            <strong>Could not login.</strong>
+                        </p>
+                    }
 
                     <div class="form-outline mb-4">
                         <input type="text" id="username" name="username" class="form-control text-center"

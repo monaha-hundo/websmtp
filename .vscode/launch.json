@@ -46,11 +46,17 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/tests/bin/Debug/net8.0/tests.dll",
+            "program": "${workspaceFolder}/websmtp/bin/Debug/net8.0/websmtp.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/tests",
+            "cwd": "${workspaceFolder}/websmtp/",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
-            "console": "internalConsole",
+            "console": "externalTerminal",
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            },
             "stopAtEntry": false
         }
     ]

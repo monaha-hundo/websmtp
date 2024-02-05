@@ -16,7 +16,7 @@
             <div class="my-1">@Model.Message.ReceivedOn.Date.ToLongDateString()</div>
         </div>
         <div style="display: flex; justify-content: space-between">
-            <div>
+            <div class="my-1">
                 <span style="font-weight: 900; display: inline-block; min-width: 50px">To:</span>
                 @Model.Message.To
             </div>
@@ -31,10 +31,17 @@
             }
         </div>
 
+        <div style="display: flex; justify-content: space-between">
+            <div class="my-1">
+                <span style="font-weight: bold; display: inline-block; min-width: 50px">Internal ID:</span>
+                @Model.Message.Id.ToString("N")
+            </div>
+        </div>
+
         @* <div class="btn-group mt-2" role="group" aria-label="Basic example">
-            <button type="button" class="btn btn-secondary"><i class="bi bi-envelope"></i></button>
-            <button type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
-            <button type="button" class="btn btn-secondary"><i class="bi bi-tag"></i></button>
+        <button type="button" class="btn btn-secondary"><i class="bi bi-envelope"></i></button>
+        <button type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
+        <button type="button" class="btn btn-secondary"><i class="bi bi-tag"></i></button>
         </div> *@
 
         @if (!string.IsNullOrEmpty(Model.Message.HtmlContent))
@@ -64,12 +71,16 @@
     @if (Model.Message.Replied)
     {
         <h3 class="m-3">Automatic AI Reply</h3>
-        <div class="border rounded" style="padding-left: 10px !important; border-left: 10px solid #0b5ed7 !important">
-            <h4>Text</h4>
-            <pre>@Model.Message.ReplyHtml</pre>
-            <h4>HTML</h4>
-            <iframe id="html-content" class="mt-2" style="width: 100%; "
-                src="data:,@Model.Message.ReplyHtmlDecoded"></iframe>
+        <div class="border rounded p-3" style="padding-left: 10px !important; border-left: 10px solid #0b5ed7 !important">
+            @if (!string.IsNullOrWhiteSpace(Model.Message.ReplyText))
+            {
+                <pre class="p-0 m-0">@Model.Message.ReplyText</pre>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Message.ReplyHtml))
+            {
+                <iframe id="html-content" class="mt-2" style="width: 100%; "
+                    src="data:text/html;base64,@Model.Message.ReplyHtml"></iframe>
+            }
         </div>
     }
 </div>
