@@ -25,10 +25,7 @@ public class IndexModel : PageModel
     new public string? User { get; set; }
 
     [FromQuery]
-    public bool OnlyNew { get; set; } = false;
-
-    [FromQuery]
-    public int PerPage { get; set; } = 5000;
+    public int PerPage { get; set; } = 100;
 
     [FromQuery]
     public int CurrentPage { get; set; } = 1;
@@ -52,18 +49,12 @@ public class IndexModel : PageModel
 
         Mailboxes = _messageStore.Mailboxes();
 
-        Messages = _messageStore.Latest(OnlyNew, CurrentPage, PerPage, Host, User);
+        Messages = _messageStore.Latest(CurrentPage, PerPage, Host, User);
 
-        New = _messageStore.Count(onlyNew: true);
-        Total = _messageStore.Count(onlyNew: false);
-        if (OnlyNew == true)
-        {
-            Pages = Convert.ToInt32(Math.Ceiling(Decimal.Divide(New, PerPage)));
-        }
-        else
-        {
-            Pages = Convert.ToInt32(Math.Ceiling(Decimal.Divide(Total, PerPage)));
-        }
+        New = _messageStore.Count(onlyNew: true, Host, User);
+        Total = _messageStore.Count(false);
+        Pages = Convert.ToInt32(Math.Ceiling(Decimal.Divide(Total, PerPage)));
+        
         if (Pages == 0) Pages = 1;
 
         return Page();
