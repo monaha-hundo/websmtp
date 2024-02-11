@@ -56,11 +56,11 @@ table.table tbody tr.unread td::before {
   align-self: center;
 }
 
-.btn-transparent-primary{
+.btn-transparent-primary {
   background: transparent;
 }
 
-.btn-transparent-primary:hover{
+.btn-transparent-primary:hover {
   background: #0b5bd3a1;
 }
 .btn-transparent-primary:active,

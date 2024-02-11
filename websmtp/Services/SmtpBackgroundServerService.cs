@@ -1,12 +1,12 @@
 using SmtpServer;
 
-public class SmtpBackgroundServerService : IHostedService, IDisposable
+public class SmtpServerService : IHostedService, IDisposable
 {
-    private readonly ILogger<SmtpBackgroundServerService> _logger;
+    private readonly ILogger<SmtpServerService> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly SmtpServer.SmtpServer _smtpServer;
 
-    public SmtpBackgroundServerService(ILogger<SmtpBackgroundServerService> logger,
+    public SmtpServerService(ILogger<SmtpServerService> logger,
         IServiceProvider serviceProvider)
     {
         _logger = logger;

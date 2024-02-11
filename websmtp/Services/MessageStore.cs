@@ -11,7 +11,6 @@ using websmtp;
 public class MessageStore : IMessageStore, IReadableMessageStore
 {
     private static ConcurrentDictionary<Guid, Message> _messagesDict = new ConcurrentDictionary<Guid, Message>();
-
     private readonly ILogger<MessageStore> _logger;
     public MessageStore(ILogger<MessageStore> logger)
     {
@@ -24,27 +23,11 @@ public class MessageStore : IMessageStore, IReadableMessageStore
     }
 
     public List<Message> Latest(
-        bool onlyNew = true,
         int page = 1,
         int perPage = 5,
         string? filterByHost = null,
         string? filterByUser = null)
     {
-
-        if (onlyNew)
-        {
-            return _messagesDict.Values
-                .OrderByDescending(msg => msg.ReceivedOn)
-                .Where(msg => msg.Read == !onlyNew)
-                .Where(msg => string.IsNullOrWhiteSpace(filterByHost)
-                    ? true : msg.To.Contains(filterByHost))
-                .Where(msg => string.IsNullOrWhiteSpace(filterByUser)
-                    ? true : msg.To.Contains(filterByUser + '@'))
-                .Skip((page - 1) * perPage)
-                .Take(perPage)
-                .ToList();
-        }
-
         return _messagesDict.Values
             .OrderByDescending(msg => msg.ReceivedOn)
                 .Where(msg => string.IsNullOrWhiteSpace(filterByHost)
@@ -56,12 +39,30 @@ public class MessageStore : IMessageStore, IReadableMessageStore
             .ToList();
     }
 
+
     public List<Message> UnReplied()
     {
         return _messagesDict.Values
                 .OrderBy(msg => msg.ReceivedOn)
                 .Where(msg => !msg.Replied)
                 .ToList();
+    }
+    
+    public int Count(
+        bool onlyNew,
+        string? filterByHost,
+        string? filterByUser)
+    {
+        var query = _messagesDict.Values.AsQueryable();
+        if(onlyNew)
+        {
+            query = query.Where(msg => msg.Read == false);
+        }
+        return query.Count(msg =>
+                (string.IsNullOrWhiteSpace(filterByHost)
+                ? true : msg.To.Contains(filterByHost))
+                && (string.IsNullOrWhiteSpace(filterByUser)
+                ? true : msg.To.Contains(filterByUser + '@')));
     }
 
     public int Count(bool onlyNew = false)
@@ -106,14 +107,15 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 
     public Task LoadMessages()
     {
-        _logger.LogInformation("Loading previously received messages.");
+        _logger.LogInformation("Listing previously received messages files.");
         var messageFiles = Directory.GetFiles("messages");
         _logger.LogInformation($"Found {messageFiles.Length} messages in store.");
+
         var done = 0;
         var sw = new System.Diagnostics.Stopwatch();
         sw.Restart();
-        messageFiles
-            .AsParallel()
+
+        messageFiles.AsParallel()
             .ForAll(msgFile =>
             {
                 try
@@ -132,8 +134,11 @@ public class MessageStore : IMessageStore, IReadableMessageStore
                     throw;
                 }
             });
+
         sw.Stop();
-        _logger.LogInformation($"Loaded {done} off {messageFiles.Length} messages from store in {sw.ElapsedMilliseconds/1000}s.");
+
+        _logger.LogInformation($"Loaded {done} off {messageFiles.Length} messages from store in {sw.ElapsedMilliseconds / 1000}s.");
+
         return Task.CompletedTask;
     }
 
