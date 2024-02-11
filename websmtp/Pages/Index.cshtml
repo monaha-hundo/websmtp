@@ -11,32 +11,32 @@
             <i class="bi bi-fire"></i>
             websmtp
         </div>
-        <div class="my-2">
+        <div class="my-2 text-muted">
             <div>
-                New messages: @(Model.New)
+                <small>Messages: @(Model.Total)</small>
             </div>
             <div>
-                Total: @(Model.Total)
+                <small>New: @(Model.New)</small>
             </div>
             <div>
-                Mailboxes: @(Model.Mailboxes.Count)
+                <small>Mailboxes: @(Model.Mailboxes.Count)</small>
             </div>
         </div>
     </section>
     <nav class="nav nav-pills d-flex flex-column">
         <li class="nav-item mb-2 d-flex">
-            <a class="btn d-inline-flex align-items-center rounded border-0 " style="flex: 1 1 auto;"
+            <a class="btn d-inline-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
                 id="btn-mailbox-all"
                 href="/">
                 <i class="bi bi-inboxes"></i>
-                <span class="ms-2">All Mail (@(Model.New)/@(Model.Total))</span>
+                <span class="ms-2">All Mail</span>
             </a>
         </li>
         @foreach (var mailbox in Model.Mailboxes)
         {
             <li class="nav-item  d-flex flex-column">
                 <button id="btn-mailbox-@mailbox.Key.Replace('.','-')"
-                    class="mb-2 btn d-inline-flex align-items-center rounded border-0 collapsed"
+                    class="mb-2 btn d-inline-flex align-items-center rounded border-0 collapsed btn-transparent-primary"
                     data-bs-toggle="collapse" data-bs-target="#mailbox-@mailbox.Key.Replace('.','-')" aria-expanded="true"
                     style="flex: 1 1 auto;">
                     <i class="bi bi-inbox"></i>
@@ -47,7 +47,7 @@
                         <li class="ms-16 d-flex" style="align-items: center;">
                             <i class="bi bi-arrow-return-right ms-1 me-2"></i>
                             <a id="mailbox-@mailbox.Key.Replace('.','-')-user-all"
-                                class="mb-2 btn d-inline-flex align-items-center rounded border-0 collapsed"
+                                class="mb-2 btn d-inline-flex align-items-center rounded border-0 collapsed btn-transparent-primary"
                                 href="/?host=@mailbox.Key" style="flex: 1 1 auto;">
                                 <i class="bi bi-people"></i>
                                 <span class="ms-2">All Users</span>
@@ -57,7 +57,7 @@
                         {
                             <li class="ms-16 d-flex" style="align-items: center;">
                                 <i class="bi bi-arrow-return-right ms-1 me-2"></i>
-                                <a class="mb-2 btn d-inline-flex align-items-center rounded border-0 collapsed"
+                                <a class="mb-2 btn d-inline-flex align-items-center rounded border-0 collapsed btn-transparent-primary"
                                     id="mailbox-@mailbox.Key.Replace('.','-')-user-@recipient"
                                     href="/?user=@recipient&host=@mailbox.Key" style="flex: 1 1 auto;">
                                     <i class="bi bi-person"></i>
@@ -172,33 +172,39 @@
 
 @section Scripts {
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const currentHost = params.get('host') != null ? params.get('host').replace('.','-') : '';
-        const currentUser = params.get('user') != null ? params.get('user') : '';;
+        function initNavbar(){
+            const params = new URLSearchParams(window.location.search);
+            const currentHost = params.get('host') != null ? params.get('host').replace('.','-') : '';
+            const currentUser = params.get('user') != null ? params.get('user') : '';;
 
-        if(currentHost == ''){
-            const selector = `#btn-mailbox-all`;
-            const mailboxEl = document.querySelector(selector);
-            console.log(selector, mailboxEl)
-            mailboxEl.classList.add('btn-primary');
-        }
-        else{
-            const selector = `#btn-mailbox-${currentHost}`;
-            const mailboxEl = document.querySelector(selector);
-            const mailboxListEl = document.querySelector(`#mailbox-${currentHost}`);
-            mailboxEl.classList.add('btn-primary');
-            mailboxListEl.classList.remove('collapse');
-        }
-        if(currentHost != '' && currentUser == ''){
-            const mailboxListEl = document.querySelector(`#mailbox-${currentHost}`);
-            const allUserEl = document.querySelector(`#mailbox-${currentHost}-user-all`);
-            allUserEl.classList.add('btn-primary');
-        }
-        else if(currentHost != ''){
-            const mailboxListEl = document.querySelector(`#mailbox-${currentHost}`);
-            console.log(`#mailbox-${currentHost}-user-${currentUser}`);
-            const userEl = document.querySelector(`#mailbox-${currentHost}-user-${currentUser}`);
-            userEl.classList.add('btn-primary');
+            if(currentHost == ''){
+                const selector = `#btn-mailbox-all`;
+                const mailboxEl = document.querySelector(selector);
+                console.log(selector, mailboxEl)
+                mailboxEl.classList.remove('btn-transparent-primary');
+                mailboxEl.classList.add('btn-primary');
+            }
+            else{
+                const selector = `#btn-mailbox-${currentHost}`;
+                const mailboxEl = document.querySelector(selector);
+                const mailboxListEl = document.querySelector(`#mailbox-${currentHost}`);
+                mailboxEl.classList.remove('btn-transparent-primary');
+                mailboxEl.classList.add('btn-primary');
+                mailboxListEl.classList.remove('collapse');
+            }
+            if(currentHost != '' && currentUser == ''){
+                const mailboxListEl = document.querySelector(`#mailbox-${currentHost}`);
+                const allUserEl = document.querySelector(`#mailbox-${currentHost}-user-all`);
+                allUserEl.classList.remove('btn-transparent-primary');
+                allUserEl.classList.add('btn-primary');
+            }
+            else if(currentHost != ''){
+                const mailboxListEl = document.querySelector(`#mailbox-${currentHost}`);
+                console.log(`#mailbox-${currentHost}-user-${currentUser}`);
+                const userEl = document.querySelector(`#mailbox-${currentHost}-user-${currentUser}`);
+                userEl.classList.remove('btn-transparent-primary');
+                userEl.classList.add('btn-primary');
+            }
         }
 
         function openwMsgView(msgId) {
@@ -223,8 +229,6 @@
             const success = result == "200";
             console.log(success);
             if (success) {
-        @* const checkMarkEl = document.getElementById('msg-read-mark-' + msgId);
-                checkMarkEl.innerHTML = '<i class="bi bi-bookmark-check"></i>'; *@
                         const selector = `tr[msg-id='${msgId}']`;
                 console.log(selector);
                 const checkMarkEl = document.querySelector(selector);
@@ -233,5 +237,6 @@
         }
 
         window.addEventListener('message', handleMessage, false);
+        initNavbar();
     </script>
 }

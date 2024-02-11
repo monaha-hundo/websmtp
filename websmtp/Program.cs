@@ -1,11 +1,7 @@
 using websmtp;
 
 // Command line args parsing
-var passGenCmdResult = Startup.CheckArgsForPasswordGenerateCommand(args);
-if (passGenCmdResult != null)
-{
-    return passGenCmdResult.Value;
-}
+Startup.ParseArgs(args);
 
 // Services Setup
 var builder = WebApplication.CreateBuilder(args);

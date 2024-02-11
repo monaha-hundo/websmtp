@@ -6,7 +6,7 @@ namespace websmtp;
 
 public static class Startup
 {
-    public static int? CheckArgsForPasswordGenerateCommand(string[] args)
+    public static int? ParseArgs(string[] args)
     {
         var shouldHashPassword = args.Any(arg => arg.StartsWith("--generate-password"));
         if (shouldHashPassword)
@@ -16,6 +16,7 @@ public static class Startup
             if (string.IsNullOrWhiteSpace(passwordToHash) || passwordToHash.Length == 0)
             {
                 Console.WriteLine("Invalid password.");
+                Environment.Exit(-1);
                 return -1;
             }
             var hasher = new PasswordHasher();
@@ -30,6 +31,7 @@ public static class Startup
                     Password = hash
                 }
             }, Formatting.Indented));
+            Environment.Exit(0);
             return 0;
         }
 
