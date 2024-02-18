@@ -1,22 +1,10 @@
-using System.Collections.Concurrent;
-using MimeKit;
 using websmtp;
+using websmtp.Database.Models;
 
 public interface IReadableMessageStore
 {
-    public List<Message> All();
-    public List<Message> Latest(int page = 1, int perPage = 5, string? filterByHost = null, string? filterByUser = null);
-    public List<Message> UnReplied();
-    public Dictionary<string,List<string>> Mailboxes();
+    public ListResult Latest(int page , int perPage, bool onlyNew, string filter);
     public Message Single(Guid msgId);
     public void MarkAsRead(Guid msgId);
-    public void SaveMessage(Message message);
-    public int Count(
-        bool onlyNew,
-        string? filterByHost,
-        string? filterByUser);
-
-    public int Count(bool onlyNew = false);
-
-    public Task LoadMessages();
+    public long Count(bool onlyNew);
 }

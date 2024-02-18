@@ -1,9 +1,8 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "websmtp";
 }
-
 
 <nav class="sidebar">
     <section>
@@ -13,13 +12,10 @@
         </div>
         <div class="my-2 text-muted">
             <div>
-                <small>Messages: @(Model.Total)</small>
+                <small>Messages: @(Model.Listing.Total)</small>
             </div>
             <div>
-                <small>New: @(Model.New)</small>
-            </div>
-            <div>
-                <small>Mailboxes: @(Model.Mailboxes.Count)</small>
+                <small>New: @(Model.Listing.New)</small>
             </div>
         </div>
     </section>
@@ -27,48 +23,17 @@
         <li class="nav-item mb-2 d-flex">
             <a class="btn d-inline-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
                 id="btn-mailbox-all"
-                href="/">
+                href="/?onlyNew=true">
+                <i class="bi bi-inboxes"></i>
+                <span class="ms-2">Inbox</span>
+            </a>
+            <a class="btn d-inline-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
+                id="btn-mailbox-all"
+                href="/?onlyNew=false">
                 <i class="bi bi-inboxes"></i>
                 <span class="ms-2">All Mail</span>
             </a>
         </li>
-        @foreach (var mailbox in Model.Mailboxes)
-        {
-            <li class="nav-item  d-flex flex-column">
-                <button id="btn-mailbox-@mailbox.Key.Replace('.','-')"
-                    class="mb-2 btn d-inline-flex align-items-center rounded border-0 collapsed btn-transparent-primary"
-                    data-bs-toggle="collapse" data-bs-target="#mailbox-@mailbox.Key.Replace('.','-')" aria-expanded="true"
-                    style="flex: 1 1 auto;">
-                    <i class="bi bi-inbox"></i>
-                    <span class="ms-2">@mailbox.Key</span>
-                </button>
-                <div class="collapse" id="mailbox-@mailbox.Key.Replace('.','-')">
-                    <ul class="btn-toggle-nav list-unstyled fw-normal small mb-0">
-                        <li class="ms-16 d-flex" style="align-items: center;">
-                            <i class="bi bi-arrow-return-right ms-1 me-2"></i>
-                            <a id="mailbox-@mailbox.Key.Replace('.','-')-user-all"
-                                class="mb-2 btn d-inline-flex align-items-center rounded border-0 collapsed btn-transparent-primary"
-                                href="/?host=@mailbox.Key" style="flex: 1 1 auto;">
-                                <i class="bi bi-people"></i>
-                                <span class="ms-2">All Users</span>
-                            </a>
-                        </li>
-                        @foreach (var recipient in mailbox.Value)
-                        {
-                            <li class="ms-16 d-flex" style="align-items: center;">
-                                <i class="bi bi-arrow-return-right ms-1 me-2"></i>
-                                <a class="mb-2 btn d-inline-flex align-items-center rounded border-0 collapsed btn-transparent-primary"
-                                    id="mailbox-@mailbox.Key.Replace('.','-')-user-@recipient"
-                                    href="/?user=@recipient&host=@mailbox.Key" style="flex: 1 1 auto;">
-                                    <i class="bi bi-person"></i>
-                                    <span class="ms-2">@recipient</span>
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </li>
-        }
     </nav>
 </nav>
 
@@ -118,17 +83,17 @@
         <div class="table-responsive" style="max-heigh: 30vh; ">
             <table class="table table-fixed table-dark table-hover table-striped table-sm m-0 align-middle"
                 style="position: relative; table-layout: fixed;">
-                @if (Model.Messages.Count == 0)
+                @if (Model.Listing.Messages.Count == 0)
                 {
                     <tr>
                         <th colspan="7">No messages... yet!</th>
                     </tr>
                 }
-                @for (int msgId = 0; msgId < Model.Messages.Count; msgId++)
+                @for (int msgId = 0; msgId < Model.Listing.Messages.Count; msgId++)
                 {
-                    var message = Model.Messages[msgId];
+                    var message = Model.Listing.Messages[msgId];
                     <tr onclick="openwMsgView('@message.Id')" style="cursor: pointer;"
-                        class="@(message.Read ? "" : "unread")" msg-id="@message.Id">
+                        class='@(message.Read ? "" : "unread")' msg-id="@message.Id">
                         <td class="text-nowrap text-truncate" style="width: 130px;">
                             @if (message.ReceivedOn.Date == DateTime.UtcNow.Date)
                             {

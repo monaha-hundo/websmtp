@@ -12,9 +12,6 @@ var app = builder.Build();
 Startup.ConfigureAppPipeline(app);
 Startup.MapEndpoints(app);
 
-// Initialisation Tasks
-await Task.Run(async () => await Startup.InitMessageStore(app));
-
 // Start listening for requests
 app.Run();
 

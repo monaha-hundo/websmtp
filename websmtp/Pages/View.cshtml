@@ -68,21 +68,6 @@
             </div>
         }
     </div>
-    @if (Model.Message.Replied)
-    {
-        <h3 class="m-3">Automatic AI Reply</h3>
-        <div class="border rounded p-3" style="padding-left: 10px !important; border-left: 10px solid #0b5ed7 !important">
-            @if (!string.IsNullOrWhiteSpace(Model.Message.ReplyText))
-            {
-                <pre class="p-0 m-0">@Model.Message.ReplyText</pre>
-            }
-            @if (!string.IsNullOrWhiteSpace(Model.Message.ReplyHtml))
-            {
-                <iframe id="html-content" class="mt-2" style="width: 100%; "
-                    src="data:text/html;base64,@Model.Message.ReplyHtml"></iframe>
-            }
-        </div>
-    }
 </div>
 
 <style>

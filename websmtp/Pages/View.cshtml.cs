@@ -1,9 +1,7 @@
-using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using MimeKit;
-using SmtpServer.Storage;
+using websmtp.Database.Models;
 
 namespace websmtp.Pages;
 

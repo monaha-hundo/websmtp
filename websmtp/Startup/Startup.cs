@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SmtpServer.Storage;
+using websmtp.Database;
 
 namespace websmtp;
 
@@ -53,6 +55,9 @@ public static class Startup
 
     public static void ConfigureServices(IServiceCollection services)
     {
+        services.AddDbContext<DataContext>(
+            options => options.UseSqlite("Data Source=websmtp.db"));
+
         services.AddAntiforgery();
         services.AddHttpContextAccessor();
         services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
@@ -60,7 +65,7 @@ public static class Startup
         services.AddAuthorization();
         services.AddRazorPages();
         services.AddTransient<SendMailService>();
-        services.AddSingleton<IMessageStore, MessageStore>();
+        services.AddTransient<IMessageStore, MessageStore>();
         services.AddTransient<IReadableMessageStore, MessageStore>();
         services.AddHostedService<SmtpServerService>();
     }
@@ -98,17 +103,5 @@ public static class Startup
     {
         app.MapGet("/api/messages/{msgId}/attachements/{filename}", MessagesEndpoints.GetMessageAttachement).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}.html", MessagesEndpoints.GetMessage).RequireAuthorization();
-    }
-
-    public static async Task InitMessageStore(WebApplication app)
-    {
-        var scope = app.Services.CreateScope();
-        var log = scope.ServiceProvider.GetService<ILogger<WebApplication>>();
-        if (!Directory.Exists("messages"))
-        {
-            Directory.CreateDirectory("messages");
-        }
-        var smtpBgSrv = scope.ServiceProvider.GetRequiredService<IReadableMessageStore>();
-        await smtpBgSrv.LoadMessages();
     }
 }
