@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SmtpServer.Storage;
 using websmtp.Database;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace websmtp;
 
@@ -53,21 +54,24 @@ public static class Startup
         }
     }
 
-    public static void ConfigureServices(IServiceCollection services)
+    public static void ConfigureServices(WebApplicationBuilder builder)
     {
-        services.AddDbContext<DataContext>(
-            options => options.UseSqlite("Data Source=websmtp.db"));
+        var dbServer = builder.Configuration.GetValue<string>("Database:Server");
+        var dbName = builder.Configuration.GetValue<string>("Database:Name");
+        var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
+        var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
+        var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
 
-        services.AddAntiforgery();
-        services.AddHttpContextAccessor();
-        services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
-
-        services.AddAuthorization();
-        services.AddRazorPages();
-        services.AddTransient<SendMailService>();
-        services.AddSingleton<IMessageStore, MessageStore>();
-        services.AddTransient<IReadableMessageStore, MessageStore>();
-        services.AddHostedService<SmtpServerService>();
+        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySQL(cs));
+        builder.Services.AddAntiforgery();
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
+        builder.Services.AddAuthorization();
+        builder.Services.AddRazorPages();
+        builder.Services.AddTransient<SendMailService>();
+        builder.Services.AddSingleton<IMessageStore, MessageStore>();
+        builder.Services.AddTransient<IReadableMessageStore, MessageStore>();
+        builder.Services.AddHostedService<SmtpServerService>();
     }
 
     public static void ConfigureAuthenticationCookie(CookieAuthenticationOptions opts)
@@ -101,6 +105,7 @@ public static class Startup
 
     public static void MapEndpoints(WebApplication app)
     {
+        app.MapPost("/api/messages/{msgId}/mark-as-read/", MessagesEndpoints.MarkAsRead).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}/attachements/{filename}", MessagesEndpoints.GetMessageAttachement).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}.html", MessagesEndpoints.GetMessage).RequireAuthorization();
     }

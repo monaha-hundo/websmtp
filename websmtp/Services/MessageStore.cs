@@ -1,12 +1,8 @@
-using System.Buffers;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using MongoDB.Driver;
-using Newtonsoft.Json;
 using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
+using System.Buffers;
 using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
@@ -14,22 +10,22 @@ using websmtp.Database.Models;
 public class MessageStore : IMessageStore, IReadableMessageStore
 {
     private readonly ILogger<MessageStore> _logger;
-    private readonly IConfiguration _config;
     private readonly IServiceProvider _services;
-    //private readonly DataContext _dataContext;
 
-    public MessageStore(ILogger<MessageStore> logger, IConfiguration config, IServiceProvider services)
+    public MessageStore(ILogger<MessageStore> logger, IServiceProvider services)
     {
         _logger = logger;
-        _config = config;
         _services = services;
-        //_dataContext = dataContext;
     }
 
     public ListResult Latest(int page, int perPage, bool onlyNew, string filter)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+
+        var total = _dataContext.Messages.Count();
+        var newCount = _dataContext.Messages.Count(msg => !msg.Read);
+
         var query = _dataContext.Messages
             .AsNoTracking()
             .AsSplitQuery();
@@ -42,13 +38,12 @@ public class MessageStore : IMessageStore, IReadableMessageStore
         if (!string.IsNullOrWhiteSpace(filter))
         {
             var tokens = filter.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            query = query.Where(msg => tokens.Any(t => msg.To.Contains(t))
-                || tokens.Any(t => msg.From.Contains(t))
-                || tokens.Any(t => msg.Subject.Contains(t)));
+            foreach (var token in tokens)
+            {
+                query = query.Where(msg => msg.Subject.Contains(token) || msg.To.Contains(token) || msg.From.Contains(token));
+            }
         }
 
-        var total = query.Count();
-        var newCount = query.Count(msg => !msg.Read);
         var messages = query.Skip((page - 1) * perPage).Take(perPage).ToList();
 
         return new ListResult
@@ -115,7 +110,6 @@ public class MessageStore : IMessageStore, IReadableMessageStore
         {
             _logger.LogCritical("Could not save incoming message: {0}", ex.Message);
             return Task.FromResult(SmtpResponse.TransactionFailed);
-            throw;
         }
     }
 }

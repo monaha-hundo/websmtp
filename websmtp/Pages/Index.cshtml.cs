@@ -12,6 +12,9 @@ public class IndexModel : PageModel
 
     public ListResult Listing { get; set; } = new ListResult();
 
+    [FromQuery]
+    public bool OnlyNew { get; set; } = false;
+
     public IndexModel(ILogger<IndexModel> logger,
     IReadableMessageStore messageStore)
     {
@@ -20,12 +23,11 @@ public class IndexModel : PageModel
     }
 
     public IActionResult OnGet(
-        [FromQuery] int page,
-        [FromQuery] int perPage,
-        [FromQuery] bool onlyNew,
+        [FromQuery] int page = 1,
+        [FromQuery] int perPage = 25,
         [FromQuery] string filter = "")
     {
-        Listing = _messageStore.Latest(page, perPage, onlyNew, filter);
+        Listing = _messageStore.Latest(page, perPage, OnlyNew, filter);
         return Page();
     }
 }

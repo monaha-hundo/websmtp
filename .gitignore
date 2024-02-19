@@ -8,3 +8,4 @@ build/
 websmtp/messages/
 websmtp/messages/*
 websmtp/websmtp.db
+/.vs

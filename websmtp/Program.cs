@@ -3,10 +3,8 @@ using websmtp;
 Startup.ParseArgs(args);
 
 var builder = WebApplication.CreateBuilder(args);
-
 Startup.InitAppJsonConfig(builder);
-
-Startup.ConfigureServices(builder.Services);
+Startup.ConfigureServices(builder);
 
 var app = builder.Build();
 
