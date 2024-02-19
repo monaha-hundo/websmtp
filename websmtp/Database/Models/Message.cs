@@ -4,7 +4,19 @@ using MimeKit;
 
 namespace websmtp.Database.Models;
 
-public class Message
+public interface IMessage 
+{
+    public Guid Id { get; set; }
+    public DateTimeOffset ReceivedOn { get; set; } 
+    public int Size {get; }
+    public string Subject { get; set; }
+    public string From { get; set; }
+    public string To { get; set; }
+    public int AttachementsCount { get; }
+    public bool Read { get; set; }
+}
+
+public class Message : IMessage
 {
     public Guid Id { get; set; } = Guid.Empty;
     public byte[] Raw { get; set; } = [];
@@ -16,6 +28,7 @@ public class Message
     public string? TextContent { get; set; }
     public string? HtmlContent { get; set; }
     public List<MessageAttachement> Attachements { get; set; } = [];
+    public int AttachementsCount => Attachements?.Count ?? 0;
     public bool Read { get; set; }
 
     public Message()
@@ -109,6 +122,31 @@ public class Message
 
 }
 
+
+public class MessageInfo : IMessage
+{
+    public Guid Id { get; set; }
+    public DateTimeOffset ReceivedOn { get; set; } 
+    public int Size {get; }
+    public string Subject { get; set; }
+    public string From { get; set; }
+    public string To { get; set; }
+    public int AttachementsCount { get; }
+    public bool Read { get; set; }
+    public MessageInfo(){}
+    public MessageInfo(Message message)
+    {
+        Id = message.Id;
+        ReceivedOn = message.ReceivedOn;
+        Size = message.Size;
+        Subject = message.Subject;
+        From = message.From;
+        To = message.To;
+        AttachementsCount = message.AttachementsCount;
+        Read = message.Read;
+    }
+}
+
 public class MessageAttachement
 {
     public Guid Id { get; set; }
@@ -123,7 +161,7 @@ public class MessageAttachement
         Filename = mimeEntity.ContentType.Name
             ?? mimeEntity.ContentDisposition.FileName
             ?? mimeEntity.ContentId;
-        ContentId = mimeEntity.ContentId;
+        ContentId = mimeEntity?.ContentId ?? "";
         using var tempMemory = new MemoryStream();
         var wat = new FormatOptions();
         mimeEntity.WriteTo(wat, tempMemory, true);

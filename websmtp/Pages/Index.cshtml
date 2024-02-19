@@ -137,41 +137,6 @@
 
 @section Scripts {
     <script>
-        function initNavbar(){
-            const params = new URLSearchParams(window.location.search);
-            const currentHost = params.get('host') != null ? params.get('host').replace('.','-') : '';
-            const currentUser = params.get('user') != null ? params.get('user') : '';;
-
-            if(currentHost == ''){
-                const selector = `#btn-mailbox-all`;
-                const mailboxEl = document.querySelector(selector);
-                console.log(selector, mailboxEl)
-                mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-primary');
-            }
-            else{
-                const selector = `#btn-mailbox-${currentHost}`;
-                const mailboxEl = document.querySelector(selector);
-                const mailboxListEl = document.querySelector(`#mailbox-${currentHost}`);
-                mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-primary');
-                mailboxListEl.classList.remove('collapse');
-            }
-            if(currentHost != '' && currentUser == ''){
-                const mailboxListEl = document.querySelector(`#mailbox-${currentHost}`);
-                const allUserEl = document.querySelector(`#mailbox-${currentHost}-user-all`);
-                allUserEl.classList.remove('btn-transparent-primary');
-                allUserEl.classList.add('btn-primary');
-            }
-            else if(currentHost != ''){
-                const mailboxListEl = document.querySelector(`#mailbox-${currentHost}`);
-                console.log(`#mailbox-${currentHost}-user-${currentUser}`);
-                const userEl = document.querySelector(`#mailbox-${currentHost}-user-${currentUser}`);
-                userEl.classList.remove('btn-transparent-primary');
-                userEl.classList.add('btn-primary');
-            }
-        }
-
         function openwMsgView(msgId) {
             let sectionEl = document.querySelector('#msg-view-container');
             sectionEl.style.display = 'block';

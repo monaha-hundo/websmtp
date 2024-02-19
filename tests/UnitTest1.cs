@@ -26,7 +26,7 @@ public class FakeFile : IDisposable
 }
 
 [TestClass]
-public class UnitTest1
+public class NonAutomated
 {
     public TestContext? TestContext { get; set; }
 
@@ -40,7 +40,7 @@ public class UnitTest1
 
     private readonly WebApplicationFactory<Program> _factory;
 
-    public UnitTest1()
+    public NonAutomated()
     {
         _factory = new WebApplicationFactory<Program>();
     }
@@ -51,18 +51,18 @@ public class UnitTest1
         //var client = _factory.CreateDefaultClient();
 
         Console.WriteLine("Generating test data...");
-        var testEmailCount = 1;
+        var testEmailCount = 10;
 
         var emailAddress = new Faker<string>()
             .CustomInstantiator(f => f.Internet.Email())
-            .Generate(1);
+            .Generate(10);
 
         var files = new Faker<FakeFile>()
             .CustomInstantiator((f) => new FakeFile(
                 f.Lorem.Slug() + "." + f.Lorem.Word(),
                 new MemoryStream(System.Text.Encoding.UTF8.GetBytes(f.Lorem.Paragraphs(10)))
             ))
-            .Generate(1);
+            .Generate(10);
 
         try
         {
@@ -81,7 +81,7 @@ public class UnitTest1
 
             // Execution
             Console.WriteLine($"Sending {testEmailCount} emails...");
-            var smtpClient = new SmtpClient("localhost", 1025);
+            var smtpClient = new SmtpClient("127.0.0.1", 1025);
             messages.ForEach(m => smtpClient.Send(m));
         }
         catch (Exception ex)

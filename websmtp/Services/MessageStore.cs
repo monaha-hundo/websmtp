@@ -1,4 +1,5 @@
 using System.Buffers;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
@@ -14,17 +15,21 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 {
     private readonly ILogger<MessageStore> _logger;
     private readonly IConfiguration _config;
-    private readonly DataContext _dataContext;
+    private readonly IServiceProvider _services;
+    //private readonly DataContext _dataContext;
 
-    public MessageStore(ILogger<MessageStore> logger, IConfiguration config, DataContext dataContext)
+    public MessageStore(ILogger<MessageStore> logger, IConfiguration config, IServiceProvider services)
     {
         _logger = logger;
         _config = config;
-        _dataContext = dataContext;
+        _services = services;
+        //_dataContext = dataContext;
     }
 
     public ListResult Latest(int page, int perPage, bool onlyNew, string filter)
     {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         var query = _dataContext.Messages
             .AsNoTracking()
             .AsSplitQuery();
@@ -57,6 +62,8 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 
     public long Count(bool onlyNew)
     {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         if (onlyNew)
         {
             return _dataContext.Messages.Count(msg => !msg.Read);
@@ -67,6 +74,8 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 
     public Message Single(Guid msgId)
     {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         return _dataContext.Messages
             .AsNoTracking()
             .Single(msg => msg.Id == msgId);
@@ -74,6 +83,8 @@ public class MessageStore : IMessageStore, IReadableMessageStore
 
     public void MarkAsRead(Guid msgId)
     {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
         msg.Read = true;
         _dataContext.SaveChanges();
@@ -87,6 +98,9 @@ public class MessageStore : IMessageStore, IReadableMessageStore
     {
         try
         {
+            using var scope = _services.CreateScope();
+            using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+
             _logger.LogInformation("Received message, parsing & saving...");
             var newMessage = new Message(buffer);
 
