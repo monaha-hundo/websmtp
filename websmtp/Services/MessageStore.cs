@@ -44,7 +44,11 @@ public class MessageStore : IMessageStore, IReadableMessageStore
             }
         }
 
-        var messages = query.Skip((page - 1) * perPage).Take(perPage).ToList();
+        var messages = query
+            .OrderByDescending(msg => msg.ReceivedOn)
+            .Skip((page - 1) * perPage)
+            .Take(perPage)
+            .ToList();
 
         return new ListResult
         {
@@ -73,6 +77,7 @@ public class MessageStore : IMessageStore, IReadableMessageStore
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         return _dataContext.Messages
             .AsNoTracking()
+            .Include(msg => msg.Attachements)
             .Single(msg => msg.Id == msgId);
     }
 

@@ -38,25 +38,10 @@
             </div>
         </div>
 
-        @* <div class="btn-group mt-2" role="group" aria-label="Basic example">
-        <button type="button" class="btn btn-secondary"><i class="bi bi-envelope"></i></button>
-        <button type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
-        <button type="button" class="btn btn-secondary"><i class="bi bi-tag"></i></button>
-        </div> *@
-
-        @if (!string.IsNullOrEmpty(Model.Message.HtmlContent))
-        {
-            <iframe id="html-content" class="mt-2" style="width: 100%; "
-                src="/api/messages/@(Model.Message.Id).html"></iframe>
-        }
-        else
-        {
-            <div class="mt-2">@Model.Message.TextContent</div>
-        }
 
         @if (Model.Message.Attachements.Count > 0)
         {
-            <div class="mt-2">
+            <div class="mb-2">
                 @foreach (var att in Model.Message.Attachements)
                 {
                     <a class="badge rounded-pill text-bg-primary p-2"
@@ -67,6 +52,30 @@
                 }
             </div>
         }
+
+        @* <div class="btn-group mb-2" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-secondary"><i class="bi bi-envelope"></i></button>
+        <button type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
+        <button type="button" class="btn btn-secondary"><i class="bi bi-tag"></i></button>
+        </div> *@
+
+        @if (!string.IsNullOrEmpty(Model.Message.HtmlContent))
+        {
+            <div style="font-weight: bold; ">Html Content</div>
+            <iframe id="html-content" class="" style="width: 100%; "
+                src="/api/messages/@(Model.Message.Id).html"></iframe>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.Message.TextContent))
+        {
+            <div style="font-weight: bold; ">Text Content</div>
+            <div class="">@Model.Message.TextContent</div>
+        }
+
+        <div class="mt-2">
+            <div style="font-weight: bold; ">Raw</div>
+            <pre>@System.Text.UTF8Encoding.UTF8.GetString(Model.Message.Raw)</pre>
+        </div>
     </div>
 </div>
 

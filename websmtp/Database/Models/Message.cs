@@ -28,7 +28,7 @@ public class Message : IMessage
     public string? TextContent { get; set; }
     public string? HtmlContent { get; set; }
     public List<MessageAttachement> Attachements { get; set; } = [];
-    public int AttachementsCount => Attachements?.Count ?? 0;
+    public int AttachementsCount { get; set; }
     public bool Read { get; set; }
 
     public Message()
@@ -117,6 +117,8 @@ public class Message : IMessage
                             .Where(a => a.IsAttachment)
                             .Select(a => new MessageAttachement(a))
                             .ToList();
+
+            AttachementsCount = Attachements.Count;
         }
     }
 
@@ -131,7 +133,7 @@ public class MessageInfo : IMessage
     public string Subject { get; set; }
     public string From { get; set; }
     public string To { get; set; }
-    public int AttachementsCount { get; }
+    public int AttachementsCount { get; set; }
     public bool Read { get; set; }
     public MessageInfo(){}
     public MessageInfo(Message message)

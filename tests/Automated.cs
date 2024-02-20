@@ -1,11 +1,13 @@
 using Bogus;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net.Mail;
+using websmtp.Database;
 
 namespace tests;
 
 [TestClass]
-public class NonAutomated
+public class Automated
 {
     public TestContext? TestContext { get; set; }
 
@@ -19,7 +21,7 @@ public class NonAutomated
 
     private readonly WebApplicationFactory<Program> _factory;
 
-    public NonAutomated()
+    public Automated()
     {
         _factory = new WebApplicationFactory<Program>();
     }
@@ -27,7 +29,9 @@ public class NonAutomated
     [TestMethod]
     public void SendEmail()
     {
-        //var client = _factory.CreateDefaultClient();
+        using var client = _factory.CreateDefaultClient();
+        using var scope = _factory.Services.CreateScope();
+        using var db = scope.ServiceProvider.GetRequiredService<DataContext>();
 
         Console.WriteLine("Generating test data...");
         var testEmailCount = 10;
@@ -43,32 +47,37 @@ public class NonAutomated
             ))
             .Generate(10);
 
+        var testRunId = Guid.NewGuid().ToString("N");
+
+        var messages = new Faker<MailMessage>()
+            .CustomInstantiator(f =>
+            {
+                var message = new MailMessage(f.PickRandom(emailAddress), f.PickRandom(emailAddress));
+                var toInsert = f.PickRandom(files);
+                var atts = new List<Attachment>() { new Attachment(toInsert.Content, toInsert.FileName) };
+                atts.ForEach(a => message.Attachments.Add(a));
+                return message;
+            })
+            .RuleFor(m => m.Body, (f) => f.Lorem.Paragraphs(2))
+            .RuleFor(m => m.Subject, (f) => $"Test run_id={testRunId} msg_id={Guid.NewGuid()}")
+            .Generate(testEmailCount);
+
         try
         {
-            var messages = new Faker<MailMessage>()
-                .CustomInstantiator(f =>
-                {
-                    var message = new MailMessage(f.PickRandom(emailAddress), f.PickRandom(emailAddress));
-                    var toInsert = files[0];
-                    var atts = new List<Attachment>() { new Attachment(toInsert.Content, toInsert.FileName) };
-                    atts.ForEach(a => message.Attachments.Add(a));
-                    return message;
-                })
-                .RuleFor(m => m.Body, (f) => f.Lorem.Paragraphs(2))
-                .RuleFor(m => m.Subject, (f) => f.Lorem.Sentence(10, 6))
-                .Generate(testEmailCount);
-
-            // Execution
             Console.WriteLine($"Sending {testEmailCount} emails...");
             var smtpClient = new SmtpClient("127.0.0.1", 1025);
             messages.ForEach(m => smtpClient.Send(m));
+
+            var savedMessageCount = db.Messages.Count(msg => msg.Subject.Contains(testRunId));
+
+            Assert.IsTrue(savedMessageCount == testEmailCount, "Did not find the expected number of saved emails...");
         }
         catch (Exception ex)
         {
             Console.WriteLine("Test failed, exception while sending emails:");
             Console.WriteLine(ex);
-            throw;
-            //Assert.Fail("Test failed, exception while sending emails.");
+            //throw;
+            Assert.Fail("Test failed, exception while sending emails.");
         }
         finally
         {

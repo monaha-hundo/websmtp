@@ -117,7 +117,7 @@
                             <span>@(Math.Round(decimal.Divide(message.Size, 1024m)))k</span>
                         </td>
                         <td class="text-nowrap text-truncate" style="width: 50px">
-                            <span>@(message.Attachements.Count)</span>
+                            <span>@(message.AttachementsCount)</span>
                         </td>
                     </tr>
                 }
@@ -176,12 +176,10 @@
             const response = await fetch(`/api/messages/${msgId}/mark-as-read/`, {
                 method: 'post'
             });
-            const result = await response.text();
-            const success = result == "200";
-            console.log(success);
+            console.log(response);
+            const success = response.status == 200;
             if (success) {
                 const selector = `tr[msg-id='${msgId}']`;
-                console.log(selector);
                 const checkMarkEl = document.querySelector(selector);
                 checkMarkEl.classList.remove('unread');
             }
