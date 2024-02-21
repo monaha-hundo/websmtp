@@ -24,7 +24,7 @@ public class IndexModel : PageModel
 
     public IActionResult OnGet(
         [FromQuery] int page = 1,
-        [FromQuery] int perPage = 25,
+        [FromQuery] int perPage = 1000,
         [FromQuery] string filter = "")
     {
         Listing = _messageStore.Latest(page, perPage, OnlyNew, filter);

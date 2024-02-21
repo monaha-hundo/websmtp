@@ -33,7 +33,7 @@
     </nav>
 </nav>
 
-<div data-bs-theme="dark" style="height:100%; flex: 1 1 auto; display: flex; flex-direction: column; ">
+<div class="content" data-bs-theme="dark" style="">
 
     <form class="d-flex" action="/" method="get">
         <input type="hidden" name="onlyNew" id="onlyNew" value="@Model.OnlyNew.ToString().ToLower()"/>
@@ -49,7 +49,7 @@
     </form>
 
     <section class="" style="
-        height: 300px;
+        flex: 1 0 300px;
         resize: vertical;
         overflow-y: scroll;
         border-left: 1pt solid var(--bs-border-color);
@@ -57,44 +57,39 @@
         border-bottom: 1pt solid var(--bs-border-color);
         border-top-left-radius: var(--bs-border-radius);
         position: relative;">
-        <table class="table table-dark table-hover table-striped table-sm m-0"
-               style="position: sticky; top: 0; z-index: 1; table-layout: fixed;">
-            <thead>
-                <tr>
-                    <th style="width: 130px">
+        <div class="" style="max-heigh: 30vh; ">
+            <div class=""
+                   style="position: relative; ">
+                <header class="d-flex p-1" style="position: sticky; top: 0; background-color: var(--bs-body-bg)">
+                    <div style="flex: 0 0 130px">
                         Received
-                    </th>
-                    <th style="width: calc((100% - 255px)+16%);">
+                    </div>
+                    <div style="flex: 1 1 50%">
                         Subject
-                    </th>
-                    <th style="width: calc((100% - 255px)+16%);">
+                    </div>
+                    <div style="flex: 1 1 20%">
                         From
-                    </th>
-                    <th style="width: calc((100% - 255px)+16%);">
+                    </div>
+                    <div style="flex: 1 1 20%">
                         To
-                    </th>
-                    <th style="width: 75px">Size</th>
-                    <th style="width: 50px">
+                    </div>
+                    <div style="flex: 0 0 75px ">Size</div>
+                    <div style="flex: 0 0 50px">
                         <i class="bi bi-paperclip"></i>
-                    </th>
-                </tr>
-            </thead>
-        </table>
-        <div class="table-responsive" style="max-heigh: 30vh; ">
-            <table class="table table-fixed table-dark table-hover table-striped table-sm m-0 align-middle"
-                   style="position: relative; table-layout: fixed;">
+                    </div>
+                </header>
                 @if (Model.Listing.Messages.Count == 0)
                 {
-                    <tr>
-                        <th colspan="7">No messages... yet!</th>
-                    </tr>
+                    <div class="d-flex">
+                        <div colspan="7">No messages... yet!</div>
+                    </div>
                 }
                 @for (int msgId = 0; msgId < Model.Listing.Messages.Count; msgId++)
                 {
                     var message = Model.Listing.Messages[msgId];
-                    <tr onclick="openwMsgView('@message.Id')" style="cursor: pointer;"
-                        class='@(message.Read ? "" : "unread")' msg-id="@message.Id">
-                        <td class="text-nowrap text-truncate" style="width: 130px;">
+                    <div onclick="openwMsgView('@message.Id')" style="cursor: pointer;"
+                        class='d-flex p-1 @(message.Read ? "" : "unread")' msg-id="@message.Id">
+                        <div class="text-nowrap text-truncate" style="flex: 0 0 130px;">
                             @if (message.ReceivedOn.Date == DateTime.UtcNow.Date)
                             {
                                 <span>@message.ReceivedOn.ToString("HH:mm")</span>
@@ -103,32 +98,36 @@
                             {
                                 <span title="@message.ReceivedOn.ToLocalTime()">@message.ReceivedOn.ToString("yyyy-MM-dd")</span>
                             }
-                        </td>
-                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">
+                        </div>
+                        <div class="text-nowrap text-truncate" style="flex: 1 1 50%">
                             <span>@message.Subject</span>
-                        </td>
-                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">
+                        </div>
+                        <div class="text-nowrap text-truncate" style="flex: 1 1 20%">
                             <span>@message.From</span>
-                        </td>
-                        <td class="text-nowrap text-truncate" style="width: calc((100% - 255px)+16%);">
+                        </div>
+                        <div class="text-nowrap text-truncate" style="flex: 1 1 20%">
                             <span>@message.To</span>
-                        </td>
-                        <td class="text-nowrap text-truncate" style="width: 75px;">
+                        </div>
+                        <div class="text-nowrap text-truncate" style="flex: 0 0 75px;">
                             <span>@(Math.Round(decimal.Divide(message.Size, 1024m)))k</span>
-                        </td>
-                        <td class="text-nowrap text-truncate" style="width: 50px">
+                        </div>
+                        <div class="text-nowrap text-truncate" style="flex: 0 0 50px">
                             <span>@(message.AttachementsCount)</span>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                 }
-            </table>
+            </div>
         </div>
 
     </section>
 
     <section id="msg"
-             style=" flex: 1 1 auto; resize: vertical; overflow-y: auto; border-left: 1pt solid var(--bs-border-color);">
-        <div id="msg-view-container" style="display: none;padding: 1em; padding-top: 0;">
+             style=" flex: 1 1 auto; resize: vertical; overflow-y: auto; border-left: 1pt solid var(--bs-border-color);"
+             class="d-none">
+        <div id="msg-view-container" style="display: none;padding: 1em; padding-top: 0; position: relative;">
+            <button class="btn" onclick="closeMsgView()" style="position: absolute; top: 0; right: 0;">
+                <i class="bi bi-x"></i>
+            </button>
             <iframe id="msg-view" name="msg-view" style="width: 100%; height: 100px;"
                     src="data:text/html;base64,PGh0bWwgc3R5bGU9ImJhY2tncm91bmQ6IHJnYigzMywgMzcsIDQxKTsiPjwvaHRtbD4K"></iframe>
         </div>
@@ -157,15 +156,19 @@
         }
 
         function openwMsgView(msgId) {
-            let sectionEl = document.querySelector('#msg-view-container');
-            sectionEl.style.display = 'block';
+            let sectionEl = document.querySelector('#msg');
+            sectionEl.classList.remove('d-none');
+            let containerEl = document.querySelector('#msg-view-container');
+            containerEl.style.display = 'block';
             let msgViewEl = document.getElementById('msg-view');
             msgViewEl.setAttribute('src', '/View?msgId=' + msgId);
             markMessageAsRead(msgId);
         }
         function closeMsgView() {
-            let sectionEl = document.querySelector('#msg-view-container');
-            sectionEl.style.display = 'none';
+            let sectionEl = document.querySelector('#msg');
+            sectionEl.classList.add('d-none');
+            let containerEl = document.querySelector('#msg-view-container');
+            containerEl.style.display = 'none';
         }
         function handleMessage(event) {
             if (event.origin != window.location.origin) { return; }
@@ -179,7 +182,7 @@
             console.log(response);
             const success = response.status == 200;
             if (success) {
-                const selector = `tr[msg-id='${msgId}']`;
+                const selector = `div[msg-id='${msgId}']`;
                 const checkMarkEl = document.querySelector(selector);
                 checkMarkEl.classList.remove('unread');
             }

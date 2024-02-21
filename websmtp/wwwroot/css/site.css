@@ -1,70 +1,90 @@
 html {
-  font-size: 14px;
-  height: 100vh;
+    font-size: 10px;
+    height: 100vh;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  min-height: 100%;
+    min-height: 100%;
 }
 
-table td {
-  vertical-align: middle;
+.main--container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar {
-  flex: 0 0 220px;
-  padding: 0 0.75rem;
+    padding: 0 0.75rem;
 }
 
-table.table tbody tr.unread td {
-  font-weight: bolder;
-  color: azure;
-  position: relative;
+.content {
+    flex: 1 1 100%;
+    display: flex;
+    flex-direction: column;
 }
 
-table.table tbody tr.unread td * {
-  position: relative;
+@media (min-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+
+    .main--container {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        flex: 0 0 220px;
+    }
 }
 
-table.table tbody tr.unread td::before {
-
-  content: ' ';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: #0b5bd3a1;
-  z-index: 0;
+table td {
+    vertical-align: middle;
 }
+
+
+.unread {
+    font-weight: bolder;
+    color: azure;
+    position: relative;
+    background-color: #0b5bd3a1;
+}
+
+    table.table tbody tr.unread td * {
+        position: relative;
+    }
+
+    table.table tbody tr.unread td::before {
+        content: ' ';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 0;
+    }
 
 .login-card {
-  margin: auto;
-  width: 100%;
-  max-width: 300px;
-  align-self: center;
+    margin: auto;
+    width: 100%;
+    max-width: 300px;
+    align-self: center;
 }
 
 .btn-transparent-primary {
-  background: transparent;
+    background: transparent;
 }
 
-.btn-transparent-primary:hover {
-  background: #0b5bd3a1;
-}
-.btn-transparent-primary:active,
-.btn-transparent-primary:focus
-{
-  background: #0d6efd;
-}
+    .btn-transparent-primary:hover {
+        background: #0b5bd3a1;
+    }
+
+    .btn-transparent-primary:active,
+    .btn-transparent-primary:focus {
+        background: #0d6efd;
+    }
