@@ -18,7 +18,7 @@
                href="/?onlyNew=false">
                 <i class="bi bi-inboxes"></i>
                 <span class="ms-2">All Mail</span>
-                <span style="margin-left: auto;">(@Model.Listing.Total)</span>
+                <span style="margin-left: auto;" class="badge text-bg-secondary">@Model.Listing.Total</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
@@ -27,7 +27,16 @@
                href="/?onlyNew=true">
                 <i class="bi bi-inbox"></i>
                 <span class="ms-2">Inbox</span>
-                <span style="margin-left: auto;"> (@Model.Listing.New)</span>
+                <span style="margin-left: auto;" class="badge text-bg-secondary">@Model.Listing.New</span>
+            </a>
+        </div>
+        <div class="nav-item mb-2 d-flex">
+            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
+               id="btn-mailbox-inbox"
+               href="/?showTrash=true">
+                <i class="bi bi-trash"></i>
+                <span class="ms-2">Trash</span>
+                <span style="margin-left: auto;" class="badge text-bg-secondary">0</span>
             </a>
         </div>
     </nav>
@@ -35,32 +44,29 @@
 
 <div class="content" data-bs-theme="dark" style="">
 
-    <form class="d-flex" action="/" method="get">
-        <input type="hidden" name="onlyNew" id="onlyNew" value="@Model.OnlyNew.ToString().ToLower()"/>
-        <div class="input-group input-group-sm my-2">
-            <span class="input-group-text" id="basic-addon1">Filter</span>
-            <input name="filter" id="filter"
-                    type="text" class="form-control from-control-sm" placeholder="Any text value" aria-label="Any text value"
-                   aria-describedby="basic-addon1" />
-        </div>
-        <a class="btn btn-secondary mx-2 my-2" href="/logout" style="flex: 1 1 140px">
-            <i class="bi bi-door-open"></i> Disconnect
-        </a>
-    </form>
 
-    <section class="" style="
-        flex: 1 0 300px;
-        resize: vertical;
-        overflow-y: scroll;
-        border-left: 1pt solid var(--bs-border-color);
-        border-top: 1pt solid var(--bs-border-color);
-        border-bottom: 1pt solid var(--bs-border-color);
-        border-top-left-radius: var(--bs-border-radius);
-        position: relative;">
-        <div class="" style="max-heigh: 30vh; ">
-            <div class=""
-                   style="position: relative; ">
-                <header class="d-flex p-1" style="position: sticky; top: 0; background-color: var(--bs-body-bg)">
+    <section class="listing" style="display: flex; flex-direction: column;height: 100%;overflow: hidden;">
+
+        <form class="d-flex" action="/" method="get">
+            <input type="hidden" name="onlyNew" id="onlyNew" value="@Model.OnlyNew.ToString().ToLower()"/>
+            <div class="input-group input-group-sm my-2">
+                <span class="input-group-text" id="basic-addon1">Filter</span>
+                <input name="filter" id="filter"
+                        type="text" class="form-control from-control-sm" placeholder="Any text value" aria-label="Any text value"
+                    aria-describedby="basic-addon1" />
+            </div>
+            <a class="btn btn-secondary mx-2 my-2" href="/logout" style="flex: 1 1 140px">
+                <i class="bi bi-door-open"></i> Disconnect
+            </a>
+        </form>
+<!--
+
+    -->
+        <div class="list list-group" style="
+            height: 100%;
+            overflow-y: scroll;
+            position: relative;">
+                <header class="d-flex px-1 py-2 list-group-item list-group-item-dark" style="position: sticky; top: 0; z-index: 1; background-color: var(--bs-body-bg)">
                     <div style="flex: 0 0 130px">
                         Received
                     </div>
@@ -73,26 +79,30 @@
                     <div style="flex: 1 1 20%">
                         To
                     </div>
-                    <div style="flex: 0 0 75px ">Size</div>
-                    <div style="flex: 0 0 50px">
+                    <div style="flex: 0 0 50px ">Size</div>
+                    <div style="flex: 0 0 25px">
                         <i class="bi bi-paperclip"></i>
                     </div>
                 </header>
                 @if (Model.Listing.Messages.Count == 0)
                 {
-                    <div class="d-flex">
+                    <div class="list-group-item  d-flex">
                         <div colspan="7">No messages... yet!</div>
                     </div>
                 }
                 @for (int msgId = 0; msgId < Model.Listing.Messages.Count; msgId++)
                 {
                     var message = Model.Listing.Messages[msgId];
-                    <div onclick="openwMsgView('@message.Id')" style="cursor: pointer;"
-                        class='d-flex p-1 @(message.Read ? "" : "unread")' msg-id="@message.Id">
+                    <a href="/View?msgId=@message.Id" onclick="openwMsgView('@message.Id')" style="cursor: pointer;"
+                        class='list-group-item list-group-item-action d-flex px-1 py-2 @(message.Read ? "" : "unread")' msg-id="@message.Id">
                         <div class="text-nowrap text-truncate" style="flex: 0 0 130px;">
-                            @if (message.ReceivedOn.Date == DateTime.UtcNow.Date)
+                            @if (DateTime.UtcNow.Date - message.ReceivedOn.Date < TimeSpan.FromHours(1) )
                             {
-                                <span>@message.ReceivedOn.ToString("HH:mm")</span>
+                                <span title="@message.ReceivedOn.ToLocalTime()">@(Math.Round((DateTime.UtcNow - message.ReceivedOn).TotalMinutes))m ago</span>
+                            }
+                            else if (DateTime.UtcNow.Date - message.ReceivedOn.Date <= TimeSpan.FromHours(72) )
+                            {
+                                <span title="@message.ReceivedOn.ToLocalTime()">@(Math.Round((DateTime.UtcNow - message.ReceivedOn).TotalHours))h ago</span>
                             }
                             else
                             {
@@ -108,15 +118,14 @@
                         <div class="text-nowrap text-truncate" style="flex: 1 1 20%">
                             <span>@message.To</span>
                         </div>
-                        <div class="text-nowrap text-truncate" style="flex: 0 0 75px;">
+                        <div class="text-nowrap text-truncate" style="flex: 0 0 50px;">
                             <span>@(Math.Round(decimal.Divide(message.Size, 1024m)))k</span>
                         </div>
-                        <div class="text-nowrap text-truncate" style="flex: 0 0 50px">
+                        <div class="text-nowrap text-truncate" style="flex: 0 0 25px">
                             <span>@(message.AttachementsCount)</span>
                         </div>
-                    </div>
+                    </a>
                 }
-            </div>
         </div>
 
     </section>
@@ -124,10 +133,16 @@
     <section id="msg"
              style=" flex: 1 1 auto; resize: vertical; overflow-y: auto; border-left: 1pt solid var(--bs-border-color);"
              class="d-none">
-        <div id="msg-view-container" style="display: none;padding: 1em; padding-top: 0; position: relative;">
-            <button class="btn" onclick="closeMsgView()" style="position: absolute; top: 0; right: 0;">
-                <i class="bi bi-x"></i>
-            </button>
+        <div id="msg-view-container" style="display: none; position: relative;">
+            @* <button class="btn btn-sm btn-link" onclick="closeMsgView()" style="position: absolute; top: 0; right: 0; outline: none;">
+                <i class="bi bi-x" style="font-size: 2.5rem;"></i>
+            </button> *@
+
+            @* <div  style="position: absolute; top: 0; right: 0; outline: none;" class="m-3">
+                <button style="font-size: 1.5rem;" type="button" class="btn-close" aria-label="Close"  onclick="closeMsgView()"></button>
+            </div> *@
+            
+
             <iframe id="msg-view" name="msg-view" style="width: 100%; height: 100px;"
                     src="data:text/html;base64,PGh0bWwgc3R5bGU9ImJhY2tncm91bmQ6IHJnYigzMywgMzcsIDQxKTsiPjwvaHRtbD4K"></iframe>
         </div>
@@ -155,25 +170,31 @@
             }
         }
 
-        function openwMsgView(msgId) {
+        var previousListingScrollPos = 0;
+        async function openwMsgView(msgId) {
+            event.preventDefault();
+            markMessageAsRead(msgId);
+            let listEl = document.querySelector('.list');
+            let listingEl = document.querySelector('.listing');
+            previousListingScrollPos = listEl.scrollTop;
+            console.log(previousListingScrollPos);
+            listingEl.classList.add('d-none');
+            let msgViewEl = document.getElementById('msg-view');
+            msgViewEl.setAttribute('src', '/View?msgId=' + msgId);
             let sectionEl = document.querySelector('#msg');
             sectionEl.classList.remove('d-none');
             let containerEl = document.querySelector('#msg-view-container');
             containerEl.style.display = 'block';
-            let msgViewEl = document.getElementById('msg-view');
-            msgViewEl.setAttribute('src', '/View?msgId=' + msgId);
-            markMessageAsRead(msgId);
         }
         function closeMsgView() {
             let sectionEl = document.querySelector('#msg');
             sectionEl.classList.add('d-none');
+            let listingEl = document.querySelector('.listing');
+            listingEl.classList.remove('d-none');
             let containerEl = document.querySelector('#msg-view-container');
             containerEl.style.display = 'none';
-        }
-        function handleMessage(event) {
-            if (event.origin != window.location.origin) { return; }
-            let height = event.data.split(':')[1];
-            document.querySelector('#msg-view').style.height = height + 'px';
+            let listEl = document.querySelector('.list');
+            listEl.scroll(0, previousListingScrollPos);
         }
         async function markMessageAsRead(msgId) {
             const response = await fetch(`/api/messages/${msgId}/mark-as-read/`, {
@@ -182,9 +203,22 @@
             console.log(response);
             const success = response.status == 200;
             if (success) {
-                const selector = `div[msg-id='${msgId}']`;
+                const selector = `[msg-id='${msgId}']`;
                 const checkMarkEl = document.querySelector(selector);
                 checkMarkEl.classList.remove('unread');
+            }
+        }
+        function handleMessage(event) {
+            if (event.origin != window.location.origin) { return; }
+            let msgType = event.data.split(':')[0];
+            let height = event.data.split(':')[1];
+            switch(msgType){
+                case 'set-size':
+                    document.querySelector('#msg-view').style.height = height + 'px';
+                    return;
+                case 'close-msg':
+                    closeMsgView();
+                    return;
             }
         }
 

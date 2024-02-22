@@ -6,6 +6,7 @@ using System.Buffers;
 using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
+using websmtp.Pages;
 
 public class MessageStore : IMessageStore, IReadableMessageStore
 {
@@ -48,6 +49,15 @@ public class MessageStore : IMessageStore, IReadableMessageStore
             .OrderByDescending(msg => msg.ReceivedOn)
             .Skip((page - 1) * perPage)
             .Take(perPage)
+            .Select(msg => new MessageInfo{
+                Id = msg.Id,
+                AttachementsCount = msg.AttachementsCount,
+                From = msg.From,
+                Read = msg.Read,
+                ReceivedOn = msg.ReceivedOn,
+                Subject = msg.Subject,
+                To = msg.To
+            })
             .ToList();
 
         return new ListResult
