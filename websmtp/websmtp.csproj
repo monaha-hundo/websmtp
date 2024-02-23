@@ -42,10 +42,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services/" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="websmtp.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

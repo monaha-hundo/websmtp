@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SmtpServer.Storage;
 using websmtp.Database;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace websmtp;
 
@@ -62,7 +61,7 @@ public static class Startup
         var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
         var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
 
-        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySQL(cs));
+        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySQL(cs), ServiceLifetime.Transient, ServiceLifetime.Transient);
         builder.Services.AddAntiforgery();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
@@ -70,7 +69,7 @@ public static class Startup
         builder.Services.AddRazorPages();
         builder.Services.AddTransient<SendMailService>();
         builder.Services.AddSingleton<IMessageStore, MessageStore>();
-        builder.Services.AddTransient<IReadableMessageStore, MessageStore>();
+        builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
         builder.Services.AddHostedService<SmtpServerService>();
     }
 
