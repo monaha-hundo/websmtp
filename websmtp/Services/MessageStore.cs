@@ -1,3 +1,4 @@
+using MimeKit;
 using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
@@ -27,8 +28,26 @@ public class MessageStore : IMessageStore
             using var scope = _services.CreateScope();
             using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
-            _logger.LogInformation("Received message, parsing & saving...");
-            var newMessage = new Message(buffer);
+            _logger.LogInformation("Received message, saving raw data...");
+            var raw = buffer.ToArray<byte>();
+
+            var newRawMsg = new RawMessage
+            {
+                Content = raw
+            };
+
+            _dataContext.RawMessages.Add(newRawMsg);
+            _dataContext.SaveChanges();
+            _logger.LogDebug($"Saved raw message id #{newRawMsg.Id}.");
+
+            _logger.LogInformation("Parsing message & saving data...");
+            using var memory = new MemoryStream(raw);
+            using var mimeMessage = MimeMessage.Load(memory) ?? throw new Exception("Could not parse message.");
+
+            var newMessage = new Message(mimeMessage)
+            {
+                RawMessageId = newRawMsg.Id
+            };
 
             _dataContext.Messages.Add(newMessage);
             _dataContext.SaveChanges();

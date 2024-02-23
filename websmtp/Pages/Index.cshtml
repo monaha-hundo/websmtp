@@ -23,7 +23,6 @@
                 <div style="flex: 1 1 20%">
                     To
                 </div>
-                <div style="flex: 0 1 50px ">Size</div>
                 <div style="flex: 0 1 25px">
                     <i class="bi bi-paperclip"></i>
                 </div>
@@ -62,9 +61,6 @@
                     </div>
                     <div class="" style="flex: 1 1 20%">
                         @message.To
-                    </div>
-                    <div class="" style="flex: 0 1 50px;">
-                        @(Math.Round(decimal.Divide(message.Size, 1024m)))k
                     </div>
                     <div class="" style="flex: 0 1 25px">
                         @(message.AttachementsCount)
@@ -191,6 +187,21 @@
             });
 
         }
+
+        function previousMessage(msgId) {
+            const selector = `[msg-id='${msgId}']`;
+            const checkMarkEl = document.querySelector(selector);
+            const prevMsgId = checkMarkEl.previousElementSibling.getAttribute('msg-id');
+            openwMsgView(prevMsgId);
+        }
+
+        function nextMessage(msgId) {
+            const selector = `[msg-id='${msgId}']`;
+            const checkMarkEl = document.querySelector(selector);
+            const prevMsgId = checkMarkEl.nextElementSibling.getAttribute('msg-id');
+            openwMsgView(prevMsgId);
+        }
+
         function handleMessage(event) {
             if (event.origin != window.location.origin) { return; }
             let msgType = event.data.split(':')[0];
@@ -204,6 +215,12 @@
                     return;
                 case 'delete-msg':
                     deleteMessage(msgParam);
+                    return;
+                case 'previous-msg':
+                    previousMessage(msgParam);
+                    return;
+                case 'next-msg':
+                    nextMessage(msgParam);
                     return;
             }
         }

@@ -7,7 +7,7 @@ using MySql.EntityFrameworkCore.Metadata;
 namespace websmtp.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Initial2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,22 +16,15 @@ namespace websmtp.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Messages",
+                name: "RawMessages",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false),
-                    Raw = table.Column<byte[]>(type: "longblob", nullable: false),
-                    ReceivedOn = table.Column<DateTimeOffset>(type: "datetime", nullable: false),
-                    Subject = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false),
-                    From = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false),
-                    To = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false),
-                    TextContent = table.Column<string>(type: "longtext", nullable: true),
-                    HtmlContent = table.Column<string>(type: "longtext", nullable: true),
-                    Read = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    Content = table.Column<byte[]>(type: "longblob", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Messages", x => x.Id);
+                    table.PrimaryKey("PK_RawMessages", x => x.Id);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -47,6 +40,37 @@ namespace websmtp.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    RawMessageId = table.Column<Guid>(type: "char(36)", nullable: false),
+                    ReceivedOn = table.Column<DateTimeOffset>(type: "datetime", nullable: false),
+                    Subject = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false),
+                    From = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false),
+                    To = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false),
+                    TextContent = table.Column<string>(type: "longtext", nullable: true),
+                    HtmlContent = table.Column<string>(type: "longtext", nullable: true),
+                    AttachementsCount = table.Column<int>(type: "int", nullable: false),
+                    Read = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Deleted = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Cc = table.Column<string>(type: "longtext", nullable: false),
+                    Bcc = table.Column<string>(type: "longtext", nullable: false),
+                    Importance = table.Column<string>(type: "varchar(8)", maxLength: 8, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Messages_RawMessages_RawMessageId",
+                        column: x => x.RawMessageId,
+                        principalTable: "RawMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -76,6 +100,11 @@ namespace websmtp.Migrations
                 name: "IX_MessageAttachement_MessageId",
                 table: "MessageAttachement",
                 column: "MessageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_RawMessageId",
+                table: "Messages",
+                column: "RawMessageId");
         }
 
         /// <inheritdoc />
@@ -89,6 +118,9 @@ namespace websmtp.Migrations
 
             migrationBuilder.DropTable(
                 name: "Messages");
+
+            migrationBuilder.DropTable(
+                name: "RawMessages");
         }
     }
 }

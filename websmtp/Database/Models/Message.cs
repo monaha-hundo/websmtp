@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using MimeKit;
 
 namespace websmtp.Database.Models;
@@ -8,7 +9,6 @@ public interface IMessage
 {
     public Guid Id { get; set; }
     public DateTimeOffset ReceivedOn { get; set; }
-    public long Size { get; set; }
     public string Subject { get; set; }
     public string From { get; set; }
     public string To { get; set; }
@@ -23,9 +23,10 @@ public interface IMessage
 public class Message : IMessage
 {
     public Guid Id { get; set; } = Guid.Empty;
-    public byte[] Raw { get; set; } = [];
+    public Guid RawMessageId { get; set; } = Guid.Empty;
+    [ForeignKey("RawMessageId")] public RawMessage RawMessage { get; set; }
     public DateTimeOffset ReceivedOn { get; set; } = DateTimeOffset.MinValue;
-    public long Size { get; set; }
+    //public long Size { get; set; }
     [StringLength(1000)] public string Subject { get; set; } = string.Empty;
     [StringLength(1000)] public string From { get; set; } = string.Empty;
     [StringLength(1000)] public string To { get; set; } = string.Empty;
@@ -52,11 +53,70 @@ public class Message : IMessage
     /// <exception cref="Exception"></exception>
     public Message(ReadOnlySequence<byte> buffer)
     {
-        Size = buffer.Length;
-        Raw = buffer.ToArray<byte>();
-        using var memory = new MemoryStream(Raw);
+        //Size = buffer.Length;
+        var raw = buffer.ToArray<byte>();
+        using var memory = new MemoryStream(raw);
         using var _mimeMessage = MimeMessage.Load(memory) ?? throw new Exception("Could not parse message.");
 
+        ReceivedOn = DateTimeOffset.UtcNow;
+
+        Subject = _mimeMessage.Subject;
+
+        var allFrom = _mimeMessage.From? .Select(f => f.ToString())?.ToList()
+            ?? new List<string>(0);
+
+        From = string.Join(',', allFrom);
+
+        var allTo = _mimeMessage.To?.Select(f => f.ToString())?.ToList()
+            ?? new List<string>(0);
+
+        To = string.Join(',', allTo);
+
+        var allCc = _mimeMessage.Cc?.Select(f => f.ToString())?.ToList()
+            ?? new List<string>(0);
+
+        Cc = string.Join(',', allCc);
+
+        var allBcc = _mimeMessage.Bcc?.Select(f => f.ToString())?.ToList()
+            ?? new List<string>(0);
+
+        Bcc = string.Join(',', allBcc);
+
+        Importance = _mimeMessage.Importance switch
+        {
+            MessageImportance.Low => "Low",
+            MessageImportance.Normal => "Normal",
+            MessageImportance.High => "High",
+            _ => string.Empty,
+        };
+
+        var textContent = _mimeMessage.GetTextBody(MimeKit.Text.TextFormat.Text);
+        TextContent = textContent;
+
+        if (_mimeMessage.HtmlBody != null)
+        {
+            var htmlContent = _mimeMessage.HtmlBody
+                ?? throw new Exception("Could not read message HtmlBody");
+
+            var base64HtmlContent = htmlContent != null
+                ? Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(htmlContent))
+                : Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(string.Empty));
+
+            HtmlContent = base64HtmlContent;
+        }
+
+        if (_mimeMessage.Attachments.Count() > 0)
+        {
+            Attachements = _mimeMessage.Attachments
+                            .Where(a => a.IsAttachment)
+                            .Select(a => new MessageAttachement(a))
+                            .ToList();
+
+            AttachementsCount = Attachements.Count;
+        }
+    }
+    public Message(MimeMessage _mimeMessage)
+    {
         ReceivedOn = DateTimeOffset.UtcNow;
 
         Subject = _mimeMessage.Subject;
@@ -122,7 +182,7 @@ public class MessageInfo : IMessage
 {
     public Guid Id { get; set; }
     public DateTimeOffset ReceivedOn { get; set; }
-    public long Size { get; set;  }
+    //public long Size { get; set;  }
     public string Subject { get; set; }
     public string From { get; set; }
     public string To { get; set; }
@@ -137,7 +197,7 @@ public class MessageInfo : IMessage
     {
         Id = message.Id;
         ReceivedOn = message.ReceivedOn;
-        Size = message.Size;
+        //Size = message.Size;
         Subject = message.Subject;
         From = message.From;
         To = message.To;

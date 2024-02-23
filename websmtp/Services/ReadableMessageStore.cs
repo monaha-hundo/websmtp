@@ -68,7 +68,7 @@ public class ReadableMessageStore : IReadableMessageStore
                 Cc = msg.Cc,
                 Bcc = msg.Bcc,
                 Importance = msg.Importance,
-                Size = msg.Size
+                //Size = msg.Size
             })
             .OrderByDescending(msg => msg.ReceivedOn)
             .Skip((page - 1) * perPage)
@@ -102,14 +102,26 @@ public class ReadableMessageStore : IReadableMessageStore
             .Count();
     }
 
-    public Message Single(Guid msgId)
+    public Message Single(Guid msgId, bool includeRaw = false)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        return _dataContext.Messages
-            .AsNoTracking()
-            .Include(msg => msg.Attachements)
-            .Single(msg => msg.Id == msgId);
+        var query = _dataContext.Messages
+            .AsNoTracking();
+
+        if (includeRaw)
+        {
+            query = query
+                .Include(msg => msg.Attachements)
+                .Include(msg => msg.RawMessage);
+        }
+        else
+        {
+            query = query
+                .Include(msg => msg.Attachements);
+        }
+
+        return query.Single(msg => msg.Id == msgId);
     }
 
     public void MarkAsRead(Guid msgId)

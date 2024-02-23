@@ -5,14 +5,16 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="" style="width: 100%;">
+<div class="w-100" >
     <div class="p-2 mb-2" role="group" aria-label="Basic example" style="border-bottom: 1pt solid var(--bs-border-color);">
         <button onclick="closeMsg()" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left"></i></button>
+        <button onclick="previousMsg()" type="button" class="btn btn-secondary"><i class="bi bi-arrow-up"></i></button>
+        <button onclick="nextMsg()" type="button" class="btn btn-secondary"><i class="bi bi-arrow-down"></i></button>
+        <button onclick="showRawMsg()" type="button" class="btn btn-secondary"><i class="bi bi-file-earmark-code"></i></button>
         @if (!Model.Message.Deleted)
         {
             <button onclick="deleteMsg()" type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
         }
-        <!--<button type="button" class="btn btn-secondary"><i class="bi bi-tag"></i></button>-->
     </div>
 
     <h3 class="my-3 mx-4 px-1 pe-5">@Model.Message.Subject</h3>
@@ -34,7 +36,7 @@
                     break;
             }
         </div>
-        <div style="display: flex; align-items: center;">
+        <div class="d-flex align-items-center">
             <div class="my-1">
                 <span style="font-weight: bold; display: inline-block; min-width: 50px">Date:</span>
                 @Model.Message.ReceivedOn.Date.ToLongDateString()
@@ -109,10 +111,13 @@
             <div class="">@Model.Message.TextContent</div>
         }
 
-        <div class="mt-2">
-            <div style="font-weight: bold; ">Raw</div>
-            <pre>@System.Text.UTF8Encoding.UTF8.GetString(Model.Message.Raw)</pre>
-        </div>
+        @if (Model.Message.RawMessage != null)
+        {
+            <div class="mt-2">
+                <div style="font-weight: bold; ">Raw</div>
+                <pre>@System.Text.UTF8Encoding.UTF8.GetString(Model.Message.RawMessage.Content)</pre>
+            </div>
+        }
     </div>
 </div>
 
@@ -145,6 +150,16 @@
         }
         function deleteMsg() {
             window.parent.postMessage(`delete-msg:@Model.MsgId`, window.location.origin);
+        }
+        function previousMsg() {
+            window.parent.postMessage(`previous-msg:@Model.MsgId`, window.location.origin);
+        }
+        function nextMsg() {
+            window.parent.postMessage(`next-msg:@Model.MsgId`, window.location.origin);
+        }
+        function showRawMsg() {
+            console.log(document.location.href);
+            document.location.href = document.location.href + '&showRaw=true';
         }
     </script>
     <script>

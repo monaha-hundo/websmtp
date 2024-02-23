@@ -61,6 +61,10 @@ public static class Startup
         var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
         var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
 
+        builder.Services.AddResponseCompression(options =>
+         {
+             options.EnableForHttps = true;
+         });
         builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySQL(cs), ServiceLifetime.Transient, ServiceLifetime.Transient);
         builder.Services.AddAntiforgery();
         builder.Services.AddHttpContextAccessor();
@@ -83,6 +87,7 @@ public static class Startup
 
     public static void ConfigureAppPipeline(WebApplication app)
     {
+        app.UseResponseCompression();
         app.UseAntiforgery();
         app.UseAuthentication();
         app.UseAuthorization();

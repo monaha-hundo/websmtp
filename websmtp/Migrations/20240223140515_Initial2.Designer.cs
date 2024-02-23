@@ -11,8 +11,8 @@ using websmtp.Database;
 namespace websmtp.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240222164115_MessagesProperties")]
-    partial class MessagesProperties
+    [Migration("20240223140515_Initial2")]
+    partial class Initial2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,6 +39,9 @@ namespace websmtp.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("From")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -52,9 +55,8 @@ namespace websmtp.Migrations
                         .HasMaxLength(8)
                         .HasColumnType("varchar(8)");
 
-                    b.Property<byte[]>("Raw")
-                        .IsRequired()
-                        .HasColumnType("longblob");
+                    b.Property<Guid>("RawMessageId")
+                        .HasColumnType("char(36)");
 
                     b.Property<bool>("Read")
                         .HasColumnType("tinyint(1)");
@@ -76,6 +78,8 @@ namespace websmtp.Migrations
                         .HasColumnType("varchar(1000)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RawMessageId");
 
                     b.ToTable("Messages");
                 });
@@ -115,6 +119,21 @@ namespace websmtp.Migrations
                     b.ToTable("MessageAttachement");
                 });
 
+            modelBuilder.Entity("websmtp.Database.Models.RawMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("longblob");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RawMessages");
+                });
+
             modelBuilder.Entity("websmtp.Database.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -134,6 +153,17 @@ namespace websmtp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("websmtp.Database.Models.Message", b =>
+                {
+                    b.HasOne("websmtp.Database.Models.RawMessage", "RawMessage")
+                        .WithMany()
+                        .HasForeignKey("RawMessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RawMessage");
                 });
 
             modelBuilder.Entity("websmtp.Database.Models.MessageAttachement", b =>
