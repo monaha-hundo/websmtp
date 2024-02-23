@@ -1,131 +1,76 @@
 ﻿@page
 @model IndexModel
-@{
-    ViewData["Title"] = "websmtp";
-}
 
-<nav class="sidebar">
-    <section>
-        <div class="h2 my-2">
-            <i class="bi bi-fire"></i>
-            websmtp
-        </div>
-    </section>
-    <nav class="nav nav-pills d-flex flex-column">
-        <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
-               id="btn-mailbox-all"
-               href="/?onlyNew=false">
-                <i class="bi bi-inboxes"></i>
-                <span class="ms-2">All Mail</span>
-                <span style="margin-left: auto;" class="badge text-bg-secondary">@Model.Listing.Total</span>
-            </a>
-        </div>
-        <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
-               id="btn-mailbox-inbox"
-               href="/?onlyNew=true">
-                <i class="bi bi-inbox"></i>
-                <span class="ms-2">Inbox</span>
-                <span style="margin-left: auto;" class="badge text-bg-secondary">@Model.Listing.New</span>
-            </a>
-        </div>
-        <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
-               id="btn-mailbox-inbox"
-               href="/?showTrash=true">
-                <i class="bi bi-trash"></i>
-                <span class="ms-2">Trash</span>
-                <span style="margin-left: auto;" class="badge text-bg-secondary">0</span>
-            </a>
-        </div>
-    </nav>
-</nav>
+<partial name="Sidebar" model="Model.Listing" />
 
-<div class="content" data-bs-theme="dark" style="">
+<div class="content" data-bs-theme="dark">
+    <section class="listing d-flex flex-column h-100">
 
+        <partial name="SearchForm" model="Model" />
 
-    <section class="listing" style="display: flex; flex-direction: column;height: 100%;overflow: hidden;">
+        <div class="list list-group h-100 overflow-y-scroll position-relative">
+            <header class="d-flex px-1 py-2 list-group-item list-group-item-dark sticky-top z-1"
+                    style="background-color: var(--bs-body-bg)">
+                <div style="flex: 0 0 120px">
+                    Received
+                </div>
+                <div style="flex: 1 0 50%">
+                    Subject
+                </div>
+                <div style="flex: 1 1 20%">
+                    From
+                </div>
+                <div style="flex: 1 1 20%">
+                    To
+                </div>
+                <div style="flex: 0 1 50px ">Size</div>
+                <div style="flex: 0 1 25px">
+                    <i class="bi bi-paperclip"></i>
+                </div>
+            </header>
+            @if (Model.Listing.Messages.Count == 0)
+            {
+                <div class="list-group-item  d-flex">
+                    <div colspan="7">No messages... yet!</div>
+                </div>
+            }
+            @for (int msgId = 0; msgId < Model.Listing.Messages.Count; msgId++)
+            {
+                var message = Model.Listing.Messages[msgId];
+                <div href="/View?msgId=@message.Id" onclick="openwMsgView('@message.Id')" style="cursor: pointer;"
+                     class='list-group-item list-group-item-action d-flex px-1 py-2 @(message.Read ? "" : "unread")' msg-id="@message.Id">
+                    <div class="text-nowrap text-truncate" style="flex: 0 0 120px;">
+                        @if (DateTime.UtcNow - message.ReceivedOn < TimeSpan.FromHours(1))
+                        {
+                            <span title="@message.ReceivedOn.ToLocalTime()">@(Math.Round((DateTime.UtcNow - message.ReceivedOn).TotalMinutes))m ago</span>
+                        }
+                        else if (DateTime.UtcNow - message.ReceivedOn <= TimeSpan.FromHours(72))
+                        {
+                            <span title="@message.ReceivedOn.ToLocalTime()">@(Math.Round((DateTime.UtcNow - message.ReceivedOn).TotalHours))h ago</span>
+                        }
+                        else
+                        {
+                            <span title="@message.ReceivedOn.ToLocalTime()">@message.ReceivedOn.ToString("yyyy-MM-dd")</span>
+                        }
+                    </div>
 
-        <form class="d-flex" action="/" method="get">
-            <input type="hidden" name="onlyNew" id="onlyNew" value="@Model.OnlyNew.ToString().ToLower()"/>
-            <div class="input-group input-group-sm my-2">
-                <span class="input-group-text" id="basic-addon1">Filter</span>
-                <input name="filter" id="filter"
-                        type="text" class="form-control from-control-sm" placeholder="Any text value" aria-label="Any text value"
-                    aria-describedby="basic-addon1" />
-            </div>
-            <a class="btn btn-secondary mx-2 my-2" href="/logout" style="flex: 1 1 140px">
-                <i class="bi bi-door-open"></i> Disconnect
-            </a>
-        </form>
-<!--
-
-    -->
-        <div class="list list-group" style="
-            height: 100%;
-            overflow-y: scroll;
-            position: relative;">
-                <header class="d-flex px-1 py-2 list-group-item list-group-item-dark" style="position: sticky; top: 0; z-index: 1; background-color: var(--bs-body-bg)">
-                    <div style="flex: 0 0 130px">
-                        Received
+                    <div class="" style="flex: 1 0 50%">
+                        @message.Subject
                     </div>
-                    <div style="flex: 1 1 50%">
-                        Subject
+                    <div class="" style="flex: 1 1 20%">
+                        @message.From
                     </div>
-                    <div style="flex: 1 1 20%">
-                        From
+                    <div class="" style="flex: 1 1 20%">
+                        @message.To
                     </div>
-                    <div style="flex: 1 1 20%">
-                        To
+                    <div class="" style="flex: 0 1 50px;">
+                        @(Math.Round(decimal.Divide(message.Size, 1024m)))k
                     </div>
-                    <div style="flex: 0 0 50px ">Size</div>
-                    <div style="flex: 0 0 25px">
-                        <i class="bi bi-paperclip"></i>
+                    <div class="" style="flex: 0 1 25px">
+                        @(message.AttachementsCount)
                     </div>
-                </header>
-                @if (Model.Listing.Messages.Count == 0)
-                {
-                    <div class="list-group-item  d-flex">
-                        <div colspan="7">No messages... yet!</div>
-                    </div>
-                }
-                @for (int msgId = 0; msgId < Model.Listing.Messages.Count; msgId++)
-                {
-                    var message = Model.Listing.Messages[msgId];
-                    <a href="/View?msgId=@message.Id" onclick="openwMsgView('@message.Id')" style="cursor: pointer;"
-                        class='list-group-item list-group-item-action d-flex px-1 py-2 @(message.Read ? "" : "unread")' msg-id="@message.Id">
-                        <div class="text-nowrap text-truncate" style="flex: 0 0 130px;">
-                            @if (DateTime.UtcNow.Date - message.ReceivedOn.Date < TimeSpan.FromHours(1) )
-                            {
-                                <span title="@message.ReceivedOn.ToLocalTime()">@(Math.Round((DateTime.UtcNow - message.ReceivedOn).TotalMinutes))m ago</span>
-                            }
-                            else if (DateTime.UtcNow.Date - message.ReceivedOn.Date <= TimeSpan.FromHours(72) )
-                            {
-                                <span title="@message.ReceivedOn.ToLocalTime()">@(Math.Round((DateTime.UtcNow - message.ReceivedOn).TotalHours))h ago</span>
-                            }
-                            else
-                            {
-                                <span title="@message.ReceivedOn.ToLocalTime()">@message.ReceivedOn.ToString("yyyy-MM-dd")</span>
-                            }
-                        </div>
-                        <div class="text-nowrap text-truncate" style="flex: 1 1 50%">
-                            <span>@message.Subject</span>
-                        </div>
-                        <div class="text-nowrap text-truncate" style="flex: 1 1 20%">
-                            <span>@message.From</span>
-                        </div>
-                        <div class="text-nowrap text-truncate" style="flex: 1 1 20%">
-                            <span>@message.To</span>
-                        </div>
-                        <div class="text-nowrap text-truncate" style="flex: 0 0 50px;">
-                            <span>@(Math.Round(decimal.Divide(message.Size, 1024m)))k</span>
-                        </div>
-                        <div class="text-nowrap text-truncate" style="flex: 0 0 25px">
-                            <span>@(message.AttachementsCount)</span>
-                        </div>
-                    </a>
-                }
+                </div>
+            }
         </div>
 
     </section>
@@ -134,15 +79,6 @@
              style=" flex: 1 1 auto; resize: vertical; overflow-y: auto; border-left: 1pt solid var(--bs-border-color);"
              class="d-none">
         <div id="msg-view-container" style="display: none; position: relative;">
-            @* <button class="btn btn-sm btn-link" onclick="closeMsgView()" style="position: absolute; top: 0; right: 0; outline: none;">
-                <i class="bi bi-x" style="font-size: 2.5rem;"></i>
-            </button> *@
-
-            @* <div  style="position: absolute; top: 0; right: 0; outline: none;" class="m-3">
-                <button style="font-size: 1.5rem;" type="button" class="btn-close" aria-label="Close"  onclick="closeMsgView()"></button>
-            </div> *@
-            
-
             <iframe id="msg-view" name="msg-view" style="width: 100%; height: 100px;"
                     src="data:text/html;base64,PGh0bWwgc3R5bGU9ImJhY2tncm91bmQ6IHJnYigzMywgMzcsIDQxKTsiPjwvaHRtbD4K"></iframe>
         </div>
@@ -154,11 +90,19 @@
         function initNavbar() {
             const params = new URLSearchParams(window.location.search);
             const onlyNew = params.get('onlyNew') != null ? params.get('onlyNew') == 'true' : false;
+            const showTrash = params.get('showTrash') != null ? params.get('showTrash') == 'true' : false;
 
-            if (onlyNew) {
+            if (showTrash) {
+                const selector = `#btn-mailbox-trash`;
+                const mailboxEl = document.querySelector(selector);
+                mailboxEl.classList.remove('btn-transparent-primary');
+                mailboxEl.classList.add('btn-primary');
+                return;
+            }
+
+            if (onlyNew && !showTrash) {
                 const selector = `#btn-mailbox-inbox`;
                 const mailboxEl = document.querySelector(selector);
-                console.log(selector, mailboxEl)
                 mailboxEl.classList.remove('btn-transparent-primary');
                 mailboxEl.classList.add('btn-primary');
             }
@@ -186,6 +130,7 @@
             let containerEl = document.querySelector('#msg-view-container');
             containerEl.style.display = 'block';
         }
+
         function closeMsgView() {
             let sectionEl = document.querySelector('#msg');
             sectionEl.classList.add('d-none');
@@ -196,11 +141,11 @@
             let listEl = document.querySelector('.list');
             listEl.scroll(0, previousListingScrollPos);
         }
+
         async function markMessageAsRead(msgId) {
             const response = await fetch(`/api/messages/${msgId}/mark-as-read/`, {
                 method: 'post'
             });
-            console.log(response);
             const success = response.status == 200;
             if (success) {
                 const selector = `[msg-id='${msgId}']`;
@@ -208,16 +153,57 @@
                 checkMarkEl.classList.remove('unread');
             }
         }
+
+        function updateTrashCount(count) {
+            const selector = 'sidebar--trash--count';
+            const trashCountEl = document.getElementById(selector);
+            const currentCount = parseInt(trashCountEl.innerText);
+            trashCountEl.innerText = currentCount + 1;
+        }
+
+        async function deleteMessage(msgId) {
+            const call = async () => {
+                const response = await fetch(`/api/messages/${msgId}/delete/`, {
+                    method: 'post'
+                });
+                const success = response.status == 200;
+                if (success) {
+                    const selector = `[msg-id='${msgId}']`;
+                    const checkMarkEl = document.querySelector(selector);
+                    checkMarkEl.parentElement.removeChild(checkMarkEl);
+                    updateTrashCount();
+                    closeMsgView();
+                } else {
+                    Swal.fire({
+                        title: `Error`,
+                        text: 'Could not process request.'
+                    });
+                }
+            };
+
+            let result = await Swal.fire({
+                title: "Move message to trash?",
+                showCancelButton: true,
+                confirmButtonText: "Yes",
+                showLoaderOnConfirm: true,
+                preConfirm: call,
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+
+        }
         function handleMessage(event) {
             if (event.origin != window.location.origin) { return; }
             let msgType = event.data.split(':')[0];
-            let height = event.data.split(':')[1];
-            switch(msgType){
+            let msgParam = event.data.split(':')[1];
+            switch (msgType) {
                 case 'set-size':
-                    document.querySelector('#msg-view').style.height = height + 'px';
+                    document.querySelector('#msg-view').style.height = msgParam + 'px';
                     return;
                 case 'close-msg':
                     closeMsgView();
+                    return;
+                case 'delete-msg':
+                    deleteMessage(msgParam);
                     return;
             }
         }

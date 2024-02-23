@@ -13,7 +13,10 @@ public class IndexModel : PageModel
     public ListResult Listing { get; set; } = new ListResult();
 
     [FromQuery]
-    public bool OnlyNew { get; set; } = false;
+    public bool? OnlyNew { get; set; }
+
+    [FromQuery]
+    public bool ShowTrash { get; set; } = false;
 
     public IndexModel(ILogger<IndexModel> logger,
     IReadableMessageStore messageStore)
@@ -27,7 +30,17 @@ public class IndexModel : PageModel
         [FromQuery] int perPage = 1000,
         [FromQuery] string filter = "")
     {
-        Listing = _messageStore.Latest(page, perPage, OnlyNew, filter);
+        if (!OnlyNew.HasValue && !ShowTrash)
+        {
+            return Redirect("/?onlyNew=true");
+        }
+
+        if (!OnlyNew.HasValue)
+        {
+            OnlyNew = false;
+        }
+
+        Listing = _messageStore.Latest(page, perPage, OnlyNew.Value, ShowTrash, filter);
         return Page();
     }
 }

@@ -1,6 +1,7 @@
 using Bogus;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using MimeKit;
 using System.Net.Mail;
 using websmtp.Database;
 
@@ -34,11 +35,11 @@ public class Automated
         using var db = scope.ServiceProvider.GetRequiredService<DataContext>();
 
         Console.WriteLine("Generating test data...");
-        var testEmailCount = 10;
+        var testEmailCount = 100;
 
         var emailAddress = new Faker<string>()
             .CustomInstantiator(f => f.Internet.Email())
-            .Generate(10);
+            .Generate(15);
 
         var files = new Faker<FakeFile>()
             .CustomInstantiator((f) => new FakeFile(
@@ -53,13 +54,28 @@ public class Automated
             .CustomInstantiator(f =>
             {
                 var message = new MailMessage(f.PickRandom(emailAddress), f.PickRandom(emailAddress));
-                var toInsert = f.PickRandom(files);
-                var atts = new List<Attachment>() { new Attachment(toInsert.Content, toInsert.FileName) };
-                atts.ForEach(a => message.Attachments.Add(a));
+
+                for (int i = 0; i < f.Random.Number(0, 10); i++)
+                {
+                    var file = f.PickRandom(files);
+                    message.Attachments.Add(new Attachment(file.Content, file.FileName));
+                }
+
+                for (int i = 0; i < f.Random.Number(0, 10); i++)
+                {
+                    message.CC.Add(f.PickRandom(emailAddress));
+                }
+
+                for (int i = 0; i < f.Random.Number(0, 10); i++)
+                {
+                    message.Bcc.Add(f.PickRandom(emailAddress));
+                }
+
                 return message;
             })
             .RuleFor(m => m.Body, (f) => f.Lorem.Paragraphs(2))
             .RuleFor(m => m.Subject, (f) => $"Test run_id={testRunId} msg_id={Guid.NewGuid()}")
+            .RuleFor(m => m.Priority, (f) => f.Random.Enum<MailPriority>())
             .Generate(testEmailCount);
 
         try

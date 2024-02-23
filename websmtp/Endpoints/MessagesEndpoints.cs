@@ -46,4 +46,13 @@ public static class MessagesEndpoints
         messages.MarkAsRead(msgId);
         return Results.Ok();
     }
+
+    public static IResult Delete(
+        [FromRoute] Guid msgId,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.Delete(msgId);
+        return Results.Ok();
+    }
 }

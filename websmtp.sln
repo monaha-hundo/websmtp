@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "websmtp", "websmtp\websmtp.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tests", "tests\tests.csproj", "{46E73802-BD95-4F8D-8B67-7568DA7E4635}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManualTester", "ManualTester\ManualTester.csproj", "{4D545E43-22BA-474E-90B5-EE32A6835030}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManualTester", "ManualTester\ManualTester.csproj", "{4D545E43-22BA-474E-90B5-EE32A6835030}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,5 +30,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {29E8F1FC-F732-4162-9706-9A71733CFF22}
 	EndGlobalSection
 EndGlobal

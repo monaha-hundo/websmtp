@@ -6,7 +6,6 @@ using System.Buffers;
 using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
-using websmtp.Pages;
 
 public class MessageStore : IMessageStore, IReadableMessageStore
 {
@@ -19,17 +18,31 @@ public class MessageStore : IMessageStore, IReadableMessageStore
         _services = services;
     }
 
-    public ListResult Latest(int page, int perPage, bool onlyNew, string filter)
+    public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, string filter)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
+
+        _dataContext.ChangeTracker.LazyLoadingEnabled = false;
+        _dataContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+
         var total = _dataContext.Messages.Count();
         var newCount = _dataContext.Messages.Count(msg => !msg.Read);
+        var deletedCount = _dataContext.Messages.Count(msg => msg.Deleted);
 
         var query = _dataContext.Messages
             .AsNoTracking()
             .AsSplitQuery();
+
+        if (showTrash)
+        {
+            query = query.Where(msg => msg.Deleted);
+        }
+        else
+        {
+            query = query.Where(msg => !msg.Deleted);
+        }
 
         if (onlyNew)
         {
@@ -46,24 +59,31 @@ public class MessageStore : IMessageStore, IReadableMessageStore
         }
 
         var messages = query
-            .OrderByDescending(msg => msg.ReceivedOn)
-            .Skip((page - 1) * perPage)
-            .Take(perPage)
-            .Select(msg => new MessageInfo{
+            .Select(msg => new MessageInfo
+            {
                 Id = msg.Id,
                 AttachementsCount = msg.AttachementsCount,
                 From = msg.From,
                 Read = msg.Read,
+                Deleted = msg.Deleted,
                 ReceivedOn = msg.ReceivedOn,
                 Subject = msg.Subject,
-                To = msg.To
+                To = msg.To,
+                Cc = msg.Cc,
+                Bcc = msg.Bcc,
+                Importance = msg.Importance,
+                Size = msg.Size
             })
+            .OrderByDescending(msg => msg.ReceivedOn)
+            .Skip((page - 1) * perPage)
+            .Take(perPage)
             .ToList();
 
         return new ListResult
         {
             Count = messages.Count,
             New = newCount,
+            Deleted = deletedCount,
             Total = total,
             Messages = messages
         };
@@ -73,12 +93,17 @@ public class MessageStore : IMessageStore, IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+
         if (onlyNew)
         {
-            return _dataContext.Messages.Count(msg => !msg.Read);
+            return _dataContext.Messages
+                .Where(msg => !msg.Deleted)
+                .Count(msg => !msg.Read);
         }
 
-        return _dataContext.Messages.Count();
+        return _dataContext.Messages
+            .Where(msg => !msg.Deleted)
+            .Count();
     }
 
     public Message Single(Guid msgId)
@@ -97,6 +122,15 @@ public class MessageStore : IMessageStore, IReadableMessageStore
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
         msg.Read = true;
+        _dataContext.SaveChanges();
+    }
+
+    public void Delete(Guid msgId)
+    {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
+        msg.Deleted = true;
         _dataContext.SaveChanges();
     }
 

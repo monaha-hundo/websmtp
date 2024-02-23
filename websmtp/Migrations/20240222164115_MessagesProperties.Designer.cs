@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using websmtp.Database;
 
@@ -10,9 +11,11 @@ using websmtp.Database;
 namespace websmtp.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240222164115_MessagesProperties")]
+    partial class MessagesProperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,9 +39,6 @@ namespace websmtp.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("From")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -61,9 +61,6 @@ namespace websmtp.Migrations
 
                     b.Property<DateTimeOffset>("ReceivedOn")
                         .HasColumnType("datetime");
-
-                    b.Property<long>("Size")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("Subject")
                         .IsRequired()
