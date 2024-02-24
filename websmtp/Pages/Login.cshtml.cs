@@ -3,8 +3,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using OtpNet;
 using websmtp;
 
 namespace MyApp.Namespace
@@ -18,8 +20,10 @@ namespace MyApp.Namespace
         public IConfiguration _conf { get; set; }
         [FromForm] public string Username { get; set; } = string.Empty;
         [FromForm] public string Password { get; set; } = string.Empty;
+        [FromForm] public string OTP { get; set; } = string.Empty;
         [FromQuery] public string? ReturnUrl { get; set; }
         public bool Error { get; set; }
+        public bool MfaEnabled => _conf.GetValue<bool>("Security:MfaEnabled");
 
         public LoginModel(IHttpContextAccessor http, IConfiguration conf)
         {
@@ -50,6 +54,15 @@ namespace MyApp.Namespace
 
             var isAuth = Username == configuredUsername
                 && passwordHasher.VerifyHashedPassword(configuredPasswordHash, Password);
+
+            if (MfaEnabled)
+            {
+                var secret = _conf.GetValue<string>("Security:OTPSecret");
+                var secretBytes = Base32Encoding.ToBytes(secret);
+                var totp = new Totp(secretBytes);
+                var result = totp.VerifyTotp(OTP, out var timeSteps);
+                isAuth = isAuth && result;
+            }
 
             if (isAuth)
             {

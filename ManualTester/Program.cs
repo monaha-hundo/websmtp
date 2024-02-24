@@ -1,6 +1,36 @@
 ﻿using Bogus;
 using ManualTester;
 using System.Net.Mail;
+using OtpNet;
+using QRCoder;
+
+byte[] raw = new byte[10];
+Random.Shared.NextBytes(raw);
+
+var secret = Base32Encoding.ToString(raw);
+QRCodeGenerator qrGenerator = new QRCodeGenerator();
+var uriString = new OtpUri(OtpType.Totp, secret, "some_user@asd.com").ToString();
+QRCodeData qrCodeData = qrGenerator.CreateQrCode(uriString, QRCodeGenerator.ECCLevel.Q);
+AsciiQRCode qrCode = new AsciiQRCode(qrCodeData);
+
+var lines = qrCode.GetLineByLineGraphic(1,  drawQuietZones: false);
+foreach (var line in lines)
+{
+    Console.WriteLine(line);
+}
+
+//var secretBytes = Base32Encoding.ToBytes(secret);
+var totp = new Totp(raw);
+
+while (true)
+{
+    Console.Write("Enter OTP: ");
+    var input = Console.ReadLine();
+    var result = totp.VerifyTotp(input, out var timeSteps);
+    Console.WriteLine(result);
+}
+
+return;
 
 Console.WriteLine("Generating test data...");
 var testEmailCount = 10;

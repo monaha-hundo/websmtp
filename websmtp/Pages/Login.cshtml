@@ -38,10 +38,18 @@
                         <label class="form-label visually-hidden" for="password">Password</label>
                     </div>
 
+                    @if(Model.MfaEnabled)
+                    {
+                        <div class="form-outline mb-4">
+                            <input type="number" id="otp" name="otp" class="form-control text-center"
+                                   placeholder="OTP" />
+                            <label class="form-label visually-hidden" for="password">OTP</label>
+                        </div>
+                    }
+
                     <div class="text-center pt-1 pb-1">
                         <button class="btn btn-primary btn-block fa-lg" type="submit">
-                            Log
-                            in
+                            Log in
                         </button>
                     </div>
 
