@@ -7,11 +7,31 @@ Use it to receive local email alerts from devices such as routers, ip cameras, p
 
 _In active development, partial features, missing features, etc._
 
-Multiple Inboxes
-![image](https://github.com/monaha-hundo/websmtp/assets/139830086/234eb8a9-113e-4e23-8516-4833e9cbf54a)
+## Login with one time passwords
+![Screenshot from 2024-02-26 09-47-51](https://github.com/monaha-hundo/websmtp/assets/139830086/5d7c567c-6136-4d50-8c31-3526101be3e3)
 
-Also supports cats and/or HTML
-![image](https://github.com/monaha-hundo/websmtp/assets/139830086/eb2d3172-6d29-4e2b-b8b5-759d1415fce0)
+## Basic Inbox/All Mail/Trash view
+![Screenshot from 2024-02-26 09-48-18](https://github.com/monaha-hundo/websmtp/assets/139830086/b1dee015-1e6f-4eee-a8b9-916dbcdc5cf2)
 
-And file attachements
-![image](https://github.com/monaha-hundo/websmtp/assets/139830086/dccb1f9c-2920-4f15-a056-bcb7eca28c61)
+## Clean email view
+![Screenshot from 2024-02-26 09-48-26](https://github.com/monaha-hundo/websmtp/assets/139830086/aba757c9-139b-4b52-8570-7b1d0a53ca1f)
+
+## Supports raw message display
+![Screenshot from 2024-02-26 09-48-57](https://github.com/monaha-hundo/websmtp/assets/139830086/a21f1db8-3b4d-404a-8ae7-2d7edfad5af5)
+
+## Supports HTML with media content
+![Screenshot from 2024-02-26 09-49-14](https://github.com/monaha-hundo/websmtp/assets/139830086/ffd58730-f8e1-453b-9d34-64df1cace315)
+
+## Quick OTP setup with QR code
+![image](https://github.com/monaha-hundo/websmtp/assets/139830086/07812766-a779-4c36-9975-0dd26a4a60cb)
+
+
+# Made with
+- Asp.Net / .Net 8 / EntityFramework Core
+- Bootstrap (no jquery/javascript)
+- SweetAlert2
+- MailKit / MimeKit
+- MariaDb / Oracle MySql Provider for efc
+- Otp.Net
+- QRCoder
+- SmtpServer
