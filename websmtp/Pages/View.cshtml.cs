@@ -1,17 +1,15 @@
-using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using MimeKit;
-using SmtpServer.Storage;
+using websmtp.Database.Models;
 
 namespace websmtp.Pages;
 
 [Authorize]
 public class MessageViewModel : PageModel
 {
-    [FromQuery]
-    public Guid MsgId { get; set; } = Guid.Empty;
+    [FromQuery] public Guid MsgId { get; set; } = Guid.Empty;
+    [FromQuery] public bool ShowRaw { get; set; } = false;
     private readonly ILogger<IndexModel> _logger;
     private readonly IReadableMessageStore _messageStore;
 
@@ -28,6 +26,6 @@ public class MessageViewModel : PageModel
 
     public void OnGet()
     {
-        Message = _messageStore.Single(MsgId);
+        Message = _messageStore.Single(MsgId, ShowRaw);
     }
 }

@@ -1,145 +1,20 @@
-using System.Buffers;
-using System.Collections.Concurrent;
-using System.Text.Json.Serialization;
 using MimeKit;
-using Newtonsoft.Json;
 using SmtpServer;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
-using websmtp;
+using System.Buffers;
+using websmtp.Database;
+using websmtp.Database.Models;
 
-public class MessageStore : IMessageStore, IReadableMessageStore
+public class MessageStore : IMessageStore
 {
-    private static ConcurrentDictionary<Guid, Message> _messagesDict = new ConcurrentDictionary<Guid, Message>();
     private readonly ILogger<MessageStore> _logger;
-    public MessageStore(ILogger<MessageStore> logger)
+    private readonly IServiceProvider _services;
+
+    public MessageStore(ILogger<MessageStore> logger, IServiceProvider services)
     {
         _logger = logger;
-    }
-
-    public List<Message> All()
-    {
-        return _messagesDict.Values.ToList();
-    }
-
-    public List<Message> Latest(
-        int page = 1,
-        int perPage = 5,
-        string? filterByHost = null,
-        string? filterByUser = null)
-    {
-        return _messagesDict.Values
-            .OrderByDescending(msg => msg.ReceivedOn)
-                .Where(msg => string.IsNullOrWhiteSpace(filterByHost)
-                    ? true : msg.To.Contains(filterByHost))
-                .Where(msg => string.IsNullOrWhiteSpace(filterByUser)
-                    ? true : msg.To.Contains(filterByUser + '@'))
-            .Skip((page - 1) * perPage)
-            .Take(perPage)
-            .ToList();
-    }
-
-
-    public List<Message> UnReplied()
-    {
-        return _messagesDict.Values
-                .OrderBy(msg => msg.ReceivedOn)
-                .Where(msg => !msg.Replied)
-                .ToList();
-    }
-    
-    public int Count(
-        bool onlyNew,
-        string? filterByHost,
-        string? filterByUser)
-    {
-        var query = _messagesDict.Values.AsQueryable();
-        if(onlyNew)
-        {
-            query = query.Where(msg => msg.Read == false);
-        }
-        return query.Count(msg =>
-                (string.IsNullOrWhiteSpace(filterByHost)
-                ? true : msg.To.Contains(filterByHost))
-                && (string.IsNullOrWhiteSpace(filterByUser)
-                ? true : msg.To.Contains(filterByUser + '@')));
-    }
-
-    public int Count(bool onlyNew = false)
-    {
-        if (onlyNew)
-        {
-            return _messagesDict.Values.Count(msg => !msg.Read);
-        }
-        else
-        {
-            return _messagesDict.Count;
-        }
-    }
-
-    public Dictionary<string, List<string>> Mailboxes()
-    {
-        var mailboxes = _messagesDict.Values
-            .Select(msg => new { Host = msg.ToAddress.Split('@')[1], User = msg.ToAddress.Split('@')[0] })
-            .GroupBy(msg => msg.Host)
-            .ToDictionary(
-                hostGrp => hostGrp.First().Host,
-                hostGrp => hostGrp.Select(hg => hg.User)
-                    .GroupBy(u => u)
-                    .Select(grp => grp.First())
-                    .ToList())
-            ?? throw new Exception("Could not generate mailboxes.");
-
-        return mailboxes;
-    }
-
-    public Message Single(Guid msgId)
-    {
-        return _messagesDict[msgId];
-    }
-
-    public void MarkAsRead(Guid msgId)
-    {
-        var msg = _messagesDict[msgId];
-        msg.Read = true;
-        SaveMessage(msg);
-    }
-
-    public Task LoadMessages()
-    {
-        _logger.LogInformation("Listing previously received messages files.");
-        var messageFiles = Directory.GetFiles("messages");
-        _logger.LogInformation($"Found {messageFiles.Length} messages in store.");
-
-        var done = 0;
-        var sw = new System.Diagnostics.Stopwatch();
-        sw.Restart();
-
-        messageFiles.AsParallel()
-            .ForAll(msgFile =>
-            {
-                try
-                {
-                    var json = File.ReadAllText(msgFile);
-                    var msg = JsonConvert.DeserializeObject<Message>(json) ?? throw new Exception("Could not parse message.");
-                    if (!_messagesDict.TryAdd(msg.Id, msg))
-                    {
-                        throw new Exception("Could not add loaded message to dictionary.");
-                    }
-                    done++;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogCritical($"Could load saved message id #{msgFile}: {ex.Message}");
-                    throw;
-                }
-            });
-
-        sw.Stop();
-
-        _logger.LogInformation($"Loaded {done} off {messageFiles.Length} messages from store in {sw.ElapsedMilliseconds / 1000}s.");
-
-        return Task.CompletedTask;
+        _services = services;
     }
 
     public Task<SmtpResponse> SaveAsync(
@@ -150,26 +25,41 @@ public class MessageStore : IMessageStore, IReadableMessageStore
     {
         try
         {
-            _logger.LogInformation("Received message, parsing & saving...");
-            var newGuid = Guid.NewGuid();
-            var newMessage = new Message(newGuid, buffer);
-            _messagesDict.TryAdd(newGuid, newMessage);
-            _logger.LogDebug($"Saved message id #{newGuid}.");
-            SaveMessage(newMessage);
+            using var scope = _services.CreateScope();
+            using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+
+            _logger.LogInformation("Received message, saving raw data...");
+            var raw = buffer.ToArray<byte>();
+
+            var newRawMsg = new RawMessage
+            {
+                Content = raw
+            };
+
+            _dataContext.RawMessages.Add(newRawMsg);
+            _dataContext.SaveChanges();
+            _logger.LogDebug($"Saved raw message id #{newRawMsg.Id}.");
+
+            _logger.LogInformation("Parsing message & saving data...");
+            using var memory = new MemoryStream(raw);
+            using var mimeMessage = MimeMessage.Load(memory) ?? throw new Exception("Could not parse message.");
+
+            var newMessage = new Message(mimeMessage)
+            {
+                RawMessageId = newRawMsg.Id
+            };
+
+            _dataContext.Messages.Add(newMessage);
+            _dataContext.SaveChanges();
+
+            _logger.LogDebug($"Saved message id #{newMessage.Id}.");
+
             return Task.FromResult(SmtpResponse.Ok);
         }
         catch (Exception ex)
         {
             _logger.LogCritical("Could not save incoming message: {0}", ex.Message);
             return Task.FromResult(SmtpResponse.TransactionFailed);
-            throw;
         }
-    }
-
-    public void SaveMessage(Message message)
-    {
-        var json = JsonConvert.SerializeObject(message);
-        var path = Path.Combine("messages", message.Id.ToString("N"));
-        File.WriteAllText(path, json);
     }
 }

@@ -37,4 +37,31 @@ public static class MessagesEndpoints
         var mimeType = attachement.MimeType;
         return Results.File(contentBytes, mimeType, filename);
     }
+
+    public static IResult MarkAsRead(
+        [FromRoute] Guid msgId,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.MarkAsRead(msgId);
+        return Results.Ok();
+    }
+
+    public static IResult Delete(
+        [FromRoute] Guid msgId,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.Delete(msgId);
+        return Results.Ok();
+    }
+
+    public static IResult Undelete(
+        [FromRoute] Guid msgId,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.Undelete(msgId);
+        return Results.Ok();
+    }
 }

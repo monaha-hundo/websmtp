@@ -5,95 +5,123 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="">
-    <h3 class="m-3 mt-6">@Model.Message.Subject</h3>
-    <div class="border rounded p-3">
-        <div style="display: flex; justify-content: space-between">
-            <div class="my-1">
-                <span style="font-weight: bold; display: inline-block; min-width: 50px">From:</span>
-                @Model.Message.From
-            </div>
-            <div class="my-1">@Model.Message.ReceivedOn.Date.ToLongDateString()</div>
-        </div>
-        <div style="display: flex; justify-content: space-between">
-            <div class="my-1">
-                <span style="font-weight: 900; display: inline-block; min-width: 50px">To:</span>
-                @Model.Message.To
-            </div>
-            @if (Model.Message.Attachements.Count > 0)
-            {
-                <div class="my-1">
-                    <div class="pill">
-                        <i class="bi bi-paperclip"></i>
-                        @Model.Message.Attachements.Count
-                    </div>
-                </div>
-            }
-        </div>
-
-        <div style="display: flex; justify-content: space-between">
-            <div class="my-1">
-                <span style="font-weight: bold; display: inline-block; min-width: 50px">Internal ID:</span>
-                @Model.Message.Id.ToString("N")
-            </div>
-        </div>
-
-        @* <div class="btn-group mt-2" role="group" aria-label="Basic example">
-        <button type="button" class="btn btn-secondary"><i class="bi bi-envelope"></i></button>
-        <button type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
-        <button type="button" class="btn btn-secondary"><i class="bi bi-tag"></i></button>
-        </div> *@
-
-        @if (!string.IsNullOrEmpty(Model.Message.HtmlContent))
+<div class="w-100 text-white">
+    <div class="p-2 mb-2 border-bottom" role="group" aria-label="Basic example">
+        <button onclick="closeMsg()" type="button" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i>
+        </button>
+        <button onclick="previousMsg()" type="button" class="btn btn-secondary">
+            <i class="bi bi-arrow-up"></i>
+        </button>
+        <button onclick="nextMsg()" type="button" class="btn btn-secondary">
+            <i class="bi bi-arrow-down"></i>
+        </button>
+        <button onclick="showRawMsg()" type="button" class="btn btn-secondary">
+            <i class="bi bi-file-earmark-code"></i>
+        </button>
+        @if (Model.Message.Deleted)
         {
-            <iframe id="html-content" class="mt-2" style="width: 100%; "
-                src="/api/messages/@(Model.Message.Id).html"></iframe>
+            <button onclick="undeleteMsg()" type="button" class="btn btn-secondary"><i class="bi bi-recycle"></i></button>
         }
         else
         {
-            <div class="mt-2">@Model.Message.TextContent</div>
+            <button onclick="deleteMsg()" type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
+        }
+    </div>
+
+    <h3 class="my-3 mx-4 px-1 pe-5">@Model.Message.Subject</h3>
+
+
+    <div class="border rounded p-3 mx-4">
+        <div class="d-flex align-items-center">
+            @switch (Model.Message.Importance)
+            {
+                case "High":
+                    <i class="bi bi-exclamation-circle me-2 fs-1_5rem text-danger"></i>
+                    <span class="fw-bold d-inline-block mw-50px">High Priority</span>
+                    break;
+                case "Low":
+                    <i class="bi bi-thermometer-low me-2 fs-1_5rem text-secondary"></i>
+                    <span class="fw-bold d-inline-block mw-50px">Low Priority</span>
+                    break;
+                default:
+                    break;
+            }
+        </div>
+        <div class="d-flex align-items-center">
+            <div class="my-1">
+                <span class="fw-bold d-inline-block mw-50px">Date:</span>
+                @Model.Message.ReceivedOn.Date.ToLongDateString()
+            </div>
+        </div>
+        <div class="d-flex justify-content-between">
+            <div class="my-1">
+                <span class="fw-bold d-inline-block mw-50px">From:</span>
+                <partial name="MailboxAddresses" model="Model.Message.From" />
+            </div>
+        </div>
+        <div class="d-flex justify-content-between">
+            <div class="my-1">
+                <span class="fw-bold d-inline-block mw-50px">To:</span>
+                <partial name="MailboxAddresses" model="Model.Message.To" />
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Message.Cc))
+        {
+            <div class="d-flex justify-content-between">
+                <div class="my-1">
+                    <span class="fw-bold d-inline-block mw-50px">Cc:</span>
+                    <partial name="MailboxAddresses" model="Model.Message.Cc" />
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Message.Bcc))
+        {
+            <div class="d-flex justify-content-between">
+                <div class="my-1">
+                    <span class="fw-bold d-inline-block mw-50px">Bcc:</span>
+                    <partial name="MailboxAddresses" model="Model.Message.Bcc" />
+                </div>
+            </div>
         }
 
         @if (Model.Message.Attachements.Count > 0)
         {
-            <div class="mt-2">
+            <div class="mb-2 p-2">
                 @foreach (var att in Model.Message.Attachements)
                 {
-                    <a class="badge rounded-pill text-bg-primary p-2"
+                    <a class="badge rounded-pill fs-6 text-bg-primary p-2"
                         href="/api/messages/@Model.Message.Id/attachements/@att.Filename">
-
                         <i class="bi bi-paperclip"></i>
-                        @att.Filename</a>
+                        @att.Filename
+                    </a>
                 }
             </div>
         }
+
+        @if (!string.IsNullOrEmpty(Model.Message.HtmlContent))
+        {
+            <div class="fw-bold">Html Content</div>
+            <iframe id="html-content" class="w-100" src="/api/messages/@(Model.Message.Id).html"></iframe>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.Message.TextContent))
+        {
+            <div class="fw-bold">Text Content</div>
+            <div class="">@Model.Message.TextContent</div>
+        }
+
+        @if (Model.Message.RawMessage != null)
+        {
+            <div class="mt-2">
+                <div class="fw-bold">Raw</div>
+                <pre>@System.Text.UTF8Encoding.UTF8.GetString(Model.Message.RawMessage.Content)</pre>
+            </div>
+        }
     </div>
-    @if (Model.Message.Replied)
-    {
-        <h3 class="m-3">Automatic AI Reply</h3>
-        <div class="border rounded p-3" style="padding-left: 10px !important; border-left: 10px solid #0b5ed7 !important">
-            @if (!string.IsNullOrWhiteSpace(Model.Message.ReplyText))
-            {
-                <pre class="p-0 m-0">@Model.Message.ReplyText</pre>
-            }
-            @if (!string.IsNullOrWhiteSpace(Model.Message.ReplyHtml))
-            {
-                <iframe id="html-content" class="mt-2" style="width: 100%; "
-                    src="data:text/html;base64,@Model.Message.ReplyHtml"></iframe>
-            }
-        </div>
-    }
 </div>
-
-<style>
-    table.msg-view {
-        width: 100%;
-    }
-
-    table.msg-view tr td.header {
-        max-width: 320px;
-    }
-</style>
 
 @section Scripts {
     <script>
@@ -109,23 +137,27 @@
             let visibility = isVisible ? 'none' : 'block';
             el.style.display = visibility;
         }
+        function closeMsg() {
+            window.parent.postMessage(`close-msg:_`, window.location.origin);
+        }
+        function deleteMsg() {
+            window.parent.postMessage(`delete-msg:@Model.MsgId`, window.location.origin);
+        }
+        function undeleteMsg() {
+            window.parent.postMessage(`undelete-msg:@Model.MsgId`, window.location.origin);
+        }
+        function previousMsg() {
+            window.parent.postMessage(`previous-msg:@Model.MsgId`, window.location.origin);
+        }
+        function nextMsg() {
+            window.parent.postMessage(`next-msg:@Model.MsgId`, window.location.origin);
+        }
+        function showRawMsg() {
+            console.log(document.location.href);
+            document.location.href = document.location.href + '&showRaw=true';
+        }
     </script>
     <script>
         setInterval(() => window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
-    </script>
-    <script type="text/javascript">
-        window.addEventListener('message', receiveMessage, false);
-
-        function receiveMessage(evt) {
-            console.log("Got message: " + JSON.stringify(evt.data) + " from origin: " + evt.origin);
-            // Do we trust the sender of this message?
-            //if (evt.origin !== "https://localhost:44335") {
-            //    return;
-            //}
-
-            if (evt.data.type === "frame-resized") {
-                document.getElementById("html-content").style.height = evt.data.value + "px";
-            }
-        }
     </script>
 }
