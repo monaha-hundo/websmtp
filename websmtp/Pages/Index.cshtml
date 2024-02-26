@@ -1,32 +1,17 @@
 ﻿@page
 @model IndexModel
+@{
+    var regex = new System.Text.RegularExpressions.Regex(@"""(.+)"" <(.+)>");
+}
 
 <partial name="Sidebar" model="Model.Listing" />
 
-<div class="content" data-bs-theme="dark">
-    <section class="listing d-flex flex-column h-100" style="border-left: 1pt solid var(--bs-border-color);">
+<div class="content">
+    <section class="listing d-flex flex-column h-100">
 
         <partial name="SearchForm" model="Model" />
 
         <div class="list list-group h-100 overflow-y-scroll position-relative">
-            <header class="d-flex px-1 py-2 list-group-item list-group-item-dark sticky-top z-1"
-                    style="background-color: var(--bs-body-bg)">
-                <div style="flex: 0 0 120px">
-                    Received
-                </div>
-                <div style="flex: 1 0 50%">
-                    Subject
-                </div>
-                <div style="flex: 1 1 20%">
-                    From
-                </div>
-                <div style="flex: 1 1 20%">
-                    To
-                </div>
-                <div style="flex: 0 1 25px">
-                    <i class="bi bi-paperclip"></i>
-                </div>
-            </header>
             @if (Model.Listing.Messages.Count == 0)
             {
                 <div class="list-group-item  d-flex">
@@ -37,33 +22,53 @@
             {
                 var message = Model.Listing.Messages[msgId];
                 <div href="/View?msgId=@message.Id" onclick="openwMsgView('@message.Id')" style="cursor: pointer;"
-                     class='list-group-item list-group-item-action d-flex px-1 py-2 @(message.Read ? "" : "unread")' msg-id="@message.Id">
-                    <div class="text-nowrap text-truncate" style="flex: 0 0 120px;">
-                        @if (DateTime.UtcNow - message.ReceivedOn < TimeSpan.FromHours(1))
-                        {
-                            <span title="@message.ReceivedOn.ToLocalTime()">@(Math.Round((DateTime.UtcNow - message.ReceivedOn).TotalMinutes))m ago</span>
-                        }
-                        else if (DateTime.UtcNow - message.ReceivedOn <= TimeSpan.FromHours(72))
-                        {
-                            <span title="@message.ReceivedOn.ToLocalTime()">@(Math.Round((DateTime.UtcNow - message.ReceivedOn).TotalHours))h ago</span>
-                        }
-                        else
-                        {
-                            <span title="@message.ReceivedOn.ToLocalTime()">@message.ReceivedOn.ToString("yyyy-MM-dd")</span>
-                        }
-                    </div>
+                    class='list-group-item list-group-item-action  px-1 py-2 @(message.Read ? "" : "unread")'
+                    msg-id="@message.Id">
+                    <div class="row align-items-center g-0 px-2">
+                        <div class="col-12 col-lg-2">
+                            @foreach (var singleOrigin in message.From.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                var result = regex.Matches(singleOrigin);
+                                if (result.Count == 0)
+                                {
+                                    @message.From
+                                }
+                                else
+                                {
+                                    var name = result[0].Groups[1];
+                                    var email = result[0].Groups[2]; ;
+                                    <span class="" href="/compose?to=@email" title="@email" class="me-2">@name</span>
+                                }
+                            }
+                        </div>
+                        <div class="col-12 col-lg-9">
+                            @message.Subject
+                        </div>
+                        <div class="col-12 col-lg-1">
 
-                    <div class="" style="flex: 1 0 50%">
-                        @message.Subject
-                    </div>
-                    <div class="" style="flex: 1 1 20%">
-                        @message.From
-                    </div>
-                    <div class="" style="flex: 1 1 20%">
-                        @message.To
-                    </div>
-                    <div class="" style="flex: 0 1 25px">
-                        @(message.AttachementsCount)
+                            @if (DateTime.UtcNow - message.ReceivedOn < TimeSpan.FromHours(1))
+                            {
+                                <span title="@message.ReceivedOn.ToLocalTime()">
+                                    @(Math.Round((DateTime.UtcNow - message.ReceivedOn).TotalMinutes))m ago
+                                </span>
+                            }
+                            else if (DateTime.UtcNow - message.ReceivedOn <= TimeSpan.FromHours(48))
+                            {
+                                <span title="@message.ReceivedOn.ToLocalTime()">
+                                    @(Math.Round((DateTime.UtcNow - message.ReceivedOn).TotalHours))h ago
+                                </span>
+                            }
+                            else
+                            {
+                                <span title="@message.ReceivedOn.ToLocalTime()">@message.ReceivedOn.ToString("dd MMMM")</span>
+                            }
+
+                            @if (message.AttachementsCount > 0)
+                            {
+                                <span class=""><i class="bi bi-paperclip"></i>@message.AttachementsCount</span>
+                            }
+
+                        </div>
                     </div>
                 </div>
             }
@@ -72,21 +77,32 @@
     </section>
 
     <section id="msg"
-             style=" flex: 1 1 auto; resize: vertical; overflow-y: auto; border-left: 1pt solid var(--bs-border-color);"
-             class="d-none">
+        style=" flex: 1 1 auto; resize: vertical; overflow-y: auto; border-left: 1pt solid var(--bs-border-color);"
+        class="d-none">
         <div id="msg-view-container" style="display: none; position: relative;">
-            <iframe id="msg-view" name="msg-view" style="width: 100%; height: 100px;"
-                    src="data:text/html;base64,PGh0bWwgc3R5bGU9ImJhY2tncm91bmQ6IHJnYigzMywgMzcsIDQxKTsiPjwvaHRtbD4K"></iframe>
+
         </div>
     </section>
 </div>
 
 @section Scripts {
     <script>
+
+        let onlyNew = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.OnlyNew));
+        let showTrash = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.ShowTrash));
+
+        window.addEventListener("popstate", (event) => {
+            console.log(`location: ${document.location}, state: ${JSON.stringify(event.state)}`);
+            closeMsgView();
+        });
+
+
         function initNavbar() {
-            const params = new URLSearchParams(window.location.search);
-            const onlyNew = params.get('onlyNew') != null ? params.get('onlyNew') == 'true' : false;
-            const showTrash = params.get('showTrash') != null ? params.get('showTrash') == 'true' : false;
+            //const params = new URLSearchParams(window.location.search);
+            //const onlyNew = params.get('onlyNew') != null ? params.get('onlyNew') == 'true' : false;
+            //const showTrash = params.get('showTrash') != null ? params.get('showTrash') == 'true' : false;
+            let onlyNew = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.OnlyNew));
+            let showTrash = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.ShowTrash));
 
             if (showTrash) {
                 const selector = `#btn-mailbox-trash`;
@@ -113,21 +129,33 @@
         var previousListingScrollPos = 0;
         async function openwMsgView(msgId) {
             event.preventDefault();
+
             markMessageAsRead(msgId);
             let listEl = document.querySelector('.list');
             let listingEl = document.querySelector('.listing');
             previousListingScrollPos = listEl.scrollTop;
             console.log(previousListingScrollPos);
             listingEl.classList.add('d-none');
-            let msgViewEl = document.getElementById('msg-view');
-            msgViewEl.setAttribute('src', '/View?msgId=' + msgId);
             let sectionEl = document.querySelector('#msg');
-            sectionEl.classList.remove('d-none');
             let containerEl = document.querySelector('#msg-view-container');
+
+            let msgViewEl = document.createElement('iframe');
+            msgViewEl.id = 'msg-view';
+            msgViewEl.style.width = '100%';
+            msgViewEl.style.height = '100%';
+
+            containerEl.appendChild(msgViewEl);
+
+            msgViewEl.setAttribute('src', '/View?msgId=' + msgId);
+            sectionEl.classList.remove('d-none');
             containerEl.style.display = 'block';
+
+            history.pushState({ page: 'view', msgId }, "");
         }
 
         function closeMsgView() {
+            let msgViewEl = document.getElementById('msg-view');
+            msgViewEl.parentElement.removeChild(msgViewEl);
             let sectionEl = document.querySelector('#msg');
             sectionEl.classList.add('d-none');
             let listingEl = document.querySelector('.listing');
@@ -151,11 +179,47 @@
         }
 
         function updateTrashCount(count) {
+            if (count == null) count = 1;
             const selector = 'sidebar--trash--count';
             const trashCountEl = document.getElementById(selector);
             const currentCount = parseInt(trashCountEl.innerText);
             trashCountEl.innerText = currentCount + 1;
         }
+
+        async function undeleteMessage(msgId) {
+            const call = async () => {
+                const response = await fetch(`/api/messages/${msgId}/undelete/`, {
+                    method: 'post'
+                });
+                const success = response.status == 200;
+                if (success) {
+                    const selector = `[msg-id='${msgId}']`;
+                    const checkMarkEl = document.querySelector(selector);
+                    checkMarkEl.parentElement.removeChild(checkMarkEl);
+                    updateTrashCount(-1);
+                    //closeMsgView();
+                    let msgViewEl = document.getElementById('msg-view');
+                    let url = msgViewEl.getAttribute('src');
+                    msgViewEl.setAttribute('src', url);
+                } else {
+                    Swal.fire({
+                        title: `Error`,
+                        text: 'Could not process request.'
+                    });
+                }
+            };
+
+            let result = await Swal.fire({
+                title: "Restore message?",
+                showCancelButton: true,
+                confirmButtonText: "Yes",
+                showLoaderOnConfirm: true,
+                preConfirm: call,
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+
+        }
+
 
         async function deleteMessage(msgId) {
             const call = async () => {
@@ -167,7 +231,7 @@
                     const selector = `[msg-id='${msgId}']`;
                     const checkMarkEl = document.querySelector(selector);
                     checkMarkEl.parentElement.removeChild(checkMarkEl);
-                    updateTrashCount();
+                    updateTrashCount(1);
                     closeMsgView();
                 } else {
                     Swal.fire({
@@ -192,6 +256,7 @@
             const selector = `[msg-id='${msgId}']`;
             const checkMarkEl = document.querySelector(selector);
             const prevMsgId = checkMarkEl.previousElementSibling.getAttribute('msg-id');
+            closeMsgView();
             openwMsgView(prevMsgId);
         }
 
@@ -199,6 +264,7 @@
             const selector = `[msg-id='${msgId}']`;
             const checkMarkEl = document.querySelector(selector);
             const prevMsgId = checkMarkEl.nextElementSibling.getAttribute('msg-id');
+            closeMsgView();
             openwMsgView(prevMsgId);
         }
 
@@ -211,7 +277,11 @@
                     document.querySelector('#msg-view').style.height = msgParam + 'px';
                     return;
                 case 'close-msg':
-                    closeMsgView();
+                    //closeMsgView();
+                    history.back();
+                    return;
+                case 'undelete-msg':
+                    undeleteMessage(msgParam);
                     return;
                 case 'delete-msg':
                     deleteMessage(msgParam);

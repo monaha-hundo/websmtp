@@ -1,4 +1,4 @@
-﻿namespace tests;
+﻿namespace Tests;
 
 public class FakeFile : IDisposable
 {

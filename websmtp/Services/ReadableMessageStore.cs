@@ -50,7 +50,10 @@ public class ReadableMessageStore : IReadableMessageStore
             var tokens = filter.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             foreach (var token in tokens)
             {
-                query = query.Where(msg => msg.Subject.Contains(token) || msg.To.Contains(token) || msg.From.Contains(token));
+                query = query.Where(msg => msg.Subject.Contains(token) 
+                                        || msg.To.Contains(token) 
+                                        || msg.From.Contains(token)
+                                        || (msg.TextContent != null && msg.TextContent.Contains(token)));
             }
         }
 
@@ -139,6 +142,14 @@ public class ReadableMessageStore : IReadableMessageStore
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
         msg.Deleted = true;
+        _dataContext.SaveChanges();
+    }
+    public void Undelete(Guid msgId)
+    {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
+        msg.Deleted = false;
         _dataContext.SaveChanges();
     }
 }

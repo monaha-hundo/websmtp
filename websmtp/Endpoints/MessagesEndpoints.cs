@@ -55,4 +55,13 @@ public static class MessagesEndpoints
         messages.Delete(msgId);
         return Results.Ok();
     }
+
+    public static IResult Undelete(
+        [FromRoute] Guid msgId,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.Undelete(msgId);
+        return Results.Ok();
+    }
 }

@@ -5,10 +5,10 @@ using MimeKit;
 using System.Net.Mail;
 using websmtp.Database;
 
-namespace tests;
+namespace Tests;
 
 [TestClass]
-public class Automated
+public class Basic
 {
     public TestContext? TestContext { get; set; }
 
@@ -22,7 +22,7 @@ public class Automated
 
     private readonly WebApplicationFactory<Program> _factory;
 
-    public Automated()
+    public Basic()
     {
         _factory = new WebApplicationFactory<Program>();
     }
@@ -37,8 +37,15 @@ public class Automated
         Console.WriteLine("Generating test data...");
         var testEmailCount = 100;
 
-        var emailAddress = new Faker<string>()
-            .CustomInstantiator(f => f.Internet.Email())
+        var emailAddress = new Faker<MailAddress>()
+            .CustomInstantiator(f =>
+            {
+                var fn = f.Name.FirstName();
+                var ln = f.Name.LastName();
+                var prov = f.Internet.DomainName();
+                var email = f.Internet.Email(fn, ln, prov, "");
+                return new MailAddress(email, $"{fn} {ln}");
+            })
             .Generate(15);
 
         var files = new Faker<FakeFile>()

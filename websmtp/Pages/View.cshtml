@@ -5,13 +5,25 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="w-100" >
-    <div class="p-2 mb-2" role="group" aria-label="Basic example" style="border-bottom: 1pt solid var(--bs-border-color);">
-        <button onclick="closeMsg()" type="button" class="btn btn-secondary"><i class="bi bi-arrow-left"></i></button>
-        <button onclick="previousMsg()" type="button" class="btn btn-secondary"><i class="bi bi-arrow-up"></i></button>
-        <button onclick="nextMsg()" type="button" class="btn btn-secondary"><i class="bi bi-arrow-down"></i></button>
-        <button onclick="showRawMsg()" type="button" class="btn btn-secondary"><i class="bi bi-file-earmark-code"></i></button>
-        @if (!Model.Message.Deleted)
+<div class="w-100 text-white">
+    <div class="p-2 mb-2 border-bottom" role="group" aria-label="Basic example">
+        <button onclick="closeMsg()" type="button" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i>
+        </button>
+        <button onclick="previousMsg()" type="button" class="btn btn-secondary">
+            <i class="bi bi-arrow-up"></i>
+        </button>
+        <button onclick="nextMsg()" type="button" class="btn btn-secondary">
+            <i class="bi bi-arrow-down"></i>
+        </button>
+        <button onclick="showRawMsg()" type="button" class="btn btn-secondary">
+            <i class="bi bi-file-earmark-code"></i>
+        </button>
+        @if (Model.Message.Deleted)
+        {
+            <button onclick="undeleteMsg()" type="button" class="btn btn-secondary"><i class="bi bi-recycle"></i></button>
+        }
+        else
         {
             <button onclick="deleteMsg()" type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
         }
@@ -25,12 +37,12 @@
             @switch (Model.Message.Importance)
             {
                 case "High":
-                    <i class="bi bi-exclamation-circle me-2" style="font-size: 1.5rem; color: red;"></i>
-                    <span style="font-weight: 900; display: inline-block; min-width: 50px">High Priority</span>
+                    <i class="bi bi-exclamation-circle me-2 fs-1_5rem text-danger"></i>
+                    <span class="fw-bold d-inline-block mw-50px">High Priority</span>
                     break;
                 case "Low":
-                    <i class="bi bi-thermometer-low me-2" style="font-size: 1.5rem; color: lightslategray;"></i>
-                    <span style="font-weight: 900; display: inline-block; min-width: 50px">Low Priority</span>
+                    <i class="bi bi-thermometer-low me-2 fs-1_5rem text-secondary"></i>
+                    <span class="fw-bold d-inline-block mw-50px">Low Priority</span>
                     break;
                 default:
                     break;
@@ -38,59 +50,50 @@
         </div>
         <div class="d-flex align-items-center">
             <div class="my-1">
-                <span style="font-weight: bold; display: inline-block; min-width: 50px">Date:</span>
+                <span class="fw-bold d-inline-block mw-50px">Date:</span>
                 @Model.Message.ReceivedOn.Date.ToLongDateString()
             </div>
         </div>
-        <div style="display: flex; justify-content: space-between">
+        <div class="d-flex justify-content-between">
             <div class="my-1">
-                <span style="font-weight: bold; display: inline-block; min-width: 50px">From:</span>
-                @Model.Message.From
+                <span class="fw-bold d-inline-block mw-50px">From:</span>
+                <partial name="MailboxAddresses" model="Model.Message.From" />
             </div>
         </div>
-        <div style="display: flex; justify-content: space-between">
+        <div class="d-flex justify-content-between">
             <div class="my-1">
-                <span style="font-weight: 900; display: inline-block; min-width: 50px">To:</span>
-                @Model.Message.To
+                <span class="fw-bold d-inline-block mw-50px">To:</span>
+                <partial name="MailboxAddresses" model="Model.Message.To" />
             </div>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(Model.Message.Cc))
         {
-            <div style="display: flex; justify-content: space-between">
+            <div class="d-flex justify-content-between">
                 <div class="my-1">
-                    <span style="font-weight: bold; display: inline-block; min-width: 50px">Cc:</span>
-                    @Model.Message.Cc
+                    <span class="fw-bold d-inline-block mw-50px">Cc:</span>
+                    <partial name="MailboxAddresses" model="Model.Message.Cc" />
                 </div>
             </div>
         }
 
         @if (!string.IsNullOrWhiteSpace(Model.Message.Bcc))
         {
-            <div style="display: flex; justify-content: space-between">
+            <div class="d-flex justify-content-between">
                 <div class="my-1">
-                    <span style="font-weight: bold; display: inline-block; min-width: 50px">Bcc:</span>
-                    @Model.Message.Bcc
+                    <span class="fw-bold d-inline-block mw-50px">Bcc:</span>
+                    <partial name="MailboxAddresses" model="Model.Message.Bcc" />
                 </div>
             </div>
         }
 
-        <!--
-            <div style="display: flex; justify-content: space-between">
-                <div class="my-1">
-                    <span style="font-weight: bold; display: inline-block; min-width: 50px">Internal ID:</span>
-            @Model.Message.Id.ToString("N")
-                </div>
-            </div>
-        -->
         @if (Model.Message.Attachements.Count > 0)
         {
             <div class="mb-2 p-2">
                 @foreach (var att in Model.Message.Attachements)
                 {
-                    <a class="badge rounded-pill text-bg-primary p-2"
-                       href="/api/messages/@Model.Message.Id/attachements/@att.Filename">
-
+                    <a class="badge rounded-pill fs-6 text-bg-primary p-2"
+                        href="/api/messages/@Model.Message.Id/attachements/@att.Filename">
                         <i class="bi bi-paperclip"></i>
                         @att.Filename
                     </a>
@@ -100,36 +103,25 @@
 
         @if (!string.IsNullOrEmpty(Model.Message.HtmlContent))
         {
-            <div style="font-weight: bold; ">Html Content</div>
-            <iframe id="html-content" class="" style="width: 100%; "
-                    src="/api/messages/@(Model.Message.Id).html"></iframe>
+            <div class="fw-bold">Html Content</div>
+            <iframe id="html-content" class="w-100" src="/api/messages/@(Model.Message.Id).html"></iframe>
         }
 
         @if (!string.IsNullOrEmpty(Model.Message.TextContent))
         {
-            <div style="font-weight: bold; ">Text Content</div>
+            <div class="fw-bold">Text Content</div>
             <div class="">@Model.Message.TextContent</div>
         }
 
         @if (Model.Message.RawMessage != null)
         {
             <div class="mt-2">
-                <div style="font-weight: bold; ">Raw</div>
+                <div class="fw-bold">Raw</div>
                 <pre>@System.Text.UTF8Encoding.UTF8.GetString(Model.Message.RawMessage.Content)</pre>
             </div>
         }
     </div>
 </div>
-
-<style>
-    table.msg-view {
-        width: 100%;
-    }
-
-        table.msg-view tr td.header {
-            max-width: 320px;
-        }
-</style>
 
 @section Scripts {
     <script>
@@ -150,6 +142,9 @@
         }
         function deleteMsg() {
             window.parent.postMessage(`delete-msg:@Model.MsgId`, window.location.origin);
+        }
+        function undeleteMsg() {
+            window.parent.postMessage(`undelete-msg:@Model.MsgId`, window.location.origin);
         }
         function previousMsg() {
             window.parent.postMessage(`previous-msg:@Model.MsgId`, window.location.origin);

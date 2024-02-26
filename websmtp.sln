@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "websmtp", "websmtp\websmtp.csproj", "{E098E0BA-802A-4B26-B9D8-2B36BC62ED5D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tests", "tests\tests.csproj", "{46E73802-BD95-4F8D-8B67-7568DA7E4635}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "tests\Tests.csproj", "{46E73802-BD95-4F8D-8B67-7568DA7E4635}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManualTester", "ManualTester\ManualTester.csproj", "{4D545E43-22BA-474E-90B5-EE32A6835030}"
 EndProject
