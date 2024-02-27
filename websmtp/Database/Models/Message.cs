@@ -62,7 +62,7 @@ public class Message : IMessage
 
         Subject = _mimeMessage.Subject;
 
-        var allFrom = _mimeMessage.From? .Select(f => f.ToString())?.ToList()
+        var allFrom = _mimeMessage.From?.Select(f => f.ToString())?.ToList()
             ?? new List<string>(0);
 
         From = string.Join(',', allFrom);
@@ -121,7 +121,7 @@ public class Message : IMessage
 
         Subject = _mimeMessage.Subject;
 
-        var allFrom = _mimeMessage.From? .Select(f => f.ToString())?.ToList()
+        var allFrom = _mimeMessage.From?.Select(f => f.ToString())?.ToList()
             ?? new List<string>(0);
 
         From = string.Join(',', allFrom);
@@ -156,6 +156,30 @@ public class Message : IMessage
         {
             var htmlContent = _mimeMessage.HtmlBody
                 ?? throw new Exception("Could not read message HtmlBody");
+
+            var bodyParts = _mimeMessage.BodyParts
+                .Where(a => !string.IsNullOrEmpty(a.ContentId))
+                .Select(a => new MessageAttachement(a))
+                .ToList();
+
+            var realAttachments = _mimeMessage.Attachments
+                .Where(a => a.IsAttachment)
+                .Select(a => new MessageAttachement(a))
+                .ToList();
+
+            var attachments = bodyParts.Concat(realAttachments).ToList();
+
+            foreach (var attachment in attachments.Where(a => !string.IsNullOrWhiteSpace(a.ContentId)))
+            {
+                var indexOfCid = htmlContent.IndexOf(attachment.ContentId);
+                var foundCid = indexOfCid > -1;
+                if (foundCid)
+                {
+                    htmlContent = htmlContent.Replace(
+                        "cid:" + attachment.ContentId,
+                        string.Format("data:{0};base64,{1}", attachment.MimeType, attachment.Content));
+                }
+            }
 
             var base64HtmlContent = htmlContent != null
                 ? Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(htmlContent))

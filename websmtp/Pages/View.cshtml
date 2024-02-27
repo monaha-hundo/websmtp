@@ -156,8 +156,14 @@
             console.log(document.location.href);
             document.location.href = document.location.href + '&showRaw=true';
         }
-    </script>
-    <script>
+
         setInterval(() => window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
+
+        setInterval(()=>{
+            let iframeEl = document.getElementById('html-content');
+            let height = iframeEl.contentDocument.documentElement.scrollHeight;
+            console.log(height);
+            iframeEl.height = height;
+        },100);
     </script>
 }
