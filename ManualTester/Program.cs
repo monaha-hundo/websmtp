@@ -4,17 +4,6 @@ using System.Net.Mail;
 using OtpNet;
 using QRCoder;
 
-var validator = new SpfValidator()
-{
-    HeloDomain = DomainName.Parse("example.com"),
-    LocalDomain = DomainName.Parse("receivingmta.example.com"),
-    LocalIP = IPAddress.Parse("192.0.2.1")
-};
-
-SpfQualifier result = validator.CheckHost(IPAddress.Parse("192.0.2.200"), DomainName.Parse("example.com"), "sender@example.com").Result;
-
-return;
-
 // byte[] raw = new byte[10];
 // Random.Shared.NextBytes(raw);
 

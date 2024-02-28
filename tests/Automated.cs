@@ -1,7 +1,9 @@
 using Bogus;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MimeKit;
+using MimeKit.Cryptography;
 using System.Net.Mail;
 using websmtp.Database;
 
@@ -27,6 +29,44 @@ public class Basic
         _factory = new WebApplicationFactory<Program>();
     }
 
+    [TestMethod]
+    public void SignAndVerifyDKIM()
+    {
+        using var client = _factory.CreateDefaultClient();
+        using var scope = _factory.Services.CreateScope();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+        var mailMessage = new MailMessage
+        {
+            From = new MailAddress("Rod B", "rod.b@skcr.me")
+        };
+        
+        mailMessage.To.Add(new MailAddress("Bob G", "bob.g@skcr.me"));
+        mailMessage.Subject = "Testing signed email (dkim)";
+        mailMessage.Body = "Hello, this message is signed. Hope it makes you feel safe.";
+
+        var mimeMessage = MimeMessage.CreateFromMailMessage(mailMessage);
+        var headersToSign =  new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
+
+        var domain = config.GetValue<string>("DKIM:Domain");
+        var selector = config.GetValue<string>("DKIM:selector");
+        var privateKeyFilename = config.GetValue<string>("DKIM:PrivateKey");
+
+        // need to resetup DKIM on skcr.me?
+
+        var signer = new DkimSigner (privateKeyFilename, domain, selector) 
+        {
+            AgentOrUserIdentifier = "@skcr.me",
+            QueryMethod = "dns/txt",
+        };
+
+        mimeMessage.Prepare(EncodingConstraint.SevenBit);
+
+        signer.Sign(mimeMessage, headersToSign);
+
+        var result = websmtp.IncomingEmailValidator.VerifyDkim(mimeMessage);
+        Assert.IsTrue(result);
+    }
 
     [TestMethod]
     public void VerifySpfGmail()
@@ -35,7 +75,7 @@ public class Basic
         var domain = "gmail.com";
         var sender = "test@gmail.com";
 
-        var result = websmtp.MessageStore.VerifySpf(ip, domain, sender);
+        var result = websmtp.IncomingEmailValidator.VerifySpf(ip, domain, sender);
         Assert.IsTrue(result == websmtp.SpfVerifyResult.Pass);
     }
 

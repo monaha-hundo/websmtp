@@ -1,5 +1,5 @@
-﻿using System.Text;
-using Heijden.DNS;
+﻿using DnsClient;
+using DnsClient.Protocol;
 using MimeKit.Cryptography;
 using Org.BouncyCastle.Crypto;
 
@@ -8,44 +8,35 @@ namespace websmtp;
 public class BasicPublicKeyLocator : DkimPublicKeyLocatorBase
 {
     readonly Dictionary<string, AsymmetricKeyParameter> cache;
-    readonly Resolver resolver;
+    readonly LookupClient lookupClient;
 
     public BasicPublicKeyLocator()
     {
         cache = new Dictionary<string, AsymmetricKeyParameter>();
 
-        resolver = new Resolver()//"8.8.8.8"
-        {
-            TransportType = TransportType.Udp,
-            UseCache = true,
-            Retries = 3
-        };
+        lookupClient = new LookupClient();
     }
 
     AsymmetricKeyParameter DnsLookup(string domain, string selector, CancellationToken cancellationToken)
     {
         var query = selector + "._domainkey." + domain;
-        AsymmetricKeyParameter pubkey;
 
         // checked if we've already fetched this key
-        if (cache.TryGetValue(query, out pubkey))
-            return pubkey;
-
-        // make a DNS query
-        var response = resolver.Query(query, QType.TXT);
-        var builder = new StringBuilder();
-
-        // combine the TXT records into 1 string buffer
-        foreach (var record in response.RecordsTXT)
+        if (cache.TryGetValue(query, out var cachedPubkey))
         {
-            foreach (var text in record.TXT)
-                builder.Append(text);
+            return cachedPubkey;
         }
 
-        var txt = builder.ToString();
+        var response = lookupClient.Query(query, QueryType.TXT);
 
-        // DkimPublicKeyLocatorBase provides us with this helpful method.
-        pubkey = GetPublicKey(txt);
+        var records = response.Answers
+            .Select(anws => anws as TxtRecord ?? throw new Exception("Answer was not a TXT Record..."))
+            .Select(txtRec => txtRec.Text)
+            .ToList();  //
+
+        var record = string.Concat(records);
+
+        var pubkey = GetPublicKey(record);
 
         cache.Add(query, pubkey);
 
@@ -54,14 +45,17 @@ public class BasicPublicKeyLocator : DkimPublicKeyLocatorBase
 
     public override AsymmetricKeyParameter LocatePublicKey(string methods, string domain, string selector, CancellationToken cancellationToken = default)
     {
-        var methodList = methods.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+        var methodList = methods.Split(':', StringSplitOptions.RemoveEmptyEntries);
+
         for (int i = 0; i < methodList.Length; i++)
         {
             if (methodList[i] == "dns/txt")
+            {
                 return DnsLookup(domain, selector, cancellationToken);
+            }
         }
 
-        throw new NotSupportedException(string.Format("{0} does not include any suported lookup methods.", methods));
+        throw new NotSupportedException($"{methods} does not include any suported lookup methods.");
     }
 
     public override Task<AsymmetricKeyParameter> LocatePublicKeyAsync(string methods, string domain, string selector, CancellationToken cancellationToken = default)
