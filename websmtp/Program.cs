@@ -1,6 +1,6 @@
-using websmtp;
+using websmtp.Startup;
 
-Startup.ParseArgs(args);
+CommandLine.ParseArgs(args);
 
 var builder = WebApplication.CreateBuilder(args);
 Startup.InitAppJsonConfig(builder);

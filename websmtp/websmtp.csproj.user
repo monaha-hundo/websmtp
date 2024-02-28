@@ -3,7 +3,7 @@
   <PropertyGroup>
     <RazorPage_SelectedScaffolderID>RazorViewEmptyScaffolder</RazorPage_SelectedScaffolderID>
     <RazorPage_SelectedScaffolderCategoryPath>root/Common/MVC</RazorPage_SelectedScaffolderCategoryPath>
-    <ActiveDebugProfile>websmtp</ActiveDebugProfile>
+    <ActiveDebugProfile>websmtp dkim setup</ActiveDebugProfile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
