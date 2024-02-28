@@ -27,6 +27,18 @@ public class Basic
         _factory = new WebApplicationFactory<Program>();
     }
 
+
+    [TestMethod]
+    public void VerifySpfGmail()
+    {
+        var ip = "66.249.80.2";
+        var domain = "gmail.com";
+        var sender = "test@gmail.com";
+
+        var result = websmtp.MessageStore.VerifySpf(ip, domain, sender);
+        Assert.IsTrue(result == websmtp.SpfVerifyResult.Pass);
+    }
+
     [TestMethod]
     public void SendEmail()
     {
