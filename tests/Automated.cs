@@ -38,10 +38,10 @@ public class Basic
 
         var mailMessage = new MailMessage
         {
-            From = new MailAddress("Rod B", "rod.b@skcr.me")
+            From = new MailAddress("rod.b@skcr.me", "Rod B")
         };
         
-        mailMessage.To.Add(new MailAddress("Bob G", "bob.g@skcr.me"));
+        mailMessage.To.Add(new MailAddress("bob.g@skcr.me", "Bob G"));
         mailMessage.Subject = "Testing signed email (dkim)";
         mailMessage.Body = "Hello, this message is signed. Hope it makes you feel safe.";
 

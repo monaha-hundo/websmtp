@@ -13,7 +13,7 @@ public partial class IncomingEmailValidator
     public static bool VerifyDkim(MimeMessage mimeMessage)
     {
         var dkimHeaderIndex = mimeMessage.Headers.IndexOf(HeaderId.DkimSignature);
-        var hasDkimSignature = dkimHeaderIndex > 0;
+        var hasDkimSignature = dkimHeaderIndex > -1;
         if (hasDkimSignature)
         {
             var locator = new BasicPublicKeyLocator();

@@ -31,7 +31,7 @@ public class BasicPublicKeyLocator : DkimPublicKeyLocatorBase
 
         var records = response.Answers
             .Select(anws => anws as TxtRecord ?? throw new Exception("Answer was not a TXT Record..."))
-            .Select(txtRec => txtRec.Text)
+            .SelectMany(txtRec => txtRec.Text)
             .ToList();  //
 
         var record = string.Concat(records);
