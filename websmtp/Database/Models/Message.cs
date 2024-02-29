@@ -18,6 +18,10 @@ public interface IMessage
     public int AttachementsCount { get; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
+    public bool DkimFailed { get; set; }
+    public SpfVerifyResult SpfStatus { get; set; }
+    public bool DmarcFailed { get; set; }
+    public bool Spam => DkimFailed || (SpfStatus != SpfVerifyResult.Pass) || DmarcFailed;
 }
 
 public class Message : IMessage
@@ -30,15 +34,18 @@ public class Message : IMessage
     [StringLength(1000)] public string Subject { get; set; } = string.Empty;
     [StringLength(1000)] public string From { get; set; } = string.Empty;
     [StringLength(1000)] public string To { get; set; } = string.Empty;
+    [StringLength(1000)] public string Cc { get; set; } = string.Empty;
+    [StringLength(1000)] public string Bcc { get; set; } = string.Empty;
+    [StringLength(8)] public string Importance { get; set; } = string.Empty;
     public string? TextContent { get; set; }
     public string? HtmlContent { get; set; }
     public List<MessageAttachement> Attachements { get; set; } = [];
     public int AttachementsCount { get; set; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
-    public string Cc { get; set; } = string.Empty;
-    public string Bcc { get; set; } = string.Empty;
-    [StringLength(8)] public string Importance { get; set; } = string.Empty;
+    public bool DkimFailed { get; set; }
+    public SpfVerifyResult SpfStatus { get; set; }
+    public bool DmarcFailed { get; set; }
 
     public Message()
     {
@@ -216,12 +223,14 @@ public class MessageInfo : IMessage
     public int AttachementsCount { get; set; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
+    public bool DkimFailed { get; set; }
+    public SpfVerifyResult SpfStatus { get; set; }
+    public bool DmarcFailed { get; set; }
     public MessageInfo() { }
     public MessageInfo(Message message)
     {
         Id = message.Id;
         ReceivedOn = message.ReceivedOn;
-        //Size = message.Size;
         Subject = message.Subject;
         From = message.From;
         To = message.To;
@@ -231,6 +240,9 @@ public class MessageInfo : IMessage
         AttachementsCount = message.AttachementsCount;
         Read = message.Read;
         Deleted = message.Deleted;
+        DkimFailed = message.DkimFailed;
+        SpfStatus = message.SpfStatus;
+        DmarcFailed = message.DmarcFailed;
     }
 }
 

@@ -52,8 +52,6 @@ public class Basic
         var selector = config.GetValue<string>("DKIM:selector");
         var privateKeyFilename = config.GetValue<string>("DKIM:PrivateKey");
 
-        // need to resetup DKIM on skcr.me?
-
         var signer = new DkimSigner (privateKeyFilename, domain, selector) 
         {
             AgentOrUserIdentifier = "@skcr.me",

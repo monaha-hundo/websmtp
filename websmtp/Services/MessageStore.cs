@@ -1,18 +1,11 @@
-using DnsClient;
-using DnsClient.Protocol;
 using MimeKit;
-using MimeKit.Cryptography;
 using SmtpServer;
 using SmtpServer.Mail;
 using SmtpServer.Net;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
-using SQLitePCL;
 using System.Buffers;
-using System.Diagnostics;
 using System.Net;
-using System.Text.RegularExpressions;
-using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
 
@@ -56,44 +49,33 @@ public class MessageStore : IMessageStore
             using var memory = new MemoryStream(raw);
             using var mimeMessage = MimeMessage.Load(memory) ?? throw new Exception("Could not parse message.");
 
-            var isSpam = false;
-
-            try
-            {
-                isSpam = isSpam && IncomingEmailValidator.VerifyDkim(mimeMessage);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
-            }
-
-            try
-            {
-                var ip = "goddamn";
-                var domain = transaction.From.Host;
-                var sender = transaction.From.AsAddress();
-                var spfResult = IncomingEmailValidator.VerifySpf(ip, domain, sender);
-                switch (spfResult)
-                {
-                    case SpfVerifyResult.Pass:
-                    case SpfVerifyResult.Softfail:
-                    case SpfVerifyResult.Neutral:
-                        isSpam = isSpam && false;
-                        break;
-                    default:
-                        isSpam = true;
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
-            }
-
             var newMessage = new Message(mimeMessage)
             {
                 RawMessageId = newRawMsg.Id
             };
+
+            try
+            {
+                newMessage.DkimFailed = !IncomingEmailValidator.VerifyDkim(mimeMessage);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
+            }
+
+            try
+            {
+                var endpoint = (IPEndPoint)context.Properties[EndpointListener.RemoteEndPointKey];
+                var ip = endpoint.Address.ToString();
+                var from = transaction.From.AsAddress();
+                var domain = transaction.From.Host;
+                newMessage.SpfStatus = IncomingEmailValidator.VerifySpf(ip, domain, from);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
+            }
+
 
             _dataContext.Messages.Add(newMessage);
             _dataContext.SaveChanges();
