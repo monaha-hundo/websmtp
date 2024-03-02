@@ -16,6 +16,9 @@ _In active development, partial features, missing features, etc._
 ## Clean email view
 ![Screenshot from 2024-02-26 09-48-26](https://github.com/monaha-hundo/websmtp/assets/139830086/aba757c9-139b-4b52-8570-7b1d0a53ca1f)
 
+## Send Emails
+![Screenshot from 2024-03-02 13-32-52](https://github.com/monaha-hundo/websmtp/assets/139830086/8eb52502-d22c-4462-ad64-beb870d06b4b)
+
 ## Supports raw message display
 ![Screenshot from 2024-02-26 09-48-57](https://github.com/monaha-hundo/websmtp/assets/139830086/a21f1db8-3b4d-404a-8ae7-2d7edfad5af5)
 
