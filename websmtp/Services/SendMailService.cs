@@ -6,6 +6,7 @@ using DnsClient.Protocol;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
+using MimeKit.Cryptography;
 
 
 namespace websmtp;
@@ -14,16 +15,26 @@ public class SendMailService
 {
     private readonly ILogger<SendMailService> _logger;
     private readonly IHostEnvironment _hostEnv;
+    private readonly IConfiguration _config;
 
     public SendMailService(ILogger<SendMailService> logger,
-        IHostEnvironment hostEnv)
+        IHostEnvironment hostEnv,
+        IConfiguration config)
     {
         _logger = logger;
         _hostEnv = hostEnv;
+        _config = config;
     }
 
     public void SendMail(MimeMessage message)
     {
+        var signMessage = _config.GetValue<bool>("DKIM:SigningEnabled");
+
+        if(signMessage)
+        {
+            Sign(message);
+        }
+
         var destinationEmail = (message.To[0] as MailboxAddress)
             ?? throw new Exception("Could not parse destination email address.");
 
@@ -80,6 +91,25 @@ public class SendMailService
             }
         }
 
+    }
+
+    private void Sign(MimeMessage mimeMessage)
+    {
+        var headersToSign =  new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
+
+        var domain = _config.GetValue<string>("DKIM:Domain");
+        var selector = _config.GetValue<string>("DKIM:selector");
+        var privateKeyFilename = _config.GetValue<string>("DKIM:PrivateKey");
+
+        var signer = new DkimSigner (privateKeyFilename, domain, selector) 
+        {
+            AgentOrUserIdentifier = "@skcr.me",
+            QueryMethod = "dns/txt",
+        };
+
+        mimeMessage.Prepare(EncodingConstraint.SevenBit);
+
+        signer.Sign(mimeMessage, headersToSign);
     }
 
     private static List<string> LookUpEmailMxRecords(MailboxAddress to, LookupClient lookup)
