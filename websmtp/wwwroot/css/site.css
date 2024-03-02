@@ -27,8 +27,7 @@ body {
 }
 
 @media (min-width: 1150px) {
-    html {
-    }
+    html {}
 
     .main--container {
         flex-direction: row;
@@ -73,10 +72,12 @@ table td {
 .content .listing .list-group-item:last-child {
     border-radius: 0;
 }
-.content .listing .list{
+
+.content .listing .list {
     border-left: none !important;
 }
-.content .listing .list .list-group-item .bi.bi-paperclip::before{
+
+.content .listing .list .list-group-item .bi.bi-paperclip::before {
     transform: rotate(33deg);
 }
 
@@ -103,7 +104,7 @@ table td {
     --bs-btn-hover-color: #fff;
     --bs-btn-hover-bg: #6c757d;
     --bs-btn-hover-border-color: #25283a;
-    --bs-btn-focus-shadow-rgb: 108,117,125;
+    --bs-btn-focus-shadow-rgb: 108, 117, 125;
     --bs-btn-active-color: #fff;
     --bs-btn-active-bg: #6c757d;
     --bs-btn-active-border-color: #25283a;
@@ -112,8 +113,25 @@ table td {
     --bs-btn-disabled-bg: transparent;
     --bs-btn-disabled-border-color: #25283a;
     --bs-gradient: none;
-  }
-  
+}
+
+.btn-dark {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #212529;
+    --bs-btn-border-color: #212529;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #424649;
+    --bs-btn-hover-border-color: #373b3e;
+    --bs-btn-focus-shadow-rgb: 66, 70, 73;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #4d5154;
+    --bs-btn-active-border-color: #373b3e;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #212529;
+    --bs-btn-disabled-border-color: #212529;
+}
+
 :root {
     --bs-blue: #0d6efd;
     --bs-indigo: #6610f2;
@@ -244,25 +262,40 @@ table td {
     box-shadow: none;
 }
 
-.mw-50px{
+.mw-50px {
     min-width: 50px;
 }
 
-.fs-1_5rem{
+.fs-1_5rem {
     font-size: 1.5rem;
 }
 
-.border-bottom{
+.border-bottom {
     border-bottom: 1pt solid var(--bs-border-color);
 }
 
-.new--message-label-min-width{
+.new--message-label-min-width {
     min-width: 80px;
 }
 
-.icon-125::before{
+.icon-125::before {
     font-size: 1.5rem;
     position: absolute;
 }
 
-.tox
+.new--message-header-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    z-index: 10;
+    background-color: #25283a;
+    border-top-left-radius: var(--bs-border-radius);
+    border-top-right-radius: var(--bs-border-radius);
+}
+
+.list-group-item-action:focus,
+.list-group-item-action:hover {
+    z-index: unset;
+}

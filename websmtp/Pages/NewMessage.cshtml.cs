@@ -28,9 +28,15 @@ namespace MyApp.Namespace
         [BindProperty] public string Body { get; set; }
         public bool? Sent { get; set; }
 
+        [FromQuery] public bool? DebugSent { get; set; }
+        [FromQuery] public bool? DebugSentError { get; set; }
+
         public void OnGet()
         {
-
+            if (DebugSent == true)
+            {
+                Sent = !DebugSentError ?? true;
+            }
         }
         public void OnPost()
         {

@@ -152,17 +152,23 @@
             window.parent.postMessage(`next-msg:@Model.MsgId`, window.location.origin);
         }
         function showRawMsg() {
-            console.log(document.location.href);
             document.location.href = document.location.href + '&showRaw=true';
         }
 
-        setInterval(() => window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
+        var viewResizeInterval = setInterval(() => window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
 
-        setInterval(()=>{
+        var innerViewResizeInterval = setInterval(()=>{
             let iframeEl = document.getElementById('html-content');
+            if(iframeEl == null) return; 
             let height = iframeEl.contentDocument.documentElement.scrollHeight;
-            console.log(height);
+            if(height == 0) return; 
             iframeEl.height = height;
         },100);
+
+        document.addEventListener('unload', ()=> {
+            console.log('clearing intervals');
+            clearInterval(viewResizeInterval);
+            clearInterval(innerViewResizeInterval);
+        });
     </script>
 }

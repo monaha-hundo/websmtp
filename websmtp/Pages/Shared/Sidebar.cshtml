@@ -4,9 +4,14 @@
         <i class="bi bi-fire"></i>
         <span>websmtp</span>
     </a>
+    <div class="pb-5">
+        <button class="btn btn-lg btn-primary w-100" onclick="newMessage()">
+            New Message
+        </button>
+    </div>
     <nav class="nav nav-pills d-flex flex-column">
         <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
+            <a class="btn btn-lg d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
                 id="btn-mailbox-inbox" href="/?onlyNew=true">
                 <i class="bi bi-inbox"></i>
                 <span class="ms-2">Inbox</span>
@@ -14,7 +19,7 @@
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
+            <a class="btn btn-lg d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
                 id="btn-mailbox-all" href="/?onlyNew=false">
                 <i class="bi bi-inboxes"></i>
                 <span class="ms-2">All Mail</span>
@@ -22,7 +27,7 @@
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
+            <a class="btn btn-lg d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
                 id="btn-mailbox-trash" href="/?showTrash=true">
                 <i class="bi bi-trash"></i>
                 <span class="ms-2">Trash</span>
