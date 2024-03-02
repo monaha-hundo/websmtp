@@ -1,6 +1,7 @@
 ﻿@page
 @model IndexModel
 @{
+    // use compile time regex
     var regex = new System.Text.RegularExpressions.Regex(@"""(.+)"" <(.+)>");
 }
 
@@ -83,6 +84,12 @@
 
         </div>
     </section>
+
+    <section id="new--message" 
+    class="d-none"
+    style="position: fixed; bottom: 0; right: 2em; width: 640px;">
+        <iframe id="new--message-frame" src="/NewMessage" style="height: 100%; width: 100%;"></iframe>
+    </section>
 </div>
 
 @section Scripts {
@@ -92,7 +99,6 @@
         let showTrash = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.ShowTrash));
 
         window.addEventListener("popstate", (event) => {
-            console.log(`location: ${document.location}, state: ${JSON.stringify(event.state)}`);
             closeMsgView();
         });
 
@@ -108,7 +114,7 @@
                 const selector = `#btn-mailbox-trash`;
                 const mailboxEl = document.querySelector(selector);
                 mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-primary');
+                mailboxEl.classList.add('btn-dark');
                 return;
             }
 
@@ -116,13 +122,13 @@
                 const selector = `#btn-mailbox-inbox`;
                 const mailboxEl = document.querySelector(selector);
                 mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-primary');
+                mailboxEl.classList.add('btn-dark');
             }
             else {
                 const selector = `#btn-mailbox-all`;
                 const mailboxEl = document.querySelector(selector);
                 mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-primary');
+                mailboxEl.classList.add('btn-dark');
             }
         }
 
@@ -133,9 +139,10 @@
             markMessageAsRead(msgId);
             let listEl = document.querySelector('.list');
             let listingEl = document.querySelector('.listing');
+
             previousListingScrollPos = listEl.scrollTop;
-            console.log(previousListingScrollPos);
             listingEl.classList.add('d-none');
+
             let sectionEl = document.querySelector('#msg');
             let containerEl = document.querySelector('#msg-view-container');
 
@@ -293,6 +300,17 @@
                     nextMessage(msgParam);
                     return;
             }
+        }
+
+        function newMessage(to){
+            let sectionEl = window.parent.document.getElementById('new--message');
+            let iframeEl = window.parent.document.getElementById('new--message-frame');
+            if(to == null){
+                iframeEl.src = '/NewMessage';
+            }else{
+                iframeEl.src = '/NewMessage?initialTo=' + to;
+            }
+            sectionEl.classList.remove('d-none');
         }
 
         window.addEventListener('message', handleMessage, false);

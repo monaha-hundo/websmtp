@@ -9,3 +9,8 @@ websmtp/messages/
 websmtp/messages/*
 websmtp/websmtp.db
 /.vs
+*.der
+*.pem
+openssl.exe
+libcrypto-3-x64.dll
+libssl-3-x64.dll

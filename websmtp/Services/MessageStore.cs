@@ -1,20 +1,27 @@
 using MimeKit;
 using SmtpServer;
+using SmtpServer.Mail;
+using SmtpServer.Net;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
 using System.Buffers;
+using System.Net;
 using websmtp.Database;
 using websmtp.Database.Models;
+
+namespace websmtp;
 
 public class MessageStore : IMessageStore
 {
     private readonly ILogger<MessageStore> _logger;
     private readonly IServiceProvider _services;
+    private readonly IConfiguration _config;
 
-    public MessageStore(ILogger<MessageStore> logger, IServiceProvider services)
+    public MessageStore(ILogger<MessageStore> logger, IServiceProvider services, IConfiguration config)
     {
         _logger = logger;
         _services = services;
+        _config = config;
     }
 
     public Task<SmtpResponse> SaveAsync(
@@ -49,6 +56,18 @@ public class MessageStore : IMessageStore
                 RawMessageId = newRawMsg.Id
             };
 
+            var dkimValidation = _config.GetValue<bool>("DKIM:SigningEnabled");
+            if (dkimValidation)
+            {
+                ValidateDkim(newRawMsg, mimeMessage, newMessage);
+            }
+
+            var spfValidation = _config.GetValue<bool>("SPF:Enabled");
+            if (spfValidation)
+            {
+                ValidateSpf(context, transaction, newRawMsg, newMessage);
+            }
+
             _dataContext.Messages.Add(newMessage);
             _dataContext.SaveChanges();
 
@@ -62,4 +81,33 @@ public class MessageStore : IMessageStore
             return Task.FromResult(SmtpResponse.TransactionFailed);
         }
     }
+
+    private void ValidateDkim(RawMessage newRawMsg, MimeMessage mimeMessage, Message newMessage)
+    {
+        try
+        {
+            newMessage.DkimFailed = !IncomingEmailValidator.VerifyDkim(mimeMessage);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
+        }
+    }
+
+    private void ValidateSpf(ISessionContext context, IMessageTransaction transaction, RawMessage newRawMsg, Message newMessage)
+    {
+        try
+        {
+            var endpoint = (IPEndPoint)context.Properties[EndpointListener.RemoteEndPointKey];
+            var ip = endpoint.Address.ToString();
+            var from = transaction.From.AsAddress();
+            var domain = transaction.From.Host;
+            newMessage.SpfStatus = IncomingEmailValidator.VerifySpf(ip, domain, from);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
+        }
+    }
 }
+

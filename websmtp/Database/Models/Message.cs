@@ -18,27 +18,34 @@ public interface IMessage
     public int AttachementsCount { get; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
+    public bool DkimFailed { get; set; }
+    public SpfVerifyResult SpfStatus { get; set; }
+    public bool DmarcFailed { get; set; }
+    public bool Spam => DkimFailed || (SpfStatus != SpfVerifyResult.Pass) || DmarcFailed;
 }
 
 public class Message : IMessage
 {
     public Guid Id { get; set; } = Guid.Empty;
     public Guid RawMessageId { get; set; } = Guid.Empty;
-    [ForeignKey("RawMessageId")] public RawMessage RawMessage { get; set; }
+    [ForeignKey("RawMessageId")] public RawMessage RawMessage { get; set; } = null!; // A message will always have an associated raw message.
     public DateTimeOffset ReceivedOn { get; set; } = DateTimeOffset.MinValue;
     //public long Size { get; set; }
     [StringLength(1000)] public string Subject { get; set; } = string.Empty;
     [StringLength(1000)] public string From { get; set; } = string.Empty;
     [StringLength(1000)] public string To { get; set; } = string.Empty;
+    [StringLength(1000)] public string Cc { get; set; } = string.Empty;
+    [StringLength(1000)] public string Bcc { get; set; } = string.Empty;
+    [StringLength(8)] public string Importance { get; set; } = string.Empty;
     public string? TextContent { get; set; }
     public string? HtmlContent { get; set; }
     public List<MessageAttachement> Attachements { get; set; } = [];
     public int AttachementsCount { get; set; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
-    public string Cc { get; set; }
-    public string Bcc { get; set; }
-    [StringLength(8)] public string Importance { get; set; }
+    public bool DkimFailed { get; set; }
+    public SpfVerifyResult SpfStatus { get; set; }
+    public bool DmarcFailed { get; set; }
 
     public Message()
     {
@@ -207,21 +214,23 @@ public class MessageInfo : IMessage
     public Guid Id { get; set; }
     public DateTimeOffset ReceivedOn { get; set; }
     //public long Size { get; set;  }
-    public string Subject { get; set; }
-    public string From { get; set; }
-    public string To { get; set; }
-    public string Cc { get; set; }
-    public string Bcc { get; set; }
-    public string Importance { get; set; }
+    public string Subject { get; set; } = string.Empty;
+    public string From { get; set; } = string.Empty;
+    public string To { get; set; } = string.Empty;
+    public string Cc { get; set; } = string.Empty;
+    public string Bcc { get; set; } = string.Empty;
+    public string Importance { get; set; } = string.Empty;
     public int AttachementsCount { get; set; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
+    public bool DkimFailed { get; set; }
+    public SpfVerifyResult SpfStatus { get; set; }
+    public bool DmarcFailed { get; set; }
     public MessageInfo() { }
     public MessageInfo(Message message)
     {
         Id = message.Id;
         ReceivedOn = message.ReceivedOn;
-        //Size = message.Size;
         Subject = message.Subject;
         From = message.From;
         To = message.To;
@@ -231,6 +240,9 @@ public class MessageInfo : IMessage
         AttachementsCount = message.AttachementsCount;
         Read = message.Read;
         Deleted = message.Deleted;
+        DkimFailed = message.DkimFailed;
+        SpfStatus = message.SpfStatus;
+        DmarcFailed = message.DmarcFailed;
     }
 }
 
@@ -244,16 +256,16 @@ public class MessageAttachement
 
     public MessageAttachement(MimeEntity mimeEntity)
     {
+        if (mimeEntity == null) throw new ArgumentNullException(nameof(mimeEntity));
+        using var tempMemory = new MemoryStream();
+        var wat = new FormatOptions();
+        mimeEntity.WriteTo(wat, tempMemory, true);
         MimeType = mimeEntity.ContentType.MimeType ?? "application/octet-stream";
         Filename = mimeEntity.ContentType.Name
             ?? mimeEntity.ContentDisposition.FileName
             ?? mimeEntity.ContentId;
         ContentId = mimeEntity?.ContentId ?? "";
-        using var tempMemory = new MemoryStream();
-        var wat = new FormatOptions();
-        mimeEntity.WriteTo(wat, tempMemory, true);
         var mimeBytes = tempMemory.ToArray();
-        //var mimeBase64 = Convert.ToBase64String(mimeBytes);
         var mimeString = System.Text.Encoding.Default.GetString(mimeBytes);
         Content = mimeString;
     }

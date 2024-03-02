@@ -1,77 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using OtpNet;
-using QRCoder;
 using SmtpServer.Storage;
-using System.Net.Sockets;
-using System.Web;
 using websmtp.Database;
 
-namespace websmtp;
+namespace websmtp.Startup;
 
 public static class Startup
 {
-    public static int? ParseArgs(string[] args)
-    {
-        var shouldHashPassword = args.Any(arg => arg.StartsWith("--generate-credentials-config"));
-        if (shouldHashPassword)
-        {
-            Console.Write("Enter username: ");
-            var username = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(username) || username.Length == 0)
-            {
-                Console.WriteLine("Invalid username.");
-                Environment.Exit(-1);
-                return -1;
-            }
-
-            Console.Write("Enter password: ");
-            var passwordToHash = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(passwordToHash) || passwordToHash.Length == 0)
-            {
-                Console.WriteLine("Invalid password.");
-                Environment.Exit(-1);
-                return -1;
-            }
-            var hasher = new PasswordHasher();
-            var hash = hasher.HashPassword(passwordToHash);
-            Console.WriteLine($"Hashed password: '{hash}'.");
-
-            byte[] raw = new byte[10];
-            Random.Shared.NextBytes(raw);
-            var otpSecret = Base32Encoding.ToString(raw);
-
-            var qrGenerator = new QRCodeGenerator();
-            var totpQrCodeString = new OtpUri(OtpType.Totp, otpSecret, username).ToString();
-            var qrCodeData = qrGenerator.CreateQrCode(totpQrCodeString, QRCodeGenerator.ECCLevel.Q);
-            var qrCode = new AsciiQRCode(qrCodeData);
-            var lines = qrCode.GetLineByLineGraphic(1, drawQuietZones: true);
-            Console.WriteLine($"Use the following QR code for your 2FA app:");
-            foreach (var line in lines)
-            {
-                Console.WriteLine(line);
-            }
-
-            Console.WriteLine("Add a 'Security' section to the configuration file to set the login credentials, eg.:");
-            Console.WriteLine(JsonConvert.SerializeObject(new
-            {
-                Security = new
-                {
-                    Username = username,
-                    PasswordHash = hash,
-                    MfaEnabled = true,
-                    OTPSecret = otpSecret
-                }
-            }, Formatting.Indented));
-            Environment.Exit(0);
-            return 0;
-        }
-
-        return null;
-    }
-
     public static void InitAppJsonConfig(WebApplicationBuilder builder)
     {
         builder.Configuration.AddJsonFile("appSettings.json", false, true);

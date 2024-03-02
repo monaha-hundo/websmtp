@@ -30,13 +30,21 @@ namespace websmtp.Migrations
 
                     b.Property<string>("Bcc")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
 
                     b.Property<string>("Cc")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
 
                     b.Property<bool>("Deleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("DkimFailed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("DmarcFailed")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("From")
@@ -60,6 +68,9 @@ namespace websmtp.Migrations
 
                     b.Property<DateTimeOffset>("ReceivedOn")
                         .HasColumnType("datetime");
+
+                    b.Property<int>("SpfStatus")
+                        .HasColumnType("int");
 
                     b.Property<string>("Subject")
                         .IsRequired()

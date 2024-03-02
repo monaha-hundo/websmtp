@@ -1,0 +1,224 @@
+﻿@page
+@model MyApp.Namespace.NewMessageModel
+@{
+    Layout = "_LayoutEmpty";
+}
+@section Head {
+    <script src="/lib/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
+    <script>
+        tinymce.init({
+            selector: '#body',
+            skin: 'polaris',
+            promotion: false,
+            branding: false,
+            plugins: 'lists link emoticons image code',
+            toolbar: 'undo redo | formatgroup | link emoticons image | code removeformat',
+
+            toolbar_groups: {
+                formatgroup: {
+                    icon: 'format',
+                    tooltip: 'Formatting',
+                    items: 'fontselect | formatselect | bold italic underline strikethrough forecolor | align bullist numlist outdent indent blockquote'
+                }
+            },
+            forced_root_block: 'p',
+            forced_root_block_attrs: { 'style': 'font-size: 14px; font-family: helvetica, arial, sans-serif;' },
+            automatic_uploads: true,
+            images_upload_handler: (blobInfo) => {
+                const base64str =
+                    "data:" +
+                    blobInfo.blob().type +
+                    ";base64," +
+                    blobInfo.base64();
+                return Promise.resolve(base64str);
+            },
+            file_picker_callback: (cb, value, meta) => {
+                const input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', 'image/*');
+
+                input.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+
+                    const reader = new FileReader();
+                    reader.addEventListener('load', () => {
+                        /*
+                          Note: Now we need to register the blob in TinyMCEs image blob
+                          registry. In the next release this part hopefully won't be
+                          necessary, as we are looking to handle it internally.
+                        */
+                        const id = 'blobid' + (new Date()).getTime();
+                        const blobCache = tinymce.activeEditor.editorUpload.blobCache;
+                        const base64 = reader.result.split(',')[1];
+                        const blobInfo = blobCache.create(id, file, base64);
+                        blobCache.add(blobInfo);
+
+                        /* call the callback and populate the Title field with the file name */
+                        cb(blobInfo.blobUri(), { title: file.name });
+                    });
+                    reader.readAsDataURL(file);
+                });
+
+                input.click();
+            },
+        });
+    </script>
+}
+@if (Model.Sent.HasValue && Model.Sent == true)
+{
+    <div style="width: 100%; height: 100%" class="d-flex align-items-center justify-content-center">
+        <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
+            <div class="card-body ">
+                <div class="text-center my-2">Message sent.</div>
+                <div class="text-center my-2">
+                    <button class="btn btn-primary" onclick="closeWindow()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (Model.Sent.HasValue && Model.Sent == false)
+{
+    <div style="width: 100%; height: 100%" class="d-flex align-items-center justify-content-center">
+        <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
+            <div class="card-body ">
+                <div class="text-center my-2">Error</div>
+                <div class="text-center my-2">Request ID: 123091283098123098</div>
+                <div class="text-center my-2">
+                    <button class="btn btn-primary" onclick="closeWindow()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="new--message-header-bg"></div>
+    <form class="position-relative card card-outlined container-fluid text-white d-flex flex-column mb-2"
+    style="height: 100%;" method="post" enctype="application/x-www-form-urlencoded">
+
+    <div class="card-body ">
+        <span class="h5 card-title mb-5" style="position: relative; z-index: 55;">
+
+            <div class="row align-items-center justify-content-between">
+                <div class="col col-auto">New Message</div>
+                <div class="col col-auto position-relative">
+                    <button class="btn btn-transparent position-absolute"
+                        style="right: 14px; top: 50%; transform: translateY(-50%)" onclick="saveAndCloseDraft()">
+                        <i class="bi bi-x-lg fw-bolder"></i>
+                    </button>
+                </div>
+            </div>
+        </span>
+
+        <div class="row align-items-center mb-2 mt-4 gx-0">
+            <div class="col col-auto new--message-label-min-width">
+                From:
+            </div>
+            <div class="col">
+
+                <div class="input-group">
+                    <input id="from" name="from" type="text" class="form-control"
+                        aria-label="Text input with dropdown button">
+                    <button class="btn btn-outline-neutral dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#">No Identities configured</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#">Manage</a></li>
+                    </ul>
+                </div>
+
+            </div>
+
+        </div>
+        <div class="row align-items-center my-2">
+            <div class="col col-auto new--message-label-min-width">
+                To:
+            </div>
+            <div class="col">
+                <div class="input-group">
+                    <input id="to" name="to" type="text" class="form-control"
+                        aria-label="Text input with dropdown button">
+                    <button class="btn btn-outline-neutral" type="button">
+                        CC
+                    </button>
+                    <button class="btn btn-outline-neutral" type="button">
+                        BCC
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="cc-row" class="row align-items-center my-2  d-none">
+            <div class="col col-auto new--message-label-min-width">
+                Cc:
+            </div>
+            <div class="col">
+                <input id="cc" name="cc" class="form-control" />
+            </div>
+        </div>
+        <div id="bcc-row" class="row align-items-center my-2 d-none">
+            <div class="col col-auto new--message-label-min-width">
+                Bcc:
+            </div>
+            <div class="col">
+                <input id="bcc" name="bcc" class="form-control" />
+            </div>
+        </div>
+        <div class="row align-items-center my-2">
+            <div class="col col-auto new--message-label-min-width">
+                Subject:
+            </div>
+            <div class="col">
+                <input id="subject" name="subject" class="form-control" />
+            </div>
+        </div>
+        <div class="my-2">
+            <textarea id="body" name="body" class="form-control" style="flex: 1 1 100%;"
+                id="exampleFormControlTextarea1" rows="3"></textarea>
+        </div>
+
+        <div class="row align-items-center justify-content-between my-2">
+            <div class="col">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="true" id="html" name="html" checked>
+                    <label class="form-check-label" for="flexCheckChecked">
+                        HTML Message
+                    </label>
+                </div>
+            </div>
+
+            <div class="col col-auto d-flex align-items-center">
+                <button type="submit" class="btn btn-primary ">Send</button>
+            </div>
+        </div>
+    </div>
+
+</form>
+}
+@section Scripts {
+    <script>
+        function closeWindow() {
+            event.preventDefault();
+            let sectionEl = window.parent.document.getElementById('new--message');
+            let iframeEl = window.parent.document.getElementById('new--message-frame');
+            sectionEl.classList.add('d-none');
+            iframeEl.src = 'about:blank';
+        }
+        function saveAndCloseDraft() {
+            event.preventDefault();
+            let sectionEl = window.parent.document.getElementById('new--message');
+            let iframeEl = window.parent.document.getElementById('new--message-frame');
+            sectionEl.classList.add('d-none');
+            iframeEl.src = 'about:blank';
+        }
+        function resizeIframe() {
+            let iframeEl = window.parent.document.getElementById('new--message-frame');
+            iframeEl.style.height = document.documentElement.scrollHeight + 'px';
+        }
+        setInterval(resizeIframe, 100);
+    </script>
+}
