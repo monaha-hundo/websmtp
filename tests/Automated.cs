@@ -1,4 +1,5 @@
 using Bogus;
+using DNS.Server;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +52,11 @@ public class Basic
         var domain = config.GetValue<string>("DKIM:Domain");
         var selector = config.GetValue<string>("DKIM:selector");
         var privateKeyFilename = config.GetValue<string>("DKIM:PrivateKey");
+        
+        var masterFile = new MasterFile();
+        var server = new DnsServer(masterFile);
+
+        masterFile.AddTextResourceRecord("skcr.me", "dkim", _publicKey);
 
         var signer = new DkimSigner (privateKeyFilename, domain, selector) 
         {
