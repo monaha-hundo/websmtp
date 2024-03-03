@@ -13,6 +13,10 @@ public class FakeFile : IDisposable
 
     public void Dispose()
     {
-        Content?.Dispose();
+        if(Content != null)
+        {
+            Content.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }

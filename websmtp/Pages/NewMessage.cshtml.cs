@@ -19,13 +19,13 @@ namespace MyApp.Namespace
         readonly SendMailService _sendMail;
 
         [FromQuery] public string? InitialTo { get; set; }
-        [BindProperty] public string From { get; set; }
-        [BindProperty] public string To { get; set; }
-        [BindProperty] public string Cc { get; set; }
-        [BindProperty] public string Bcc { get; set; }
-        [BindProperty] public string Subject { get; set; }
+        [BindProperty] public string From { get; set; } = string.Empty;
+        [BindProperty] public string To { get; set; } = string.Empty;
+        [BindProperty] public string Cc { get; set; } = string.Empty;
+        [BindProperty] public string Bcc { get; set; } = string.Empty;
+        [BindProperty] public string Subject { get; set; } = string.Empty;
         [BindProperty] public bool Html { get; set; }
-        [BindProperty] public string Body { get; set; }
+        [BindProperty] public string Body { get; set; } = string.Empty;
         public bool? Sent { get; set; }
 
         [FromQuery] public bool? DebugSent { get; set; }
@@ -40,9 +40,10 @@ namespace MyApp.Namespace
         }
         public void OnPost()
         {
-            var mailMessage = new MailMessage();
-
-            mailMessage.From = new MailAddress(From);
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(From)
+            };
 
             if (!string.IsNullOrEmpty(To))
             {
@@ -74,7 +75,7 @@ namespace MyApp.Namespace
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Sending mail failed: {ex.Message}.");
+                _logger.LogCritical("Sending mail failed: {}.", ex.Message);
                 Sent = false;
             }
         }

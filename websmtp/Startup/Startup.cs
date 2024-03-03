@@ -38,6 +38,8 @@ public static class Startup
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
         builder.Services.AddAuthorization();
         builder.Services.AddRazorPages();
+        builder.Services.AddTransient<BasicPublicKeyLocator>();
+        builder.Services.AddTransient<IncomingEmailValidator>();
         builder.Services.AddTransient<SendMailService>();
         builder.Services.AddSingleton<IMessageStore, MessageStore>();
         builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
