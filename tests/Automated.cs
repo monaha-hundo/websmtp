@@ -1,10 +1,13 @@
 using Bogus;
+using DNS.Server;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MimeKit;
 using MimeKit.Cryptography;
 using System.Net.Mail;
+using websmtp;
 using websmtp.Database;
 
 namespace Tests;
@@ -14,7 +17,9 @@ public class Basic
 {
     public TestContext? TestContext { get; set; }
 
-    private static TestContext? _testContext;
+    #pragma warning disable IDE0052 // Remove unread private members
+    private static TestContext? _testContext; // 
+    #pragma warning restore IDE0052 // Remove unread private members
 
     [ClassInitialize]
     public static void SetupTests(TestContext testContext)
@@ -35,6 +40,8 @@ public class Basic
         using var client = _factory.CreateDefaultClient();
         using var scope = _factory.Services.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+        var incomingEmailValidator = scope.ServiceProvider.GetRequiredService<IncomingEmailValidator>();
 
         var mailMessage = new MailMessage
         {
@@ -48,9 +55,17 @@ public class Basic
         var mimeMessage = MimeMessage.CreateFromMailMessage(mailMessage);
         var headersToSign =  new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
 
-        var domain = config.GetValue<string>("DKIM:Domain");
-        var selector = config.GetValue<string>("DKIM:selector");
-        var privateKeyFilename = config.GetValue<string>("DKIM:PrivateKey");
+        var domain = config.GetValue<string>("DKIM:Domain") ?? throw new Exception("Missing DKIM:Domain config key.");
+        var selector = config.GetValue<string>("DKIM:Selector") ?? throw new Exception("Missing DKIM:Selector config key.");
+        var privateKeyFilename = config.GetValue<string>("DKIM:PrivateKey") ?? throw new Exception("Missing DKIM:PrivateKey config key.");
+        privateKeyFilename = Path.Join(env.ContentRootPath, privateKeyFilename); // filename relative to the websmtp app, not the tests app
+        var publicKeyFilename = privateKeyFilename.Replace("private", "pub").Replace("pem", "der");
+        var publicKey = Convert.ToBase64String(File.ReadAllBytes(publicKeyFilename));
+
+        var masterFile = new MasterFile();
+        var server = new DnsServer(masterFile);
+        masterFile.AddTextResourceRecord("dkim._domainkey.skcr.me", "dkim", "v=DKIM1; p=" + publicKey);
+        var listenTask = server.Listen();
 
         var signer = new DkimSigner (privateKeyFilename, domain, selector) 
         {
@@ -62,19 +77,28 @@ public class Basic
 
         signer.Sign(mimeMessage, headersToSign);
 
-        var result = websmtp.IncomingEmailValidator.VerifyDkim(mimeMessage);
-        Assert.IsTrue(result);
+        var isValid = incomingEmailValidator.VerifyDkim(mimeMessage);
+
+        Assert.IsTrue(isValid);
     }
 
     [TestMethod]
     public void VerifySpfGmail()
     {
+        using var client = _factory.CreateDefaultClient();
+        using var scope = _factory.Services.CreateScope();
+        var incomingEmailValidator = scope.ServiceProvider.GetRequiredService<IncomingEmailValidator>();
+
+        var masterFile = new MasterFile();
+        var server = new DnsServer(masterFile, "192.168.1.1");
+        var listenTask = server.Listen();
+
         var ip = "66.249.80.2";
         var domain = "gmail.com";
         var sender = "test@gmail.com";
 
-        var result = websmtp.IncomingEmailValidator.VerifySpf(ip, domain, sender);
-        Assert.IsTrue(result == websmtp.SpfVerifyResult.Pass);
+        var result = incomingEmailValidator.VerifySpf(ip, domain, sender);
+        Assert.IsTrue(result == SpfVerifyResult.Pass);
     }
 
     [TestMethod]

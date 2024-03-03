@@ -2,22 +2,31 @@
 using DnsClient.Protocol;
 using MimeKit.Cryptography;
 using Org.BouncyCastle.Crypto;
+using System.Net;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace websmtp;
 
 public class BasicPublicKeyLocator : DkimPublicKeyLocatorBase
 {
-    readonly Dictionary<string, AsymmetricKeyParameter> cache;
-    readonly LookupClient lookupClient;
+    private readonly Dictionary<string, AsymmetricKeyParameter> cache;
+    private readonly LookupClient lookupClient;
+    private readonly IConfiguration _config;
 
-    public BasicPublicKeyLocator()
+    private string DnsServer { get; set; }
+
+    public BasicPublicKeyLocator(IConfiguration config)
     {
-        cache = new Dictionary<string, AsymmetricKeyParameter>();
+        _config = config;
 
-        lookupClient = new LookupClient();
+        DnsServer = _config?.GetValue<string>("DNS") ?? throw new Exception("Missing DNS config key.");
+        cache = [];
+
+        var ip = IPAddress.Parse(DnsServer);
+        lookupClient = new LookupClient(ip);
     }
 
-    AsymmetricKeyParameter DnsLookup(string domain, string selector, CancellationToken cancellationToken)
+    private AsymmetricKeyParameter DnsLookup(string domain, string selector, CancellationToken cancellationToken)
     {
         var query = selector + "._domainkey." + domain;
 
@@ -27,7 +36,7 @@ public class BasicPublicKeyLocator : DkimPublicKeyLocatorBase
             return cachedPubkey;
         }
 
-        var response = lookupClient.Query(query, QueryType.TXT);
+        var response = lookupClient.QueryAsync(query, QueryType.TXT, cancellationToken: cancellationToken).Result;
 
         var records = response.Answers
             .Select(anws => anws as TxtRecord ?? throw new Exception("Answer was not a TXT Record..."))

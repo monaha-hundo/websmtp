@@ -16,12 +16,14 @@ public class MessageStore : IMessageStore
     private readonly ILogger<MessageStore> _logger;
     private readonly IServiceProvider _services;
     private readonly IConfiguration _config;
+    private readonly IncomingEmailValidator _incomingValidator;
 
-    public MessageStore(ILogger<MessageStore> logger, IServiceProvider services, IConfiguration config)
+    public MessageStore(ILogger<MessageStore> logger, IServiceProvider services, IConfiguration config, IncomingEmailValidator incomingValidator)
     {
         _logger = logger;
         _services = services;
         _config = config;
+        _incomingValidator = incomingValidator;
     }
 
     public Task<SmtpResponse> SaveAsync(
@@ -45,11 +47,11 @@ public class MessageStore : IMessageStore
 
             _dataContext.RawMessages.Add(newRawMsg);
             _dataContext.SaveChanges();
-            _logger.LogDebug($"Saved raw message id #{newRawMsg.Id}.");
+            _logger.LogDebug("Saved raw message id #{}.", newRawMsg.Id);
 
             _logger.LogInformation("Parsing message & saving data...");
             using var memory = new MemoryStream(raw);
-            using var mimeMessage = MimeMessage.Load(memory) ?? throw new Exception("Could not parse message.");
+            using var mimeMessage = MimeMessage.Load(memory, cancellationToken) ?? throw new Exception("Could not parse message.");
 
             var newMessage = new Message(mimeMessage)
             {
@@ -71,13 +73,13 @@ public class MessageStore : IMessageStore
             _dataContext.Messages.Add(newMessage);
             _dataContext.SaveChanges();
 
-            _logger.LogDebug($"Saved message id #{newMessage.Id}.");
+            _logger.LogDebug("Saved message id #{}.", newMessage.Id);
 
             return Task.FromResult(SmtpResponse.Ok);
         }
         catch (Exception ex)
         {
-            _logger.LogCritical("Could not save incoming message: {0}", ex.Message);
+            _logger.LogCritical("Could not save incoming message: {}", ex.Message);
             return Task.FromResult(SmtpResponse.TransactionFailed);
         }
     }
@@ -86,11 +88,11 @@ public class MessageStore : IMessageStore
     {
         try
         {
-            newMessage.DkimFailed = !IncomingEmailValidator.VerifyDkim(mimeMessage);
+            newMessage.DkimFailed = !_incomingValidator.VerifyDkim(mimeMessage);
         }
         catch (Exception ex)
         {
-            _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
+            _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {}: {}", newRawMsg.Id, ex.Message);
         }
     }
 
@@ -102,11 +104,11 @@ public class MessageStore : IMessageStore
             var ip = endpoint.Address.ToString();
             var from = transaction.From.AsAddress();
             var domain = transaction.From.Host;
-            newMessage.SpfStatus = IncomingEmailValidator.VerifySpf(ip, domain, from);
+            newMessage.SpfStatus = _incomingValidator.VerifySpf(ip, domain, from);
         }
         catch (Exception ex)
         {
-            _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
+            _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {}: {}", newRawMsg.Id, ex.Message);
         }
     }
 }

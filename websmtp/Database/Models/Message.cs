@@ -69,23 +69,19 @@ public class Message : IMessage
 
         Subject = _mimeMessage.Subject;
 
-        var allFrom = _mimeMessage.From?.Select(f => f.ToString())?.ToList()
-            ?? new List<string>(0);
+        var allFrom = _mimeMessage.From?.Select(f => f.ToString())?.ToList() ?? [];
 
         From = string.Join(',', allFrom);
 
-        var allTo = _mimeMessage.To?.Select(f => f.ToString())?.ToList()
-            ?? new List<string>(0);
+        var allTo = _mimeMessage.To?.Select(f => f.ToString())?.ToList() ?? [];
 
         To = string.Join(',', allTo);
 
-        var allCc = _mimeMessage.Cc?.Select(f => f.ToString())?.ToList()
-            ?? new List<string>(0);
+        var allCc = _mimeMessage.Cc?.Select(f => f.ToString())?.ToList() ?? [];
 
         Cc = string.Join(',', allCc);
 
-        var allBcc = _mimeMessage.Bcc?.Select(f => f.ToString())?.ToList()
-            ?? new List<string>(0);
+        var allBcc = _mimeMessage.Bcc?.Select(f => f.ToString())?.ToList() ?? [];
 
         Bcc = string.Join(',', allBcc);
 
@@ -112,7 +108,7 @@ public class Message : IMessage
             HtmlContent = base64HtmlContent;
         }
 
-        if (_mimeMessage.Attachments.Count() > 0)
+        if (_mimeMessage.Attachments.Any())
         {
             Attachements = _mimeMessage.Attachments
                             .Where(a => a.IsAttachment)
@@ -128,23 +124,19 @@ public class Message : IMessage
 
         Subject = _mimeMessage.Subject;
 
-        var allFrom = _mimeMessage.From?.Select(f => f.ToString())?.ToList()
-            ?? new List<string>(0);
+        var allFrom = _mimeMessage.From?.Select(f => f.ToString())?.ToList() ?? [];
 
         From = string.Join(',', allFrom);
 
-        var allTo = _mimeMessage.To?.Select(f => f.ToString())?.ToList()
-            ?? new List<string>(0);
+        var allTo = _mimeMessage.To?.Select(f => f.ToString())?.ToList() ?? [];
 
         To = string.Join(',', allTo);
 
-        var allCc = _mimeMessage.Cc?.Select(f => f.ToString())?.ToList()
-            ?? new List<string>(0);
+        var allCc = _mimeMessage.Cc?.Select(f => f.ToString())?.ToList() ?? [];
 
         Cc = string.Join(',', allCc);
 
-        var allBcc = _mimeMessage.Bcc?.Select(f => f.ToString())?.ToList()
-            ?? new List<string>(0);
+        var allBcc = _mimeMessage.Bcc?.Select(f => f.ToString())?.ToList() ?? [];
 
         Bcc = string.Join(',', allBcc);
 
@@ -195,7 +187,7 @@ public class Message : IMessage
             HtmlContent = base64HtmlContent;
         }
 
-        if (_mimeMessage.Attachments.Count() > 0)
+        if (_mimeMessage.Attachments.Any())
         {
             Attachements = _mimeMessage.Attachments
                             .Where(a => a.IsAttachment)
@@ -256,7 +248,7 @@ public class MessageAttachement
 
     public MessageAttachement(MimeEntity mimeEntity)
     {
-        if (mimeEntity == null) throw new ArgumentNullException(nameof(mimeEntity));
+        ArgumentNullException.ThrowIfNull(mimeEntity);
         using var tempMemory = new MemoryStream();
         var wat = new FormatOptions();
         mimeEntity.WriteTo(wat, tempMemory, true);
