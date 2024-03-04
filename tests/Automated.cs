@@ -100,7 +100,7 @@ public class Basic
 
         var dnsPort = config.GetValue<int>("DNS:Port");
         var masterFile = new MasterFile();
-        var ipEndpoint = new IPEndPoint(IPAddress.Parse("192.168.1.1"), 53);
+        var ipEndpoint = new IPEndPoint(IPAddress.Parse("1.1.1.1"), 53);
         var server = new DnsServer(masterFile, ipEndpoint);
         var listenTask = server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
 
