@@ -115,11 +115,23 @@ public class Basic
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         using var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         var sendMailService = scope.ServiceProvider.GetRequiredService<SendMailService>();
+        var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
         Console.WriteLine("Generating test data...");
-        var testEmailCount = 100;
+        var testEmailCount = 10;
 
-        var emailAddress = new Faker<MailAddress>()
+        var fromEmailAddrs = new Faker<MailAddress>()
+            .CustomInstantiator(f =>
+            {
+                var fn = f.Name.FirstName();
+                var ln = f.Name.LastName();
+                var prov = "skcr.me";
+                var email = f.Internet.Email(fn, ln, prov, "");
+                return new MailAddress(email, $"{fn} {ln}");
+            })
+            .Generate(15);
+
+        var toEmailAddrs = new Faker<MailAddress>()
             .CustomInstantiator(f =>
             {
                 var fn = f.Name.FirstName();
@@ -142,7 +154,7 @@ public class Basic
         var messages = new Faker<MailMessage>()
             .CustomInstantiator(f =>
             {
-                var message = new MailMessage(f.PickRandom(emailAddress), f.PickRandom(emailAddress));
+                var message = new MailMessage(f.PickRandom(fromEmailAddrs), f.PickRandom(toEmailAddrs));
 
                 for (int i = 0; i < f.Random.Number(0, 10); i++)
                 {
@@ -152,12 +164,12 @@ public class Basic
 
                 for (int i = 0; i < f.Random.Number(0, 10); i++)
                 {
-                    message.CC.Add(f.PickRandom(emailAddress));
+                    message.CC.Add(f.PickRandom(toEmailAddrs));
                 }
 
                 for (int i = 0; i < f.Random.Number(0, 10); i++)
                 {
-                    message.Bcc.Add(f.PickRandom(emailAddress));
+                    message.Bcc.Add(f.PickRandom(toEmailAddrs));
                 }
 
                 return message;
@@ -167,13 +179,23 @@ public class Basic
             .RuleFor(m => m.Priority, (f) => f.Random.Enum<MailPriority>())
             .Generate(testEmailCount);
 
-        var domains = messages.Select(m => m.To[0].Host).ToList();
+        var domains = toEmailAddrs.Select(m => m.Host).ToList();
 
         var mimeMessages = messages.Select(m => MimeMessage.CreateFromMailMessage(m)).ToList();
 
+        var privateKeyFilename = config.GetValue<string>("DKIM:PrivateKey") ?? throw new Exception("Missing DKIM:PrivateKey config key.");
+        privateKeyFilename = Path.Join(env.ContentRootPath, privateKeyFilename); // filename relative to the websmtp app, not the tests app
+        var publicKeyFilename = privateKeyFilename.Replace("private", "pub").Replace("pem", "der");
+        var publicKey = Convert.ToBase64String(File.ReadAllBytes(publicKeyFilename));
         var dnsPort = config.GetValue<int>("DNS:Port");
+
         var masterFile = new MasterFile();
-        domains.Distinct().ToList().ForEach(dmn => {
+        masterFile.AddIPAddressResourceRecord("skcr.me", "127.0.0.1");
+        masterFile.AddMailExchangeResourceRecord("skcr.me", 10, "localhost");
+        masterFile.AddTextResourceRecord("dkim._domainkey.skcr.me", "dkim", "v=DKIM1; p=" + publicKey);
+        masterFile.AddTextResourceRecord("skcr.me", "v", "spf1 +all");
+
+        domains.GroupBy(d=>d).Select(dG=>dG.FirstOrDefault()).ToList().ForEach(dmn => {
             masterFile.AddIPAddressResourceRecord(dmn, "127.0.0.1");
             masterFile.AddMailExchangeResourceRecord(dmn, 10, "localhost");
             masterFile.AddTextResourceRecord(dmn, "v", "spf1 +all");
