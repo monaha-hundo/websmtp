@@ -7,7 +7,7 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using MimeKit.Cryptography;
-
+using System.Net;
 
 namespace websmtp;
 
@@ -16,6 +16,8 @@ public class SendMailService
     private readonly ILogger<SendMailService> _logger;
     private readonly IHostEnvironment _hostEnv;
     private readonly IConfiguration _config;
+    private string DnsServer => _config.GetValue<string>("DNS") ?? throw new Exception("Missing DNS config key.");
+    private int RemoteSmtpPort => _config.GetValue<int>("SMTP:RemotePort");
 
     public SendMailService(ILogger<SendMailService> logger,
         IHostEnvironment hostEnv,
@@ -30,7 +32,7 @@ public class SendMailService
     {
         var signMessage = _config.GetValue<bool>("DKIM:SigningEnabled");
 
-        if(signMessage)
+        if (signMessage)
         {
             Sign(message);
         }
@@ -43,10 +45,10 @@ public class SendMailService
 
         _logger.LogDebug($"Mx Lookup for {domain}...");
 
-        var lookup = new LookupClient();
-        var response = _hostEnv.IsProduction()
-            ? LookUpEmailMxRecords(destinationEmail, lookup)
-            : new List<string>(1) { "localhost" };
+        var dnsServerIp = IPAddress.Parse(DnsServer);
+        var lookup = new LookupClient(dnsServerIp);
+
+        var response = LookUpEmailMxRecords(destinationEmail, lookup);
 
         _logger.LogDebug($"Responses: {response.Count}");
 
@@ -63,27 +65,13 @@ public class SendMailService
 
             try
             {
-                if (_hostEnv.IsProduction())
-                {
-                    var exchange = exchangeRecord.TrimEnd('.');
-                    _logger.LogTrace($"Attempt #{attempts}: '{exchange}'.");
-                    using var client = new SmtpClient();
-                    client.Connect(exchange, 25, SecureSocketOptions.StartTls);
-                    var result = client.Send(message);
-                    _logger.LogDebug($"Attempt #{attempts}: sent through {exchange}.");
-                    _logger.LogTrace(result);
-                }
-                else if (_hostEnv.IsDevelopment() && exchangeRecord == "localhost")
-                {
-                    _logger.LogTrace($"Transfering email locally");
-                    using var client = new SmtpClient();
-                    client.Connect("127.0.0.1", 1025, SecureSocketOptions.None);
-                    var result = client.Send(message);
-                }
-                else
-                {
-                    _logger.LogDebug($"(development env.) Not sending email but proceeding as if it were.");
-                }
+                var exchange = exchangeRecord.TrimEnd('.');
+                _logger.LogTrace($"Attempt #{attempts}: '{exchange}'.");
+                using var client = new SmtpClient();
+                client.Connect(exchange, RemoteSmtpPort, SecureSocketOptions.StartTls);
+                var result = client.Send(message);
+                _logger.LogDebug($"Attempt #{attempts}: sent through {exchange}.");
+                _logger.LogTrace(result);
             }
             catch (Exception ex)
             {
@@ -95,13 +83,13 @@ public class SendMailService
 
     private void Sign(MimeMessage mimeMessage)
     {
-        var headersToSign =  new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
+        var headersToSign = new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
 
         var domain = _config.GetValue<string>("DKIM:Domain");
         var selector = _config.GetValue<string>("DKIM:selector");
         var privateKeyFilename = _config.GetValue<string>("DKIM:PrivateKey");
 
-        var signer = new DkimSigner (privateKeyFilename, domain, selector) 
+        var signer = new DkimSigner(privateKeyFilename, domain, selector)
         {
             AgentOrUserIdentifier = "@skcr.me",
             QueryMethod = "dns/txt",

@@ -17,9 +17,9 @@ public class Basic
 {
     public TestContext? TestContext { get; set; }
 
-    #pragma warning disable IDE0052 // Remove unread private members
+#pragma warning disable IDE0052 // Remove unread private members
     private static TestContext? _testContext; // 
-    #pragma warning restore IDE0052 // Remove unread private members
+#pragma warning restore IDE0052 // Remove unread private members
 
     [ClassInitialize]
     public static void SetupTests(TestContext testContext)
@@ -47,13 +47,13 @@ public class Basic
         {
             From = new MailAddress("rod.b@skcr.me", "Rod B")
         };
-        
+
         mailMessage.To.Add(new MailAddress("bob.g@skcr.me", "Bob G"));
         mailMessage.Subject = "Testing signed email (dkim)";
         mailMessage.Body = "Hello, this message is signed. Hope it makes you feel safe.";
 
         var mimeMessage = MimeMessage.CreateFromMailMessage(mailMessage);
-        var headersToSign =  new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
+        var headersToSign = new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
 
         var domain = config.GetValue<string>("DKIM:Domain") ?? throw new Exception("Missing DKIM:Domain config key.");
         var selector = config.GetValue<string>("DKIM:Selector") ?? throw new Exception("Missing DKIM:Selector config key.");
@@ -67,7 +67,7 @@ public class Basic
         masterFile.AddTextResourceRecord("dkim._domainkey.skcr.me", "dkim", "v=DKIM1; p=" + publicKey);
         var listenTask = server.Listen();
 
-        var signer = new DkimSigner (privateKeyFilename, domain, selector) 
+        var signer = new DkimSigner(privateKeyFilename, domain, selector)
         {
             AgentOrUserIdentifier = "@skcr.me",
             QueryMethod = "dns/txt",
@@ -104,9 +104,11 @@ public class Basic
     [TestMethod]
     public void SendEmail()
     {
+
         using var client = _factory.CreateDefaultClient();
         using var scope = _factory.Services.CreateScope();
         using var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var sendMailService = scope.ServiceProvider.GetRequiredService<SendMailService>();
 
         Console.WriteLine("Generating test data...");
         var testEmailCount = 100;
@@ -159,11 +161,20 @@ public class Basic
             .RuleFor(m => m.Priority, (f) => f.Random.Enum<MailPriority>())
             .Generate(testEmailCount);
 
+        var domains = messages.Select(m => m.To[0].Host).ToList();
+
+        var mimeMessages = messages.Select(m => MimeMessage.CreateFromMailMessage(m)).ToList();
+
+        var masterFile = new MasterFile();
+        domains.ForEach(dmn => masterFile.AddMailExchangeResourceRecord(dmn, 10, "127.0.0.1"));
+        var server = new DnsServer(masterFile, "192.168.1.1");
+        var listenTask = server.Listen();
+
         try
         {
             Console.WriteLine($"Sending {testEmailCount} emails...");
-            var smtpClient = new SmtpClient("127.0.0.1", 1025);
-            messages.ForEach(m => smtpClient.Send(m));
+
+            mimeMessages.ForEach(sendMailService.SendMail);
 
             var savedMessageCount = db.Messages.Count(msg => msg.Subject.Contains(testRunId));
 
@@ -179,6 +190,8 @@ public class Basic
         finally
         {
             files?.ForEach(f => f.Content?.Dispose());
+            mimeMessages?.ForEach(m => m?.Dispose());
+            messages?.ForEach(m => m?.Dispose());
         }
     }
     // [TestMethod]
