@@ -58,57 +58,52 @@ public class MessageStore : IMessageStore
                 RawMessageId = newRawMsg.Id
             };
 
-            var dkimValidation = _config.GetValue<bool>("DKIM:SigningEnabled");
-            if (dkimValidation)
+            try
             {
-                ValidateDkim(newRawMsg, mimeMessage, newMessage);
+                var isDkimCheckEnabled = _config.GetValue<bool>("DKIM:Enable") == true;
+                if (isDkimCheckEnabled)
+                {
+                    newMessage.DkimFailed = !_incomingValidator.VerifyDkim(mimeMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
             }
 
-            var spfValidation = _config.GetValue<bool>("SPF:Enabled");
-            if (spfValidation)
+            try
             {
-                ValidateSpf(context, transaction, newRawMsg, newMessage);
+                var isSpfCheckEnable = _config.GetValue<bool>("SPF:Enable") == true;
+                if (isSpfCheckEnable)
+                {
+                    var endpoint = (IPEndPoint)context.Properties[EndpointListener.RemoteEndPointKey];
+                    var ip = endpoint.Address.ToString();
+                    var from = transaction.From.AsAddress();
+                    var domain = transaction.From.Host;
+                    newMessage.SpfStatus = _incomingValidator.VerifySpf(ip, domain, from);
+                }
+                else
+                {
+                    newMessage.SpfStatus = SpfVerifyResult.None;
+                }
             }
+            catch (Exception ex)
+            {
+                _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
+            }
+
 
             _dataContext.Messages.Add(newMessage);
             _dataContext.SaveChanges();
 
-            _logger.LogDebug("Saved message id #{}.", newMessage.Id);
+            _logger.LogDebug($"Saved message id #{newMessage.Id}.");
 
             return Task.FromResult(SmtpResponse.Ok);
         }
         catch (Exception ex)
         {
-            _logger.LogCritical("Could not save incoming message: {}", ex.Message);
+            _logger.LogCritical("Could not save incoming message: {0}", ex.Message);
             return Task.FromResult(SmtpResponse.TransactionFailed);
-        }
-    }
-
-    private void ValidateDkim(RawMessage newRawMsg, MimeMessage mimeMessage, Message newMessage)
-    {
-        try
-        {
-            newMessage.DkimFailed = !_incomingValidator.VerifyDkim(mimeMessage);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {}: {}", newRawMsg.Id, ex.Message);
-        }
-    }
-
-    private void ValidateSpf(ISessionContext context, IMessageTransaction transaction, RawMessage newRawMsg, Message newMessage)
-    {
-        try
-        {
-            var endpoint = (IPEndPoint)context.Properties[EndpointListener.RemoteEndPointKey];
-            var ip = endpoint.Address.ToString();
-            var from = transaction.From.AsAddress();
-            var domain = transaction.From.Host;
-            newMessage.SpfStatus = _incomingValidator.VerifySpf(ip, domain, from);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {}: {}", newRawMsg.Id, ex.Message);
         }
     }
 }

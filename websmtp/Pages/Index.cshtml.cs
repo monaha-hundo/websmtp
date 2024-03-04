@@ -12,11 +12,7 @@ public class IndexModel : PageModel
 
     public ListResult Listing { get; set; } = new ListResult();
 
-    [FromQuery]
-    public bool OnlyNew { get; set; } = true;
-
-    [FromQuery]
-    public bool ShowTrash { get; set; }
+    [FromRoute] public string Mailbox { get; set; } = "inbox";
 
     public IndexModel(ILogger<IndexModel> logger,
     IReadableMessageStore messageStore)
@@ -30,8 +26,25 @@ public class IndexModel : PageModel
         [FromQuery] int perPage = 1000,
         [FromQuery] string filter = "")
     {
-        if(ShowTrash) OnlyNew = false;
-        Listing = _messageStore.Latest(page, perPage, OnlyNew, ShowTrash, filter);
+        switch (Mailbox)
+        {
+            default:
+            case "inbox":
+                Listing = _messageStore.Latest(page, perPage, true, false, false, filter);
+                break;
+
+            case "all":
+                Listing = _messageStore.Latest(page, perPage, false, false, false, filter);
+                break;
+
+            case "spam":
+                Listing = _messageStore.Latest(page, perPage, false, false, true, filter);
+                break;
+
+            case "trash":
+                Listing = _messageStore.Latest(page, perPage, false, true, true, filter);
+                break;
+        }
         return Page();
     }
 }

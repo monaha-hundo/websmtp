@@ -14,18 +14,27 @@ public class ReadableMessageStore : IReadableMessageStore
         _services = services;
     }
 
-    public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, string filter)
+    public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, bool showSpam, string filter)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
-
         _dataContext.ChangeTracker.LazyLoadingEnabled = false;
         _dataContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
-        var total = _dataContext.Messages.Count();
-        var newCount = _dataContext.Messages.Count(msg => !msg.Read);
-        var deletedCount = _dataContext.Messages.Count(msg => msg.Deleted);
+        var total = _dataContext.Messages.Count(msg => !msg.DkimFailed
+                && !msg.DmarcFailed
+                && (msg.SpfStatus == SpfVerifyResult.Pass || msg.SpfStatus == SpfVerifyResult.None));
+        var newCount = _dataContext.Messages.Count(msg => !msg.Read && (!msg.DkimFailed
+                && !msg.DmarcFailed
+                && (msg.SpfStatus == SpfVerifyResult.Pass || msg.SpfStatus == SpfVerifyResult.None)));
+        var deletedCount = _dataContext.Messages.Count(msg => msg.Deleted && (!msg.DkimFailed
+                && !msg.DmarcFailed
+                && (msg.SpfStatus == SpfVerifyResult.Pass || msg.SpfStatus == SpfVerifyResult.None)));
+        var spamnCount = _dataContext.Messages.Count(msg =>
+            msg.DkimFailed
+            || msg.DmarcFailed
+            || (msg.SpfStatus != SpfVerifyResult.Pass && msg.SpfStatus != SpfVerifyResult.None));
 
         var query = _dataContext.Messages
             .AsNoTracking()
@@ -40,6 +49,13 @@ public class ReadableMessageStore : IReadableMessageStore
             query = query.Where(msg => !msg.Deleted);
         }
 
+        if (!showSpam)
+        {
+            query = query.Where(msg => !msg.DkimFailed
+                && !msg.DmarcFailed
+                && (msg.SpfStatus == SpfVerifyResult.Pass || msg.SpfStatus == SpfVerifyResult.None));
+        }
+
         if (onlyNew)
         {
             query = query.Where(msg => !msg.Read);
@@ -50,8 +66,8 @@ public class ReadableMessageStore : IReadableMessageStore
             var tokens = filter.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             foreach (var token in tokens)
             {
-                query = query.Where(msg => msg.Subject.Contains(token) 
-                                        || msg.To.Contains(token) 
+                query = query.Where(msg => msg.Subject.Contains(token)
+                                        || msg.To.Contains(token)
                                         || msg.From.Contains(token)
                                         || (msg.TextContent != null && msg.TextContent.Contains(token)));
             }
@@ -71,7 +87,6 @@ public class ReadableMessageStore : IReadableMessageStore
                 Cc = msg.Cc,
                 Bcc = msg.Bcc,
                 Importance = msg.Importance,
-                //Size = msg.Size
             })
             .OrderByDescending(msg => msg.ReceivedOn)
             .Skip((page - 1) * perPage)
@@ -82,6 +97,7 @@ public class ReadableMessageStore : IReadableMessageStore
         {
             Count = messages.Count,
             New = newCount,
+            Spam = spamnCount,
             Deleted = deletedCount,
             Total = total,
             Messages = messages
