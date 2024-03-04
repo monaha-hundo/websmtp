@@ -46,10 +46,10 @@ public class Basic
 
         var mailMessage = new MailMessage
         {
-            From = new MailAddress("rod.b@skcr.me", "Rod B")
+            From = new MailAddress("rod.b@websmtp.local", "Rod B")
         };
 
-        mailMessage.To.Add(new MailAddress("bob.g@skcr.me", "Bob G"));
+        mailMessage.To.Add(new MailAddress("bob.g@websmtp.local", "Bob G"));
         mailMessage.Subject = "Testing signed email (dkim)";
         mailMessage.Body = "Hello, this message is signed. Hope it makes you feel safe.";
 
@@ -57,21 +57,27 @@ public class Basic
         var headersToSign = new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
 
         var dnsPort = config.GetValue<int>("DNS:Port");
-        var domain = config.GetValue<string>("DKIM:Domain") ?? throw new Exception("Missing DKIM:Domain config key.");
-        var selector = config.GetValue<string>("DKIM:Selector") ?? throw new Exception("Missing DKIM:Selector config key.");
-        var privateKeyFilename = config.GetValue<string>("DKIM:PrivateKey") ?? throw new Exception("Missing DKIM:PrivateKey config key.");
-        privateKeyFilename = Path.Join(env.ContentRootPath, privateKeyFilename); // filename relative to the websmtp app, not the tests app
+
+        var domain = (mimeMessage.From[0] as MailboxAddress)?.Domain;
+        var dkimDomainConfigSection = config.GetSection("DKIM:Domains");
+        var domainsConfigs = dkimDomainConfigSection.GetChildren();
+        var domainConfig = domainsConfigs.Where(s => s.GetValue<string>("Name") == domain).SingleOrDefault();
+
+        if (domainConfig == null) throw new Exception($"Trying to sign a message for an unconfigured email domain: '{domain}'.");
+
+        var selector = domainConfig.GetValue<string>("Selector")?? throw new Exception("Missing DKIM:Domain:Selector config key.");
+        var privateKeyFilename = domainConfig.GetValue<string>("PrivateKey") ?? throw new Exception("Missing DKIM:Domain:PrivateKey config key.");
         var publicKeyFilename = privateKeyFilename.Replace("private", "pub").Replace("pem", "der");
         var publicKey = Convert.ToBase64String(File.ReadAllBytes(publicKeyFilename));
 
         var masterFile = new MasterFile();
         var server = new DnsServer(masterFile);
-        masterFile.AddTextResourceRecord("dkim._domainkey.skcr.me", "dkim", "v=DKIM1; p=" + publicKey);
+        masterFile.AddTextResourceRecord($"dkim._domainkey.{domain}", "dkim", "v=DKIM1; p=" + publicKey);
         var listenTask = server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
 
         var signer = new DkimSigner(privateKeyFilename, domain, selector)
         {
-            AgentOrUserIdentifier = "@skcr.me",
+            AgentOrUserIdentifier = $"@{domain}",
             QueryMethod = "dns/txt",
         };
 
@@ -125,7 +131,7 @@ public class Basic
             {
                 var fn = f.Name.FirstName();
                 var ln = f.Name.LastName();
-                var prov = "skcr.me";
+                var prov = "websmtp.local";
                 var email = f.Internet.Email(fn, ln, prov, "");
                 return new MailAddress(email, $"{fn} {ln}");
             })
@@ -190,10 +196,10 @@ public class Basic
         var dnsPort = config.GetValue<int>("DNS:Port");
 
         var masterFile = new MasterFile();
-        masterFile.AddIPAddressResourceRecord("skcr.me", "127.0.0.1");
-        masterFile.AddMailExchangeResourceRecord("skcr.me", 10, "localhost");
-        masterFile.AddTextResourceRecord("dkim._domainkey.skcr.me", "dkim", "v=DKIM1; p=" + publicKey);
-        masterFile.AddTextResourceRecord("skcr.me", "v", "spf1 +all");
+        masterFile.AddIPAddressResourceRecord("websmtp.local", "127.0.0.1");
+        masterFile.AddMailExchangeResourceRecord("websmtp.local", 10, "localhost");
+        masterFile.AddTextResourceRecord("dkim._domainkey.websmtp.local", "dkim", "v=DKIM1; p=" + publicKey);
+        masterFile.AddTextResourceRecord("websmtp.local", "v", "spf1 +all");
 
         domains.GroupBy(d=>d).Select(dG=>dG.FirstOrDefault()).ToList().ForEach(dmn => {
             masterFile.AddIPAddressResourceRecord(dmn, "127.0.0.1");
