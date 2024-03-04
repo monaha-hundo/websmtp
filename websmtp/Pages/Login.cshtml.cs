@@ -42,8 +42,8 @@ public class LoginModel : PageModel
         if (isAuth)
         {
             await SignIn();
-            var returnUrl = ReturnUrl ?? "/";
-            return Redirect(returnUrl);
+            //var returnUrl = ReturnUrl ?? "/";
+            return Redirect("/inbox");
         }
 
         Error = true;

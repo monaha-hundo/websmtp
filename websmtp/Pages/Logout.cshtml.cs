@@ -30,7 +30,7 @@ namespace MyApp.Namespace
 
             await _http.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-            return Redirect("/login");
+            return Redirect("/");
         }
     }
 }
