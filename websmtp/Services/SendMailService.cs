@@ -16,7 +16,8 @@ public class SendMailService
     private readonly ILogger<SendMailService> _logger;
     private readonly IHostEnvironment _hostEnv;
     private readonly IConfiguration _config;
-    private string DnsServer => _config.GetValue<string>("DNS") ?? throw new Exception("Missing DNS config key.");
+    private string DnsServer => _config.GetValue<string>("DNS:Ip") ?? throw new Exception("Missing DNS:Ip config key.");
+    private int DnsPort => _config.GetValue<int>("DNS:Port");
     private int RemoteSmtpPort => _config.GetValue<int>("SMTP:RemotePort");
 
     public SendMailService(ILogger<SendMailService> logger,
@@ -45,8 +46,8 @@ public class SendMailService
 
         _logger.LogDebug($"Mx Lookup for {domain}...");
 
-        var dnsServerIp = IPAddress.Parse(DnsServer);
-        var lookup = new LookupClient(dnsServerIp);
+        var ipEndpoint = new IPEndPoint(IPAddress.Parse(DnsServer), DnsPort);
+        var lookup = new LookupClient(ipEndpoint);
 
         var response = LookUpEmailMxRecords(destinationEmail, lookup);
 
@@ -68,7 +69,7 @@ public class SendMailService
                 var exchange = exchangeRecord.TrimEnd('.');
                 _logger.LogTrace($"Attempt #{attempts}: '{exchange}'.");
                 using var client = new SmtpClient();
-                client.Connect(exchange, RemoteSmtpPort, SecureSocketOptions.StartTls);
+                client.Connect(exchange, RemoteSmtpPort, SecureSocketOptions.Auto); //SecureSocketOptions.StartTls
                 var result = client.Send(message);
                 _logger.LogDebug($"Attempt #{attempts}: sent through {exchange}.");
                 _logger.LogTrace(result);
