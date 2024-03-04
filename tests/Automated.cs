@@ -108,8 +108,14 @@ public class Basic
         var domain = "gmail.com";
         var sender = "test@gmail.com";
 
-        var result = incomingEmailValidator.VerifySpf(ip, domain, sender);
-        Assert.IsTrue(result == SpfVerifyResult.Pass);
+        try{
+            var result = incomingEmailValidator.VerifySpf(ip, domain, sender);
+            Assert.IsTrue(result == SpfVerifyResult.Pass);
+        } catch(Exception ex){
+            var q = ex;
+            throw;
+        }
+
     }
 
     [TestMethod]
