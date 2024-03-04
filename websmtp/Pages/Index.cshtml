@@ -1,4 +1,4 @@
-﻿@page
+﻿@page "/{mailbox}"
 @model IndexModel
 @{
     // use compile time regex
@@ -95,8 +95,6 @@
 @section Scripts {
     <script>
 
-        let onlyNew = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.OnlyNew));
-        let showTrash = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.ShowTrash));
 
         window.addEventListener("popstate", (event) => {
             closeMsgView();
@@ -104,13 +102,12 @@
 
 
         function initNavbar() {
-            //const params = new URLSearchParams(window.location.search);
-            //const onlyNew = params.get('onlyNew') != null ? params.get('onlyNew') == 'true' : false;
-            //const showTrash = params.get('showTrash') != null ? params.get('showTrash') == 'true' : false;
-            let onlyNew = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.OnlyNew));
-            let showTrash = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.ShowTrash));
+            let inbox = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Mailbox == "inbox"));
+            let all = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Mailbox == "all"));
+            let spam = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Mailbox == "spam"));
+            let trash = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Mailbox == "trash"));
 
-            if (showTrash) {
+            if (trash) {
                 const selector = `#btn-mailbox-trash`;
                 const mailboxEl = document.querySelector(selector);
                 mailboxEl.classList.remove('btn-transparent-primary');
@@ -118,17 +115,25 @@
                 return;
             }
 
-            if (onlyNew && !showTrash) {
+            if (inbox) {
                 const selector = `#btn-mailbox-inbox`;
                 const mailboxEl = document.querySelector(selector);
                 mailboxEl.classList.remove('btn-transparent-primary');
                 mailboxEl.classList.add('btn-dark');
             }
-            else {
+
+            if (all) {
                 const selector = `#btn-mailbox-all`;
                 const mailboxEl = document.querySelector(selector);
                 mailboxEl.classList.remove('btn-transparent-primary');
                 mailboxEl.classList.add('btn-dark');
+            }
+
+            if (spam) {
+                const selector = `#btn-mailbox-spam`;
+                const mailboxEl = document.querySelector(selector);
+                mailboxEl.classList.remove('btn-transparent-primary');
+                mailboxEl.classList.add('btn-primary');
             }
         }
 
