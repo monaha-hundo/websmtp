@@ -60,7 +60,7 @@ public class MessageStore : IMessageStore
 
             try
             {
-                var isDkimCheckEnabled = _config.GetValue<bool>("DKIM:Enable") == true;
+                var isDkimCheckEnabled = _config.GetValue<bool>("DKIM:Enabled") == true;
                 if (isDkimCheckEnabled)
                 {
                     newMessage.DkimFailed = !_incomingValidator.VerifyDkim(mimeMessage);
@@ -73,7 +73,7 @@ public class MessageStore : IMessageStore
 
             try
             {
-                var isSpfCheckEnable = _config.GetValue<bool>("SPF:Enable") == true;
+                var isSpfCheckEnable = _config.GetValue<bool>("SPF:Enabled") == true;
                 if (isSpfCheckEnable)
                 {
                     var endpoint = (IPEndPoint)context.Properties[EndpointListener.RemoteEndPointKey];

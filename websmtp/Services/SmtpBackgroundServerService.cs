@@ -19,7 +19,11 @@ public class SmtpServerService : IHostedService, IDisposable
 
         var serverToServerOptions = new SmtpServerOptionsBuilder()
             .ServerName("localhost")
-            .Port(smtpPort)
+            .Endpoint(ep => {
+                ep
+                  .Port(smtpPort, true)
+                  .AllowUnsecureAuthentication(true);
+            })
             .Build();
 
         _smtpServer = new SmtpServer.SmtpServer(serverToServerOptions, _serviceProvider);

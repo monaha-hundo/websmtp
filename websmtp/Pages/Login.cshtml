@@ -8,16 +8,12 @@
             <div class="card-body p-4">
 
                 <div class="text-center">
-                    <h4 class="mt-1 pb-1">websmtp</h4>
+                    <h4 class="mt-1 pb-3"> <i class="bi bi-fire "></i> websmtp</h4>
                 </div>
 
                 <form method="post">
 
                     @Html.AntiForgeryToken()
-
-                    <p class="text-center">
-                        Please login
-                    </p>
 
                     @if (Model.Error)
                     {

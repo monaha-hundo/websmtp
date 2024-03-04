@@ -14,16 +14,18 @@ public class BasicPublicKeyLocator : DkimPublicKeyLocatorBase
     private readonly IConfiguration _config;
 
     private string DnsServer { get; set; }
+    private int DnsPort { get; set; }
 
     public BasicPublicKeyLocator(IConfiguration config)
     {
         _config = config;
 
-        DnsServer = _config?.GetValue<string>("DNS") ?? throw new Exception("Missing DNS config key.");
+        DnsServer = _config?.GetValue<string>("DNS:IP") ?? throw new Exception("Missing DNS:IP config key.");
+        DnsPort = _config?.GetValue<int>("DNS:PORT") ?? throw new Exception("Missing DNS:Port config key.");
         cache = [];
 
-        var ip = IPAddress.Parse(DnsServer);
-        lookupClient = new LookupClient(ip);
+        var ipEndpoint = new IPEndPoint(IPAddress.Parse(DnsServer), DnsPort);
+        lookupClient = new LookupClient(ipEndpoint);
     }
 
     private AsymmetricKeyParameter DnsLookup(string domain, string selector, CancellationToken cancellationToken)

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MimeKit;
 using MimeKit.Cryptography;
+using System.Net;
 using System.Net.Mail;
 using websmtp;
 using websmtp.Database;
@@ -17,9 +18,9 @@ public class Basic
 {
     public TestContext? TestContext { get; set; }
 
-    #pragma warning disable IDE0052 // Remove unread private members
+#pragma warning disable IDE0052 // Remove unread private members
     private static TestContext? _testContext; // 
-    #pragma warning restore IDE0052 // Remove unread private members
+#pragma warning restore IDE0052 // Remove unread private members
 
     [ClassInitialize]
     public static void SetupTests(TestContext testContext)
@@ -47,14 +48,15 @@ public class Basic
         {
             From = new MailAddress("rod.b@skcr.me", "Rod B")
         };
-        
+
         mailMessage.To.Add(new MailAddress("bob.g@skcr.me", "Bob G"));
         mailMessage.Subject = "Testing signed email (dkim)";
         mailMessage.Body = "Hello, this message is signed. Hope it makes you feel safe.";
 
         var mimeMessage = MimeMessage.CreateFromMailMessage(mailMessage);
-        var headersToSign =  new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
+        var headersToSign = new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
 
+        var dnsPort = config.GetValue<int>("DNS:Port");
         var domain = config.GetValue<string>("DKIM:Domain") ?? throw new Exception("Missing DKIM:Domain config key.");
         var selector = config.GetValue<string>("DKIM:Selector") ?? throw new Exception("Missing DKIM:Selector config key.");
         var privateKeyFilename = config.GetValue<string>("DKIM:PrivateKey") ?? throw new Exception("Missing DKIM:PrivateKey config key.");
@@ -65,9 +67,9 @@ public class Basic
         var masterFile = new MasterFile();
         var server = new DnsServer(masterFile);
         masterFile.AddTextResourceRecord("dkim._domainkey.skcr.me", "dkim", "v=DKIM1; p=" + publicKey);
-        var listenTask = server.Listen();
+        var listenTask = server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
 
-        var signer = new DkimSigner (privateKeyFilename, domain, selector) 
+        var signer = new DkimSigner(privateKeyFilename, domain, selector)
         {
             AgentOrUserIdentifier = "@skcr.me",
             QueryMethod = "dns/txt",
@@ -87,11 +89,14 @@ public class Basic
     {
         using var client = _factory.CreateDefaultClient();
         using var scope = _factory.Services.CreateScope();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         var incomingEmailValidator = scope.ServiceProvider.GetRequiredService<IncomingEmailValidator>();
 
+        var dnsPort = config.GetValue<int>("DNS:Port");
         var masterFile = new MasterFile();
-        var server = new DnsServer(masterFile, "192.168.1.1");
-        var listenTask = server.Listen();
+        var ipEndpoint = new IPEndPoint(IPAddress.Parse("192.168.1.1"), 53);
+        var server = new DnsServer(masterFile, ipEndpoint);
+        var listenTask = server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
 
         var ip = "66.249.80.2";
         var domain = "gmail.com";
@@ -104,14 +109,29 @@ public class Basic
     [TestMethod]
     public void SendEmail()
     {
+
         using var client = _factory.CreateDefaultClient();
         using var scope = _factory.Services.CreateScope();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         using var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var sendMailService = scope.ServiceProvider.GetRequiredService<SendMailService>();
+        var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
         Console.WriteLine("Generating test data...");
-        var testEmailCount = 100;
+        var testEmailCount = 10;
 
-        var emailAddress = new Faker<MailAddress>()
+        var fromEmailAddrs = new Faker<MailAddress>()
+            .CustomInstantiator(f =>
+            {
+                var fn = f.Name.FirstName();
+                var ln = f.Name.LastName();
+                var prov = "skcr.me";
+                var email = f.Internet.Email(fn, ln, prov, "");
+                return new MailAddress(email, $"{fn} {ln}");
+            })
+            .Generate(15);
+
+        var toEmailAddrs = new Faker<MailAddress>()
             .CustomInstantiator(f =>
             {
                 var fn = f.Name.FirstName();
@@ -134,7 +154,7 @@ public class Basic
         var messages = new Faker<MailMessage>()
             .CustomInstantiator(f =>
             {
-                var message = new MailMessage(f.PickRandom(emailAddress), f.PickRandom(emailAddress));
+                var message = new MailMessage(f.PickRandom(fromEmailAddrs), f.PickRandom(toEmailAddrs));
 
                 for (int i = 0; i < f.Random.Number(0, 10); i++)
                 {
@@ -144,12 +164,12 @@ public class Basic
 
                 for (int i = 0; i < f.Random.Number(0, 10); i++)
                 {
-                    message.CC.Add(f.PickRandom(emailAddress));
+                    message.CC.Add(f.PickRandom(toEmailAddrs));
                 }
 
                 for (int i = 0; i < f.Random.Number(0, 10); i++)
                 {
-                    message.Bcc.Add(f.PickRandom(emailAddress));
+                    message.Bcc.Add(f.PickRandom(toEmailAddrs));
                 }
 
                 return message;
@@ -159,15 +179,43 @@ public class Basic
             .RuleFor(m => m.Priority, (f) => f.Random.Enum<MailPriority>())
             .Generate(testEmailCount);
 
+        var domains = toEmailAddrs.Select(m => m.Host).ToList();
+
+        var mimeMessages = messages.Select(m => MimeMessage.CreateFromMailMessage(m)).ToList();
+
+        var privateKeyFilename = config.GetValue<string>("DKIM:PrivateKey") ?? throw new Exception("Missing DKIM:PrivateKey config key.");
+        privateKeyFilename = Path.Join(env.ContentRootPath, privateKeyFilename); // filename relative to the websmtp app, not the tests app
+        var publicKeyFilename = privateKeyFilename.Replace("private", "pub").Replace("pem", "der");
+        var publicKey = Convert.ToBase64String(File.ReadAllBytes(publicKeyFilename));
+        var dnsPort = config.GetValue<int>("DNS:Port");
+
+        var masterFile = new MasterFile();
+        masterFile.AddIPAddressResourceRecord("skcr.me", "127.0.0.1");
+        masterFile.AddMailExchangeResourceRecord("skcr.me", 10, "localhost");
+        masterFile.AddTextResourceRecord("dkim._domainkey.skcr.me", "dkim", "v=DKIM1; p=" + publicKey);
+        masterFile.AddTextResourceRecord("skcr.me", "v", "spf1 +all");
+
+        domains.GroupBy(d=>d).Select(dG=>dG.FirstOrDefault()).ToList().ForEach(dmn => {
+            masterFile.AddIPAddressResourceRecord(dmn, "127.0.0.1");
+            masterFile.AddMailExchangeResourceRecord(dmn, 10, "localhost");
+            masterFile.AddTextResourceRecord(dmn, "v", "spf1 +all");
+        });
+        var server = new DnsServer(masterFile);
+        var listenTask = server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
+
         try
         {
             Console.WriteLine($"Sending {testEmailCount} emails...");
-            var smtpClient = new SmtpClient("127.0.0.1", 1025);
-            messages.ForEach(m => smtpClient.Send(m));
+
+            mimeMessages.ForEach(sendMailService.SendMail);
 
             var savedMessageCount = db.Messages.Count(msg => msg.Subject.Contains(testRunId));
+            var dkimPassed = db.Messages.Count(msg => msg.Subject.Contains(testRunId) && !msg.DkimFailed);
+            var spfPassed = db.Messages.Count(msg => msg.Subject.Contains(testRunId) && msg.SpfStatus == SpfVerifyResult.Pass);
 
-            Assert.IsTrue(savedMessageCount == testEmailCount, "Did not find the expected number of saved emails...");
+            Assert.IsTrue(savedMessageCount == testEmailCount, "Did not find the expected number of saved emails.");
+            Assert.IsTrue(dkimPassed == testEmailCount, "Some email did not pass the DKIM validation.");
+            Assert.IsTrue(spfPassed == testEmailCount, "Some email did not pass the SPF validation.");
         }
         catch (Exception ex)
         {
@@ -179,120 +227,8 @@ public class Basic
         finally
         {
             files?.ForEach(f => f.Content?.Dispose());
+            mimeMessages?.ForEach(m => m?.Dispose());
+            messages?.ForEach(m => m?.Dispose());
         }
     }
-    // [TestMethod]
-    // public void Send_A_Hundred_Emails()
-    // {
-
-    //     // test data generation
-    //     Console.WriteLine("Generating test data...");
-    //     var testEmailCount = 10;
-
-    //     var emailAddress = new Faker<string>()
-    //         .CustomInstantiator(f => f.Internet.Email())
-    //         .Generate(10);
-
-    //     var files = new Faker<FakeFile>()
-    //         .RuleFor(ff => ff.FileName, f => f.Lorem.Slug() + "." + f.Lorem.Word())
-    //         .RuleFor(ff => ff.Content, f => new MemoryStream(System.Text.Encoding.UTF8.GetBytes(f.Lorem.Paragraphs(10))))
-    //         .Generate(10);
-
-    //     try
-    //     {
-    //         var messages = new Faker<MailMessage>()
-    //             .CustomInstantiator(f =>
-    //             {
-    //                 var message = new MailMessage(f.PickRandom(emailAddress), f.PickRandom(emailAddress));
-    //                 var toInsert = f.PickRandom(files, f.Random.Number(6));
-    //                 var atts = toInsert.Select(f => new Attachment(f.Content, f.FileName)).ToList();
-    //                 atts.ForEach(a => message.Attachments.Add(a));
-    //                 return message;
-    //             })
-    //             .RuleFor(m => m.Body, (f) => f.Lorem.Paragraphs(2))
-    //             .RuleFor(m => m.Subject, (f) => f.Lorem.Sentence(10, 6))
-    //             .Generate(testEmailCount);
-
-    //         // Execution
-    //         Console.WriteLine($"Sending {testEmailCount} emails...");
-    //         var smtpClient = new SmtpClient("localhost", 1025);
-    //         messages.ForEach(m => smtpClient.Send(m));
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Console.WriteLine("Test failed, exception while sending emails:");
-    //         Console.WriteLine(ex);
-    //         throw;
-    //         //Assert.Fail("Test failed, exception while sending emails.");
-    //     }
-    //     finally
-    //     {
-    //         files?.ForEach(f => f.Content?.Dispose());
-    //     }
-    // }
-
-
-    // [TestMethod]
-    // public void Send_And_Receive_A_Thousand_Emails()
-    // {
-    //     // setup
-    //     Console.WriteLine("Seting up tests app/client...");
-    //     var client = _factory.CreateClient();
-    //     var basicOnlineTest = client.GetAsync("/").Result;
-    //     Assert.IsTrue(basicOnlineTest.IsSuccessStatusCode, "Could not contact the webapp.");
-
-    //     // test data generation
-    //     Console.WriteLine("Generating test data...");
-    //     var testEmailCount = 1000;
-
-    //     var emailAddress = new Faker<string>()
-    //         .CustomInstantiator(f => f.Internet.Email())
-    //         .Generate(10);
-
-    //     var files = new Faker<FakeFile>()
-    //         .RuleFor(ff => ff.FileName, f => f.Lorem.Slug() + "." + f.Lorem.Word())
-    //         .RuleFor(ff => ff.Content, f => new MemoryStream(System.Text.Encoding.UTF8.GetBytes(f.Lorem.Paragraphs(10))))
-    //         .Generate(10);
-
-    //     try
-    //     {
-    //         var messages = new Faker<MailMessage>()
-    //             .CustomInstantiator(f =>
-    //             {
-    //                 var message = new MailMessage(f.PickRandom(emailAddress), f.PickRandom(emailAddress));
-    //                 var file = f.PickRandom(files);
-    //                 var att = new Attachment(file.Content, file.FileName);
-    //                 message.Attachments.Add(att);
-    //                 return message;
-    //             })
-    //             .RuleFor(m => m.Body, (f) => f.Lorem.Paragraphs(2))
-    //             .RuleFor(m => m.Subject, (f) => f.Lorem.Sentence(10, 6))
-    //             .Generate(testEmailCount);
-
-    //         // Execution
-    //         Console.WriteLine($"Sending {testEmailCount} emails...");
-    //         var smtpClient = new SmtpClient("localhost", 1025);
-    //         messages.ForEach(m => smtpClient.Send(m));
-
-    //         // Validation
-    //         Console.WriteLine("Validating received emails count matches the sent count...");
-    //         var messageStore = _factory.Services.GetService(typeof(IReadableMessageStore)) as IReadableMessageStore
-    //             ?? throw new Exception("Could not get IReadableMessageStore from the app's services");
-    //         var receivedMessageCount = messageStore.Count(onlyNew: false);
-
-    //         Console.WriteLine($"Found {receivedMessageCount} in message store...");
-    //         Assert.IsTrue(receivedMessageCount == messages.Count);
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Console.WriteLine("Test failed, exception while sending emails:");
-    //         Console.WriteLine(ex);
-    //         throw;
-    //         //Assert.Fail("Test failed, exception while sending emails.");
-    //     }
-    //     finally
-    //     {
-    //         files?.ForEach(f => f.Content?.Dispose());
-    //     }
-    // }
 }

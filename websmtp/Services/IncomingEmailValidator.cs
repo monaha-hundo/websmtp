@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using DnsClient;
 using DnsClient.Protocol;
@@ -11,7 +12,8 @@ public partial class IncomingEmailValidator
 {
     readonly IConfiguration _config;
     readonly BasicPublicKeyLocator _locator;
-    private string DnsServer => _config.GetValue<string>("DNS") ?? throw new Exception("Missing DNS config key.");
+    private string DnsServer => _config.GetValue<string>("DNS:IP") ?? throw new Exception("Missing DNS config key.");
+    private int DnsPort => _config.GetValue<int>("DNS:Port");
 
     public IncomingEmailValidator(IConfiguration config, BasicPublicKeyLocator locator)
     {
@@ -42,8 +44,8 @@ public partial class IncomingEmailValidator
             return SpfVerifyResult.None;
         }
 
-        var dnsServerIp = IPAddress.Parse(DnsServer);
-        var lookup = new LookupClient(dnsServerIp);
+        var ipEndpoint = new IPEndPoint(IPAddress.Parse(DnsServer), DnsPort);
+        var lookup = new LookupClient(ipEndpoint);
 
         // https://datatracker.ietf.org/doc/html/rfc7208#section-4.4
         var rootDomainQueryResult = lookup.Query(domain, QueryType.TXT);
