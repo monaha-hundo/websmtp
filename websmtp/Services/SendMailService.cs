@@ -1,13 +1,10 @@
 ﻿
-using System.Text.RegularExpressions;
-using System.Timers;
 using DnsClient;
 using DnsClient.Protocol;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using MimeKit.Cryptography;
-using System.Net;
 
 namespace websmtp;
 
@@ -46,7 +43,7 @@ public class SendMailService
 
         _logger.LogDebug($"Mx Lookup for {domain}...");
 
-        var ipEndpoint = new IPEndPoint(IPAddress.Parse(DnsServer), DnsPort);
+        var ipEndpoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(DnsServer), DnsPort);
         var lookup = new LookupClient(ipEndpoint);
 
         var response = LookUpEmailMxRecords(destinationEmail, lookup);
@@ -86,13 +83,19 @@ public class SendMailService
     {
         var headersToSign = new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
 
-        var domain = _config.GetValue<string>("DKIM:Domain");
-        var selector = _config.GetValue<string>("DKIM:selector");
-        var privateKeyFilename = _config.GetValue<string>("DKIM:PrivateKey");
+        var domain = (mimeMessage.From[0] as MailboxAddress)?.Domain;
+        var dkimDomainConfigSection = _config.GetSection("DKIM:Domains");
+        var domainsConfigs = dkimDomainConfigSection.GetChildren();
+        var domainConfig = domainsConfigs.Where(s => s.GetValue<string>("Name") == domain).SingleOrDefault();
+
+        if (domainConfig == null) throw new Exception($"Trying to sign a message for an unconfigured email domain: '{domain}'.");
+
+        var selector = domainConfig.GetValue<string>("Selector");
+        var privateKeyFilename = domainConfig.GetValue<string>("PrivateKey");
 
         var signer = new DkimSigner(privateKeyFilename, domain, selector)
         {
-            AgentOrUserIdentifier = "@skcr.me",
+            AgentOrUserIdentifier = $"@{domain}",
             QueryMethod = "dns/txt",
         };
 
