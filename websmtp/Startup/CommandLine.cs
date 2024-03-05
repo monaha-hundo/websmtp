@@ -1,13 +1,15 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using OtpNet;
 using QRCoder;
 using System.Diagnostics;
+using websmtp.Database;
 
 namespace websmtp.Startup;
 
 public static class CommandLine
 {
-    public static int? ParseArgs(string[] args)
+    public static int? ParseStartupArgs(string[] args)
     {
         var shouldHashPassword = args.Any(arg => arg.StartsWith("--generate-credentials-config"));
         if (shouldHashPassword)
@@ -22,6 +24,28 @@ public static class CommandLine
         }
 
         return null;
+    }
+    public static void ParseModifiersArgs(string[] args, WebApplication app)
+    {
+        var shouldMigrate = args.Any(arg => arg.StartsWith("--migrate-database"));
+        if (shouldMigrate)
+        {
+            try
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                    logger.LogInformation("Applyging migrations");
+                    dbContext.Database.Migrate();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed migration(s): '{ex.Message}'.");
+                Environment.Exit(-1);
+            }
+        }
     }
 
     public static int GenerateDkimConfig()

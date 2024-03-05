@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InternalsVisibleTo>test</InternalsVisibleTo>
     <!-- <PublishAot>true</PublishAot> -->
-    <!-- <PublishSingleFile>true</PublishSingleFile> -->
-    <!-- <SelfContained>true</SelfContained> -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
   <!-- <ItemGroup>
