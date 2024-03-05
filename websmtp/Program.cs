@@ -1,9 +1,12 @@
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using websmtp.Startup;
 
 CommandLine.ParseStartupArgs(args);
 
 var builder = WebApplication.CreateBuilder(args);
 Startup.InitAppJsonConfig(builder);
+Startup.ConfigureWebHost(builder);
 Startup.ConfigureServices(builder);
 
 var app = builder.Build();

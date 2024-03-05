@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using System.Net;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using SmtpServer.Storage;
 using websmtp.Database;
@@ -17,6 +19,29 @@ public static class Startup
         else
         {
             builder.Configuration.AddJsonFile("appSettings.Production.json", false, true);
+        }
+    }
+
+    public static void ConfigureWebHost(WebApplicationBuilder builder)
+    {
+        var useSsl = builder.Configuration.GetValue<bool>("SSL:Enabled");
+        if (useSsl)
+        {
+            var sslPort = builder.Configuration.GetValue<int>("SSL:Port");
+            var privKeyFilename = builder.Configuration.GetValue<string>("SSL:PrivateKey") ?? throw new Exception("Missing SSL:PrivateKey configuration.");
+            var pubKeyFilename = builder.Configuration.GetValue<string>("SSL:PublicKey") ?? throw new Exception("Missing SSL:PublicKey configuration.");
+            
+            builder.WebHost.ConfigureKestrel((context, serverOptions) =>
+            {
+                var certPem = File.ReadAllText(pubKeyFilename);
+                var keyPem = File.ReadAllText(privKeyFilename);
+                var x509 = X509Certificate2.CreateFromPem(certPem, keyPem);
+
+                serverOptions.Listen(IPAddress.Any, sslPort, listenOptions =>
+                {
+                    listenOptions.UseHttps(x509);
+                });
+            });
         }
     }
 
