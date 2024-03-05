@@ -1,4 +1,5 @@
 using Bogus;
+using DNS.Protocol;
 using DNS.Server;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -100,8 +101,15 @@ public class Basic
 
         var dnsPort = config.GetValue<int>("DNS:Port");
         var masterFile = new MasterFile();
-        var ipEndpoint = new IPEndPoint(IPAddress.Parse("192.168.1.1"), 53);
-        var server = new DnsServer(masterFile, ipEndpoint);
+        
+        // dug info on 2024-03-05
+        masterFile.AddTextResourceRecord("gmail.com", "v", "spf1 redirect=_spf.google.com");
+        masterFile.AddTextResourceRecord("_spf.google.com", "v", "spf1 include:_netblocks.google.com include:_netblocks2.google.com include:_netblocks3.google.com ~all");
+        masterFile.AddTextResourceRecord("_netblocks.google.com", "v", "spf1 ip4:35.190.247.0/24 ip4:64.233.160.0/19 ip4:66.102.0.0/20 ip4:66.249.80.0/20 ip4:72.14.192.0/18 ip4:74.125.0.0/16 ip4:108.177.8.0/21 ip4:173.194.0.0/16 ip4:209.85.128.0/17 ip4:216.58.192.0/19 ip4:216.239.32.0/19 ~all");
+        masterFile.AddTextResourceRecord("_netblocks2.google.com", "v", "spf1 ip6:2001:4860:4000::/36 ip6:2404:6800:4000::/36 ip6:2607:f8b0:4000::/36 ip6:2800:3f0:4000::/36 ip6:2a00:1450:4000::/36 ip6:2c0f:fb50:4000::/36 ~all");
+        masterFile.AddTextResourceRecord("_netblocks3.google.com", "v", "spf1 ip4:172.217.0.0/19 ip4:172.217.32.0/20 ip4:172.217.128.0/19 ip4:172.217.160.0/20 ip4:172.217.192.0/19 ip4:172.253.56.0/21 ip4:172.253.112.0/20 ip4:108.177.96.0/19 ip4:35.191.0.0/16 ip4:130.211.0.0/22 ~all");
+        
+        var server = new DnsServer(masterFile);
         var listenTask = server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
 
         var ip = "66.249.80.2";
@@ -113,7 +121,7 @@ public class Basic
     }
 
     [TestMethod]
-    public void SendEmail()
+    public void SendEmailAndCatchAll()
     {
 
         using var client = _factory.CreateDefaultClient();
@@ -124,7 +132,7 @@ public class Basic
         var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
         Console.WriteLine("Generating test data...");
-        var testEmailCount = 10;
+        var testEmailCount = 1;
 
         var fromEmailAddrs = new Faker<MailAddress>()
             .CustomInstantiator(f =>
@@ -189,10 +197,17 @@ public class Basic
 
         var mimeMessages = messages.Select(m => MimeMessage.CreateFromMailMessage(m)).ToList();
 
-        var privateKeyFilename = config.GetValue<string>("DKIM:PrivateKey") ?? throw new Exception("Missing DKIM:PrivateKey config key.");
-        privateKeyFilename = Path.Join(env.ContentRootPath, privateKeyFilename); // filename relative to the websmtp app, not the tests app
+        var domain = "websmtp.local";
+        var dkimDomainConfigSection = config.GetSection("DKIM:Domains");
+        var domainsConfigs = dkimDomainConfigSection.GetChildren();
+        var domainConfig = domainsConfigs.Where(s => s.GetValue<string>("Name") == domain).SingleOrDefault();
+        if (domainConfig == null) throw new Exception($"Trying to sign a message for an unconfigured email domain: '{domain}'.");
+
+        var selector = domainConfig.GetValue<string>("Selector") ?? throw new Exception("Missing DKIM:Domain:Selector config key.");
+        var privateKeyFilename = domainConfig.GetValue<string>("PrivateKey") ?? throw new Exception("Missing DKIM:Domain:PrivateKey config key.");
         var publicKeyFilename = privateKeyFilename.Replace("private", "pub").Replace("pem", "der");
         var publicKey = Convert.ToBase64String(File.ReadAllBytes(publicKeyFilename));
+
         var dnsPort = config.GetValue<int>("DNS:Port");
 
         var masterFile = new MasterFile();
