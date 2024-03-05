@@ -25,4 +25,4 @@ jobs:
     - name: Build
       run: dotnet build
     - name: Test
-      run: dotnet test --verbosity diagnostic
+      run: dotnet test --verbosity normal
