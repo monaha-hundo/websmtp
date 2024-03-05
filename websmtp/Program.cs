@@ -1,6 +1,6 @@
 using websmtp.Startup;
 
-CommandLine.ParseArgs(args);
+CommandLine.ParseStartupArgs(args);
 
 var builder = WebApplication.CreateBuilder(args);
 Startup.InitAppJsonConfig(builder);
@@ -10,6 +10,8 @@ var app = builder.Build();
 
 Startup.ConfigureAppPipeline(app);
 Startup.MapEndpoints(app);
+
+CommandLine.ParseModifiersArgs(args, app);
 
 app.Run();
 
