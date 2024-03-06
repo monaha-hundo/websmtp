@@ -15,12 +15,17 @@ public static class Startup
 
         if (builder.Environment.IsDevelopment())
         {
-            builder.Configuration.AddJsonFile("appSettings.Development.json", false, true);
+            builder.Configuration.AddJsonFile("appSettings.Development.json", true, true);
         }
 
         if (builder.Environment.IsProduction())
         {
-            builder.Configuration.AddJsonFile("appSettings.Production.json", false, true);
+            builder.Configuration.AddJsonFile("appSettings.Production.json", true, true);
+        }
+
+        if (builder.Environment.IsEnvironment("Test"))
+        {
+            builder.Configuration.AddJsonFile("appSettings.Test.json", true, true);
         }
 
         if (builder.Environment.IsEnvironment("Test"))
