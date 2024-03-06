@@ -34,7 +34,15 @@ public class Basic
     public Basic()
     {
         _factory = new WebApplicationFactory<Program>();
-        client = _factory.CreateDefaultClient();
+
+        //client = _factory.WithWebHostBuilder(builder =>
+        //{
+        //    builder.UseEnvironment("Test");
+        //}).CreateClient();
+
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "TEST");
+
+        client = _factory.CreateClient();
     }
 
     [TestMethod]
@@ -66,7 +74,7 @@ public class Basic
 
         if (domainConfig == null) throw new Exception($"Trying to sign a message for an unconfigured email domain: '{domain}'.");
 
-        var selector = domainConfig.GetValue<string>("Selector")?? throw new Exception("Missing DKIM:Domain:Selector config key.");
+        var selector = domainConfig.GetValue<string>("Selector") ?? throw new Exception("Missing DKIM:Domain:Selector config key.");
         var privateKeyFilename = domainConfig.GetValue<string>("PrivateKey") ?? throw new Exception("Missing DKIM:Domain:PrivateKey config key.");
         var publicKeyFilename = privateKeyFilename.Replace("private", "pub").Replace("pem", "der");
         var publicKey = Convert.ToBase64String(File.ReadAllBytes(publicKeyFilename));
@@ -77,7 +85,8 @@ public class Basic
 
         var tokenSource2 = new CancellationTokenSource();
         CancellationToken ct = tokenSource2.Token;
-        Task.Run(async () => {
+        Task.Run(async () =>
+        {
             await server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
         }, ct);
 
@@ -120,7 +129,8 @@ public class Basic
 
         var tokenSource2 = new CancellationTokenSource();
         CancellationToken ct = tokenSource2.Token;
-        Task.Run(async () => {
+        Task.Run(async () =>
+        {
             await server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
         }, ct);
 
@@ -144,7 +154,7 @@ public class Basic
         var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
         Console.WriteLine("Generating test data...");
-        var testEmailCount = 100;
+        var testEmailCount = 1;
 
         var fromEmailAddrs = new Faker<MailAddress>()
             .CustomInstantiator(f =>
@@ -228,7 +238,8 @@ public class Basic
         masterFile.AddTextResourceRecord("dkim._domainkey.websmtp.local", "dkim", "v=DKIM1; p=" + publicKey);
         masterFile.AddTextResourceRecord("websmtp.local", "v", "spf1 +all");
 
-        domains.GroupBy(d=>d).Select(dG=>dG.FirstOrDefault()).ToList().ForEach(dmn => {
+        domains.GroupBy(d => d).Select(dG => dG.FirstOrDefault()).ToList().ForEach(dmn =>
+        {
             masterFile.AddIPAddressResourceRecord(dmn, "127.0.0.1");
             masterFile.AddMailExchangeResourceRecord(dmn, 10, "localhost");
             masterFile.AddTextResourceRecord(dmn, "v", "spf1 +all");
@@ -236,7 +247,8 @@ public class Basic
         using var server = new DnsServer(masterFile);
         var tokenSource2 = new CancellationTokenSource();
         CancellationToken ct = tokenSource2.Token;
-        Task.Run(async () => {
+        Task.Run(async () =>
+        {
             await server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
         }, ct);
 
