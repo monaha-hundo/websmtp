@@ -15,14 +15,15 @@
         <div class="list list-group h-100 overflow-y-scroll position-relative">
             @if (Model.Listing.Messages.Count == 0)
             {
-                <div class="list-group-item  d-flex">
+                <div class="list-group-item  d-flex"
+                    style="border-left: none;">
                     <div colspan="7">No messages... yet!</div>
                 </div>
             }
             @for (int msgId = 0; msgId < Model.Listing.Messages.Count; msgId++)
             {
                 var message = Model.Listing.Messages[msgId];
-                <div href="/View?msgId=@message.Id" onclick="openwMsgView('@message.Id')" style="cursor: pointer;"
+                <div href="/View?msgId=@message.Id" onclick="openwMsgView('@message.Id')" style="cursor: pointer; border-left: none;"
                     class='list-group-item list-group-item-action  px-1 py-2 @(message.Read ? "" : "unread")'
                     msg-id="@message.Id">
                     <div class="row align-items-center g-0 px-2">
