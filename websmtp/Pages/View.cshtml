@@ -5,17 +5,17 @@
 }
 
 <div class="w-100 text-white">
-    <div class="p-2 mb-2 border-bottom" role="group" aria-label="Basic example">
-        <button onclick="closeMsg()" type="button" class="btn btn-secondary">
+    <div class="p-2 mb-2 border-bottom d-flex align-items-center" role="group" aria-label="Basic example" style="height: 68px;">
+        <button onclick="closeMsg()" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-left"></i>
         </button>
-        <button onclick="previousMsg()" type="button" class="btn btn-secondary">
+        <button onclick="previousMsg()" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-up"></i>
         </button>
-        <button onclick="nextMsg()" type="button" class="btn btn-secondary">
+        <button onclick="nextMsg()" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-down"></i>
         </button>
-        <button onclick="showRawMsg()" type="button" class="btn btn-secondary">
+        <button onclick="showRawMsg()" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-file-earmark-code"></i>
         </button>
         @if (Model.Message.Deleted)
