@@ -66,38 +66,43 @@
 }
 @if (Model.Sent.HasValue && Model.Sent == true)
 {
-    <div style="width: 100%; height: 100%" class="d-flex align-items-center justify-content-center">
-        <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
-            <div class="card-body ">
-                <div class="text-center my-2">Message sent.</div>
-                <div class="text-center my-2">
-                    <button class="btn btn-primary" onclick="closeWindow()">Close</button>
-                </div>
+    <div style="height: 100%" class="d-flex align-items-center justify-content-center">
+    <div class="card" style="flex: 1 1 auto;">
+        <div class="card-body ">
+            <div class="text-center my-2">Message sent.</div>
+            <div class="text-center my-2">
+                <button class="btn btn-primary" onclick="closeWindow()">Close</button>
             </div>
         </div>
     </div>
+</div>
 }
 else if (Model.Sent.HasValue && Model.Sent == false)
 {
     <div style="width: 100%; height: 100%" class="d-flex align-items-center justify-content-center">
-        <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
-            <div class="card-body ">
-                <div class="text-center my-2">Error</div>
-                <div class="text-center my-2">Request ID: 123091283098123098</div>
-                <div class="text-center my-2">
-                    <button class="btn btn-primary" onclick="closeWindow()">Close</button>
-                </div>
+    <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
+        <div class="card-body ">
+            <div class="text-center my-2">Error</div>
+            <div class="text-center my-2">Request ID: 123091283098123098</div>
+            <div class="text-center my-2">
+                <button class="btn btn-primary" onclick="closeWindow()">Close</button>
             </div>
         </div>
     </div>
+</div>
 }
 else
 {
-    <div class="new--message-header-bg"></div>
     <form class="position-relative card card-outlined container-fluid text-white d-flex flex-column mb-2"
-    style="height: 100%;" method="post" enctype="application/x-www-form-urlencoded">
+     method="post"  style="height: 100%;" enctype="application/x-www-form-urlencoded" onsubmit="onFormSubmit()">
 
-    <div class="card-body ">
+    <div id="new--message-sending" class="card-body d-none d-flex align-items-center" style="height: 100%;">
+            <strong role="status">Sending message...</strong>
+            <div class="spinner-border ms-auto" aria-hidden="true"></div>
+    </div>
+
+    <div id="new--message-body" class="card-body">
+        <div class="new--message-header-bg"></div>
         <span class="h5 card-title mb-5" style="position: relative; z-index: 55;">
 
             <div class="row align-items-center justify-content-between">
@@ -215,10 +220,22 @@ else
             sectionEl.classList.add('d-none');
             iframeEl.src = 'about:blank';
         }
+        function onFormSubmit() {
+            //event.preventDefault();
+            //console.log('form submit');
+            let composerEl = document.getElementById('new--message-body');
+            let loadingEl = document.getElementById('new--message-sending');
+            composerEl.classList.add('d-none');
+            loadingEl.classList.remove('d-none');
+            let iframeEl = window.parent.document.getElementById('new--message-frame');
+            iframeEl.style.height = '0px';
+        }
         function resizeIframe() {
             let iframeEl = window.parent.document.getElementById('new--message-frame');
             iframeEl.style.height = document.documentElement.scrollHeight + 'px';
+            requestAnimationFrame(resizeIframe);
         }
-        setInterval(resizeIframe, 100);
+        resizeIframe();
+        //setInterval(resizeIframe, 10);
     </script>
 }

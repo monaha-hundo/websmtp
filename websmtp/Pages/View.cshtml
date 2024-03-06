@@ -5,17 +5,17 @@
 }
 
 <div class="w-100 text-white">
-    <div class="p-2 mb-2 border-bottom" role="group" aria-label="Basic example">
-        <button onclick="closeMsg()" type="button" class="btn btn-secondary">
+    <div class="p-2 mb-2 border-bottom d-flex align-items-center" role="group" aria-label="Basic example" style="height: 68px;">
+        <button onclick="closeMsg()" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-left"></i>
         </button>
-        <button onclick="previousMsg()" type="button" class="btn btn-secondary">
+        <button onclick="previousMsg()" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-up"></i>
         </button>
-        <button onclick="nextMsg()" type="button" class="btn btn-secondary">
+        <button onclick="nextMsg()" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-down"></i>
         </button>
-        <button onclick="showRawMsg()" type="button" class="btn btn-secondary">
+        <button onclick="showRawMsg()" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-file-earmark-code"></i>
         </button>
         @if (Model.Message.Deleted)
@@ -48,19 +48,19 @@
             }
         </div>
         <div class="d-flex align-items-center">
-            <div class="my-1">
+            <div class="my-2">
                 <span class="fw-bold d-inline-block mw-50px">Date:</span>
                 @Model.Message.ReceivedOn.Date.ToLongDateString()
             </div>
         </div>
         <div class="d-flex justify-content-between">
-            <div class="my-1">
+            <div class="my-2">
                 <span class="fw-bold d-inline-block mw-50px">From:</span>
                 <partial name="MailboxAddresses" model="Model.Message.From" />
             </div>
         </div>
         <div class="d-flex justify-content-between">
-            <div class="my-1">
+            <div class="my-2">
                 <span class="fw-bold d-inline-block mw-50px">To:</span>
                 <partial name="MailboxAddresses" model="Model.Message.To" />
             </div>
@@ -69,7 +69,7 @@
         @if (!string.IsNullOrWhiteSpace(Model.Message.Cc))
         {
             <div class="d-flex justify-content-between">
-                <div class="my-1">
+                <div class="my-2">
                     <span class="fw-bold d-inline-block mw-50px">Cc:</span>
                     <partial name="MailboxAddresses" model="Model.Message.Cc" />
                 </div>
@@ -79,7 +79,7 @@
         @if (!string.IsNullOrWhiteSpace(Model.Message.Bcc))
         {
             <div class="d-flex justify-content-between">
-                <div class="my-1">
+                <div class="my-2">
                     <span class="fw-bold d-inline-block mw-50px">Bcc:</span>
                     <partial name="MailboxAddresses" model="Model.Message.Bcc" />
                 </div>
@@ -87,13 +87,40 @@
         }
 
         <div class="d-flex justify-content-between">
-            <div class="my-1">
+            <div class="my-2">
                 <span class="fw-bold d-inline-block mw-50px">Spam:</span>
 
-                <span class="text-decoration-none badge rounded-pill text-bg-secondary fs-6"
-                      class="me-2">DKIM:@Model.Message.DkimFailed</span>
-                <span class="text-decoration-none badge rounded-pill text-bg-secondary fs-6"
-                      class="me-2">SPF:@Enum.GetName(typeof(SpfVerifyResult), Model.Message.SpfStatus)</span>
+                <span
+                    class='text-decoration-none badge rounded-pill @(Model.Message.DkimFailed ? "text-bg-danger" : "text-bg-success") fs-6 me-2'>DKIM <i
+                        class='bi bi-hand-thumbs-@(Model.Message.DkimFailed ? "down" : "up")-fill'></i></span>
+                @switch (Model.Message.SpfStatus)
+                {
+                    case SpfVerifyResult.Fail:
+                    case SpfVerifyResult.Softfail:
+                    case SpfVerifyResult.Temperror:
+                    case SpfVerifyResult.Permerror:
+                        <span class="text-decoration-none badge rounded-pill text-bg-danger fs-6 me-2">
+                            SPF
+                            <i class="bi bi-emoji-frown"></i>
+                        </span>
+                        break;
+
+                    default:
+                    case SpfVerifyResult.Neutral:
+                    case SpfVerifyResult.None:
+                        <span class="text-decoration-none badge rounded-pill text-bg-warning fs-6 me-2">
+                            SPF
+                            <i class="bi bi-emoji-neutral"></i>
+                        </span>
+                        break;
+
+                    case SpfVerifyResult.Pass:
+                        <span class="text-decoration-none badge rounded-pill text-bg-success fs-6 me-2">
+                            SPF
+                            <i class="bi bi-emoji-smile"></i>
+                        </span>
+                        break;
+                }
             </div>
         </div>
 
@@ -168,15 +195,15 @@
 
         var viewResizeInterval = setInterval(() => window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
 
-        var innerViewResizeInterval = setInterval(()=>{
+        var innerViewResizeInterval = setInterval(() => {
             let iframeEl = document.getElementById('html-content');
-            if(iframeEl == null) return; 
+            if (iframeEl == null) return;
             let height = iframeEl.contentDocument.documentElement.scrollHeight;
-            if(height == 0) return; 
+            if (height == 0) return;
             iframeEl.height = height;
-        },100);
+        }, 100);
 
-        document.addEventListener('unload', ()=> {
+        document.addEventListener('unload', () => {
             console.log('clearing intervals');
             clearInterval(viewResizeInterval);
             clearInterval(innerViewResizeInterval);
