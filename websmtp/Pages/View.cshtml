@@ -190,7 +190,8 @@
             window.parent.postMessage(`next-msg:@Model.MsgId`, window.location.origin);
         }
         function showRawMsg() {
-            document.location.href = document.location.href + '&showRaw=true';
+            window.parent.postMessage(`raw-msg:@Model.MsgId`, window.location.origin);
+            //document.location.href = document.location.href + '&showRaw=true';
         }
 
         var viewResizeInterval = setInterval(() => window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
