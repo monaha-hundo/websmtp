@@ -14,4 +14,9 @@ websmtp/websmtp.db
 openssl.exe
 libcrypto-3-x64.dll
 libssl-3-x64.dll
+<<<<<<< Updated upstream
 websmtp/appSettings.Production.json
+=======
+websmtp/appSettings.Production.json
+websmtp/appSettings.Production.json
+>>>>>>> Stashed changes
