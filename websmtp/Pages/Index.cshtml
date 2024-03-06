@@ -5,9 +5,10 @@
     var regex = new System.Text.RegularExpressions.Regex(@"""(.+)"" <(.+)>");
 }
 
-    <a class="btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed"  href="/logout" style="flex: 1 1 auto; top: 2px; right: 2px; z-index: 60;" title="Sign Out">
-        <i class="bi bi-door-open" style="font-size: 1.5rem;"></i> 
-    </a>
+<a class="btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed" href="/logout"
+    style="flex: 1 1 auto; top: 2px; right: 2px; z-index: 60;" title="Sign Out">
+    <i class="bi bi-door-open" style="font-size: 1.5rem;"></i>
+</a>
 
 <partial name="Sidebar" model="Model.Listing" />
 
@@ -19,15 +20,15 @@
         <div class="list list-group h-100 overflow-y-scroll position-relative">
             @if (Model.Listing.Messages.Count == 0)
             {
-                <div class="list-group-item  d-flex"
-                    style="border-left: none;">
+                <div class="list-group-item  d-flex" style="border-left: none;">
                     <div colspan="7">No messages... yet!</div>
                 </div>
             }
             @for (int msgId = 0; msgId < Model.Listing.Messages.Count; msgId++)
             {
                 var message = Model.Listing.Messages[msgId];
-                <div href="/View?msgId=@message.Id" onclick="openwMsgView('@message.Id')" style="cursor: pointer; border-left: none;"
+                <div href="/View?msgId=@message.Id" onclick="openwMsgView('@message.Id')"
+                    style="cursor: pointer; border-left: none;"
                     class='list-group-item list-group-item-action  px-1 py-2 @(message.Read ? "" : "unread")'
                     msg-id="@message.Id">
                     <div class="row align-items-center g-0 px-2">
@@ -90,9 +91,8 @@
         </div>
     </section>
 
-    <section id="new--message" 
-    class="d-none"
-    style="position: fixed; bottom: 0; right: 0; width: 640px; max-width: 100vw;">
+    <section id="new--message" class="d-none"
+        style="position: fixed; bottom: 0; right: 0; width: 640px; max-width: 100vw;">
         <iframe id="new--message-frame" src="/NewMessage" style="height: 100%; width: 100%;"></iframe>
     </section>
 </div>
@@ -143,7 +143,7 @@
         }
 
         var previousListingScrollPos = 0;
-        async function openwMsgView(msgId) {
+        async function openwMsgView(msgId, showRaw) {
             event.preventDefault();
 
             markMessageAsRead(msgId);
@@ -163,11 +163,17 @@
 
             containerEl.appendChild(msgViewEl);
 
-            msgViewEl.setAttribute('src', '/View?msgId=' + msgId);
+            let url = '/View?msgId=' + msgId;
+            if (showRaw === true) {
+                url = url + '&showRaw=true';
+            }
+            msgViewEl.setAttribute('src', url);
             sectionEl.classList.remove('d-none');
             containerEl.style.display = 'block';
 
-            history.pushState({ page: 'view', msgId }, "");
+            if (showRaw !== true) {
+                history.pushState({ page: 'view', msgId }, "");
+            }
         }
 
         function closeMsgView() {
@@ -309,15 +315,19 @@
                 case 'next-msg':
                     nextMessage(msgParam);
                     return;
+                case 'raw-msg':
+                    closeMsgView();
+                    openwMsgView(msgParam, true);
+                    return;
             }
         }
 
-        function newMessage(to){
+        function newMessage(to) {
             let sectionEl = window.parent.document.getElementById('new--message');
             let iframeEl = window.parent.document.getElementById('new--message-frame');
-            if(to == null){
+            if (to == null) {
                 iframeEl.src = '/NewMessage';
-            }else{
+            } else {
                 iframeEl.src = '/NewMessage?initialTo=' + to;
             }
             sectionEl.classList.remove('d-none');

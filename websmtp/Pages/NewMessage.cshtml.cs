@@ -40,10 +40,6 @@ namespace MyApp.Namespace
         }
         public void OnPost()
         {
-                Task.Delay(10000).Wait();
-                Sent = true;
-                return;
-
             var mailMessage = new MailMessage
             {
                 From = new MailAddress(From)
@@ -69,6 +65,7 @@ namespace MyApp.Namespace
 
             mailMessage.IsBodyHtml = Html;
             mailMessage.Body = Body;
+            mailMessage.Subject = Subject;
 
             var mimeMessage = MimeMessage.CreateFromMailMessage(mailMessage);
 

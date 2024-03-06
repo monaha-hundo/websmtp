@@ -144,7 +144,7 @@ public class Basic
         var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
         Console.WriteLine("Generating test data...");
-        var testEmailCount = 1;
+        var testEmailCount = 100;
 
         var fromEmailAddrs = new Faker<MailAddress>()
             .CustomInstantiator(f =>
