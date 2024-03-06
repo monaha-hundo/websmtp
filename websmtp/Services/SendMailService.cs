@@ -46,7 +46,9 @@ public class SendMailService
         var ipEndpoint = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(DnsServer), DnsPort);
         var lookup = new LookupClient(ipEndpoint);
 
-        var response = LookUpEmailMxRecords(destinationEmail, lookup);
+        var response = domain == "localhost"
+            ? new List<string>(1) { "localhost" }
+            : LookUpEmailMxRecords(destinationEmail, lookup);
 
         _logger.LogDebug($"Responses: {response.Count}");
 
@@ -63,6 +65,15 @@ public class SendMailService
 
             try
             {
+                if (exchangeRecord == "localhost")
+                {
+                    _logger.LogTrace($"Transfering email locally");
+                    using var localClient = new SmtpClient();
+                    localClient.Connect("127.0.0.1", 1025, SecureSocketOptions.None);
+                    var localResult = localClient.Send(message);
+                    return;
+                }
+
                 var exchange = exchangeRecord.TrimEnd('.');
                 _logger.LogTrace($"Attempt #{attempts}: '{exchange}'.");
                 using var client = new SmtpClient();
@@ -70,6 +81,7 @@ public class SendMailService
                 var result = client.Send(message);
                 _logger.LogDebug($"Attempt #{attempts}: sent through {exchange}.");
                 _logger.LogTrace(result);
+
             }
             catch (Exception ex)
             {

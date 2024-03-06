@@ -12,13 +12,25 @@ public static class Startup
     public static void InitAppJsonConfig(WebApplicationBuilder builder)
     {
         builder.Configuration.AddJsonFile("appSettings.json", false, true);
+
         if (builder.Environment.IsDevelopment())
         {
-            builder.Configuration.AddJsonFile("appSettings.Development.json", false, true);
+            builder.Configuration.AddJsonFile("appSettings.Development.json", true, true);
         }
-        else
+
+        if (builder.Environment.IsProduction())
         {
-            builder.Configuration.AddJsonFile("appSettings.Production.json", false, true);
+            builder.Configuration.AddJsonFile("appSettings.Production.json", true, true);
+        }
+
+        if (builder.Environment.IsEnvironment("Test"))
+        {
+            builder.Configuration.AddJsonFile("appSettings.Test.json", true, true);
+        }
+
+        if (builder.Environment.IsEnvironment("Test"))
+        {
+            builder.Configuration.AddJsonFile("appSettings.Test.json", false, true);
         }
     }
 

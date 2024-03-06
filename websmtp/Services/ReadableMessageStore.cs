@@ -22,19 +22,10 @@ public class ReadableMessageStore : IReadableMessageStore
         _dataContext.ChangeTracker.LazyLoadingEnabled = false;
         _dataContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
-        var total = _dataContext.Messages.Count(msg => !msg.DkimFailed
-                && !msg.DmarcFailed
-                && (msg.SpfStatus == SpfVerifyResult.Pass || msg.SpfStatus == SpfVerifyResult.None));
-        var newCount = _dataContext.Messages.Count(msg => !msg.Read && (!msg.DkimFailed
-                && !msg.DmarcFailed
-                && (msg.SpfStatus == SpfVerifyResult.Pass || msg.SpfStatus == SpfVerifyResult.None)));
-        var deletedCount = _dataContext.Messages.Count(msg => msg.Deleted && (!msg.DkimFailed
-                && !msg.DmarcFailed
-                && (msg.SpfStatus == SpfVerifyResult.Pass || msg.SpfStatus == SpfVerifyResult.None)));
-        var spamnCount = _dataContext.Messages.Count(msg =>
-            msg.DkimFailed
-            || msg.DmarcFailed
-            || (msg.SpfStatus != SpfVerifyResult.Pass && msg.SpfStatus != SpfVerifyResult.None));
+        var newCount = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.Read && (!msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass));
+        var total = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var spamnCount = _dataContext.Messages.Count(msg => !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
+        var deletedCount = _dataContext.Messages.Count(msg => msg.Deleted && (!msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass));
 
         var query = _dataContext.Messages
             .AsNoTracking()
@@ -47,18 +38,20 @@ public class ReadableMessageStore : IReadableMessageStore
         else
         {
             query = query.Where(msg => !msg.Deleted);
-        }
 
-        if (!showSpam)
-        {
-            query = query.Where(msg => !msg.DkimFailed
-                && !msg.DmarcFailed
-                && (msg.SpfStatus == SpfVerifyResult.Pass || msg.SpfStatus == SpfVerifyResult.None));
-        }
+            if (!showSpam)
+            {
+                query = query.Where(msg => !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+            }
+            else
+            {
+                query = query.Where(msg => msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass);
+            }
 
-        if (onlyNew)
-        {
-            query = query.Where(msg => !msg.Read);
+            if (onlyNew)
+            {
+                query = query.Where(msg => !msg.Read);
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(filter))
