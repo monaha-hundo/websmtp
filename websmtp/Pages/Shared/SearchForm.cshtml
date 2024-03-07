@@ -1,11 +1,11 @@
 ﻿@model IndexModel
-<form class="d-inline-flex align-items-center ps-2" action="/" method="get" style="  flex: 0 0 68px;">
-
+<form class="d-inline-flex align-items-center ps-2" action="/@Model.Mailbox" method="get" style="  flex: 0 0 68px;">
     <div class="input-group my-2">
         <span class="input-group-text" id="basic-addon1">
             <i class="bi bi-search"></i>
         </span>
-        <input name="filter" id="filter" type="text" class="form-control from-control-sm" placeholder="Search messages"
+        <input name="filter" id="filter" type="text" class="form-control from-control-sm" 
+        placeholder="Search messages" value="@Model.Filter"
             aria-label="Any text value" aria-describedby="basic-addon1" />
     </div>
     <div style="flex: 1 1 100%"></div>

@@ -13,6 +13,7 @@ public class IndexModel : PageModel
     public ListResult Listing { get; set; } = new ListResult();
 
     [FromRoute] public string Mailbox { get; set; } = "inbox";
+    [FromQuery] public string Filter { get; set; } = "";
 
     public IndexModel(ILogger<IndexModel> logger,
     IReadableMessageStore messageStore)
@@ -23,26 +24,25 @@ public class IndexModel : PageModel
 
     public IActionResult OnGet(
         [FromQuery] int page = 1,
-        [FromQuery] int perPage = 1000,
-        [FromQuery] string filter = "")
+        [FromQuery] int perPage = 1000)
     {
         switch (Mailbox)
         {
             default:
             case "inbox":
-                Listing = _messageStore.Latest(page, perPage, true, false, false, filter);
+                Listing = _messageStore.Latest(page, perPage, true, false, false, Filter);
                 break;
 
             case "all":
-                Listing = _messageStore.Latest(page, perPage, false, false, false, filter);
+                Listing = _messageStore.Latest(page, perPage, false, false, false, Filter);
                 break;
 
             case "spam":
-                Listing = _messageStore.Latest(page, perPage, false, false, true, filter);
+                Listing = _messageStore.Latest(page, perPage, false, false, true, Filter);
                 break;
 
             case "trash":
-                Listing = _messageStore.Latest(page, perPage, false, true, true, filter);
+                Listing = _messageStore.Latest(page, perPage, false, true, true, Filter);
                 break;
         }
         return Page();
