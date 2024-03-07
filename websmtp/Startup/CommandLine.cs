@@ -92,6 +92,8 @@ public static class CommandLine
             Console.WriteLine($"Failed EnsureCreated: '{ex.Message}'.");
             Environment.Exit(-1);
         }
+
+        Environment.Exit(0);
     }
 
     public static int GenerateDkimConfig()

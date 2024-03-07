@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using SmtpServer.Storage;
 using websmtp.Database;
