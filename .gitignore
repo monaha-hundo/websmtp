@@ -16,3 +16,6 @@ libcrypto-3-x64.dll
 libssl-3-x64.dll
 websmtp/appSettings.Production.json
 /websmtp/appSettings.Production.json
+websmtp/tests.db
+websmtp/tests.db-shm
+websmtp/tests.db-wal

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using SmtpServer.Storage;
 using websmtp.Database;
@@ -42,7 +43,7 @@ public static class Startup
             var sslPort = builder.Configuration.GetValue<int>("SSL:Port");
             var privKeyFilename = builder.Configuration.GetValue<string>("SSL:PrivateKey") ?? throw new Exception("Missing SSL:PrivateKey configuration.");
             var pubKeyFilename = builder.Configuration.GetValue<string>("SSL:PublicKey") ?? throw new Exception("Missing SSL:PublicKey configuration.");
-            
+
             builder.WebHost.ConfigureKestrel((context, serverOptions) =>
             {
                 var certPem = File.ReadAllText(pubKeyFilename);
@@ -59,17 +60,25 @@ public static class Startup
 
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
-        var dbServer = builder.Configuration.GetValue<string>("Database:Server");
-        var dbName = builder.Configuration.GetValue<string>("Database:Name");
-        var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
-        var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
-        var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
+        if (builder.Environment.IsEnvironment("Test"))
+        {
+            Console.WriteLine("Using Sqlite TEST database.");
+            builder.Services.AddDbContext<DataContext>(dbCtxOpts => dbCtxOpts.UseSqlite("Data Source=tests.db"));
+        }
+        else
+        {
+            var dbServer = builder.Configuration.GetValue<string>("Database:Server");
+            var dbName = builder.Configuration.GetValue<string>("Database:Name");
+            var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
+            var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
+            var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
+            builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySQL(cs), ServiceLifetime.Transient, ServiceLifetime.Transient);
+        }
 
         builder.Services.AddResponseCompression(options =>
          {
              options.EnableForHttps = true;
          });
-        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySQL(cs), ServiceLifetime.Transient, ServiceLifetime.Transient);
         builder.Services.AddAntiforgery();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);

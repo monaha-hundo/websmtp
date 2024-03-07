@@ -27,6 +27,26 @@ public static class CommandLine
     }
     public static void ParseModifiersArgs(string[] args, WebApplication app)
     {
+        var shouldEnsureCreated = args.Any(arg => arg.StartsWith("--ensure-created-database"));
+        if (shouldEnsureCreated)
+        {
+            try
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                    logger.LogInformation("Database.EnsureCreated");
+                    dbContext.Database.EnsureCreated();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed EnsureCreated: '{ex.Message}'.");
+                Environment.Exit(-1);
+            }
+        }
+
         var shouldMigrate = args.Any(arg => arg.StartsWith("--migrate-database"));
         if (shouldMigrate)
         {
