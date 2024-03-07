@@ -1,5 +1,3 @@
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
 using websmtp.Startup;
 
 CommandLine.ParseStartupArgs(args);
@@ -16,6 +14,11 @@ Startup.ConfigureAppPipeline(app);
 Startup.MapEndpoints(app);
 
 CommandLine.ParseModifiersArgs(args, app);
+
+if (builder.Environment.IsEnvironment("Test"))
+{
+    Startup.PrepareTestingEnvironement(app);
+}
 
 app.Run();
 
