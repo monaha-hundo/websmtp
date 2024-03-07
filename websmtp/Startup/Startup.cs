@@ -130,4 +130,28 @@ public static class Startup
         app.MapGet("/api/messages/{msgId}/attachements/{filename}", MessagesEndpoints.GetMessageAttachement).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}.html", MessagesEndpoints.GetMessage).RequireAuthorization();
     }
+
+    public static void PrepareTestingEnvironement(WebApplication app)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+
+            if (dbContext.Database.GetDbConnection() is not SqliteConnection sqliteConnection)
+            {
+                throw new Exception("Test environement, but database does not appear to be Sqlite... Aborting");
+            }
+
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            logger.LogInformation("Test Environement, recreating TEST database.");
+            dbContext.Database.EnsureDeleted();
+            if (!dbContext.Database.EnsureCreated())
+            {
+                throw new Exception("Database not created");
+            }
+
+            var q = dbContext.RawMessages.ToList();
+        }
+    }
+
 }
