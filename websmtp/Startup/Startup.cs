@@ -60,25 +60,19 @@ public static class Startup
 
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
-        if (builder.Environment.IsEnvironment("Test"))
-        {
-            Console.WriteLine("Using Sqlite TEST database.");
-            builder.Services.AddDbContext<DataContext>(dbCtxOpts => dbCtxOpts.UseSqlite("Data Source=tests.db"));
-        }
-        else
-        {
-            var dbServer = builder.Configuration.GetValue<string>("Database:Server");
-            var dbName = builder.Configuration.GetValue<string>("Database:Name");
-            var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
-            var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
-            var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
-            builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySQL(cs), ServiceLifetime.Transient, ServiceLifetime.Transient);
-        }
+        var dbServer = builder.Configuration.GetValue<string>("Database:Server");
+        var dbName = builder.Configuration.GetValue<string>("Database:Name");
+        var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
+        var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
+        var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
+
+        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySQL(cs), ServiceLifetime.Transient, ServiceLifetime.Transient);
 
         builder.Services.AddResponseCompression(options =>
          {
              options.EnableForHttps = true;
          });
+         
         builder.Services.AddAntiforgery();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
@@ -130,28 +124,4 @@ public static class Startup
         app.MapGet("/api/messages/{msgId}/attachements/{filename}", MessagesEndpoints.GetMessageAttachement).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}.html", MessagesEndpoints.GetMessage).RequireAuthorization();
     }
-
-    public static void PrepareTestingEnvironement(WebApplication app)
-    {
-        using (var scope = app.Services.CreateScope())
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-
-            if (dbContext.Database.GetDbConnection() is not SqliteConnection sqliteConnection)
-            {
-                throw new Exception("Test environement, but database does not appear to be Sqlite... Aborting");
-            }
-
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-            logger.LogInformation("Test Environement, recreating TEST database.");
-            dbContext.Database.EnsureDeleted();
-            if (!dbContext.Database.EnsureCreated())
-            {
-                throw new Exception("Database not created");
-            }
-
-            var q = dbContext.RawMessages.ToList();
-        }
-    }
-
 }

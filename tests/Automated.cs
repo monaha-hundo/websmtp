@@ -41,7 +41,7 @@ public class Basic
         //}).CreateClient();
 
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "TEST");
-
+        
         client = _factory.CreateClient();
     }
 

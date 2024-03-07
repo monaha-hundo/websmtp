@@ -19,3 +19,4 @@ websmtp/appSettings.Production.json
 websmtp/tests.db
 websmtp/tests.db-shm
 websmtp/tests.db-wal
+websmtp/appSettings.json

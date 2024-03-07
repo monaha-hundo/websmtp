@@ -27,6 +27,12 @@ public static class CommandLine
     }
     public static void ParseModifiersArgs(string[] args, WebApplication app)
     {
+        var setupSql = args.Any(arg => arg.StartsWith("--setup-sql"));
+        if (setupSql)
+        {
+            SetupSql(app);
+        }
+
         var shouldEnsureCreated = args.Any(arg => arg.StartsWith("--ensure-created-database"));
         if (shouldEnsureCreated)
         {
@@ -65,6 +71,26 @@ public static class CommandLine
                 Console.WriteLine($"Failed migration(s): '{ex.Message}'.");
                 Environment.Exit(-1);
             }
+        }
+    }
+
+    public static void SetupSql(WebApplication app)
+    {
+        try
+        {
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                logger.LogInformation("Running setup.sql");
+                var sql = File.ReadAllText("setup.sql");
+                dbContext.Database.ExecuteSqlRaw(sql);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed EnsureCreated: '{ex.Message}'.");
+            Environment.Exit(-1);
         }
     }
 
