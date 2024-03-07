@@ -24,11 +24,16 @@ public partial class IncomingEmailValidator
 
     public bool VerifyDkim(MimeMessage mimeMessage)
     {
-        var fromDomain = (mimeMessage.From[0] as MailboxAddress).Domain;
+        ArgumentNullException.ThrowIfNull(mimeMessage);
+
+        var fromMailbox = mimeMessage.From[0] as MailboxAddress ?? throw new Exception("Address was not a mailbox address.");
+        var fromDomain = fromMailbox.Domain;
+        
         if (fromDomain == "localhost")
         {
             return true;
         }
+
         var dkimHeaderIndex = mimeMessage.Headers.IndexOf(HeaderId.DkimSignature);
         var hasDkimSignature = dkimHeaderIndex > -1;
         if (hasDkimSignature)
@@ -48,7 +53,7 @@ public partial class IncomingEmailValidator
         {
             return SpfVerifyResult.Pass;
         }
-        
+
         // https://datatracker.ietf.org/doc/html/rfc7208#section-4.3
         if (domain.Length == 0 || domain.Length > 63 || domain.EndsWith('.'))
         {
