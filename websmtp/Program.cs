@@ -17,7 +17,7 @@ CommandLine.ParseModifiersArgs(args, app);
 
 if(app.Environment.IsEnvironment("Test"))
 {
-    CommandLine.SetupSql(app);
+    CommandLine.MigrateDatabase(app);
 }
 
 app.Run();
