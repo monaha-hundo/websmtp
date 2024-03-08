@@ -27,44 +27,81 @@ public static class CommandLine
     }
     public static void ParseModifiersArgs(string[] args, WebApplication app)
     {
+        var setupSql = args.Any(arg => arg.StartsWith("--setup-sql"));
+        if (setupSql)
+        {
+            SetupSql(app);
+        }
+
         var shouldEnsureCreated = args.Any(arg => arg.StartsWith("--ensure-created-database"));
         if (shouldEnsureCreated)
         {
-            try
-            {
-                using (var scope = app.Services.CreateScope())
-                {
-                    var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-                    logger.LogInformation("Database.EnsureCreated");
-                    dbContext.Database.EnsureCreated();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed EnsureCreated: '{ex.Message}'.");
-                Environment.Exit(-1);
-            }
+            EnsureDatabaseCreated(app);
         }
 
         var shouldMigrate = args.Any(arg => arg.StartsWith("--migrate-database"));
         if (shouldMigrate)
         {
-            try
+            MigrateDatabase(app);
+        }
+    }
+
+    private static void EnsureDatabaseCreated(WebApplication app)
+    {
+        try
+        {
+            using (var scope = app.Services.CreateScope())
             {
-                using (var scope = app.Services.CreateScope())
-                {
-                    var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-                    logger.LogInformation("Applyging migrations");
-                    dbContext.Database.Migrate();
-                }
+                var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                logger.LogInformation("Database.EnsureCreated");
+                dbContext.Database.EnsureCreated();
             }
-            catch (Exception ex)
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed EnsureCreated: '{ex.Message}'.");
+            Environment.Exit(-1);
+        }
+    }
+
+    public static void MigrateDatabase(WebApplication app)
+    {
+        try
+        {
+            using (var scope = app.Services.CreateScope())
             {
-                Console.WriteLine($"Failed migration(s): '{ex.Message}'.");
-                Environment.Exit(-1);
+                var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                logger.LogInformation("Applying migrations");
+                dbContext.Database.Migrate();
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed migration(s): '{ex.Message}'.");
+            Environment.Exit(-1);
+        }
+    }
+
+    public static void SetupSql(WebApplication app)
+    {
+        try
+        {
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                logger.LogInformation("Running setup.sql");
+                var sql = File.ReadAllText("setup.sql");
+                dbContext.Database.ExecuteSqlRaw(sql);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Setup SQL Failed: '{ex.Message}'.");
+            Console.WriteLine($"Assuming the Database was already setup.");
+            //Environment.Exit(-1);
         }
     }
 

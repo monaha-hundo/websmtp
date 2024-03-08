@@ -15,9 +15,9 @@ Startup.MapEndpoints(app);
 
 CommandLine.ParseModifiersArgs(args, app);
 
-if (builder.Environment.IsEnvironment("Test"))
+if(app.Environment.IsEnvironment("Test"))
 {
-    Startup.PrepareTestingEnvironement(app);
+    CommandLine.MigrateDatabase(app);
 }
 
 app.Run();

@@ -8,9 +8,17 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    services:
+      mariadb:
+          image: mariadb:latest
+          env:
+              MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 1
+              MARIADB_USER: websmtp
+              MARIADB_PASSWORD: websmtp
+              MARIADB_DATABASE: websmtp
+          ports:
+              - 3306:3306
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET
