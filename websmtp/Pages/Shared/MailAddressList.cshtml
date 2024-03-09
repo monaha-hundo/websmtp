@@ -1,0 +1,71 @@
+@model MailAddressListViewModel
+<div id="@Model.ContainerId" class="row align-items-center my-2 g-o position-relative @Model.ContainerClass">
+    <div class="col col-auto new--message-label-min-width">
+        @Model.Label:
+    </div>
+    <div class="col d-flex align-items-center justify-content-start flex-wrap">
+        <span v-for="dest in destinations" :key="'@Html.Raw(@Model.ContainerId)'+dest.name"
+            class="text-decoration-none badge rounded-pill text-bg-light fs-6 me-2" :title="dest.email"
+            @@click="removeDest(dest)">{{dest.name}}</span>
+        <button class="btn btn-sm btn-primary rounded-pill" @@click="addDest" type="button">
+            <i class="bi bi-plus"></i>
+        </button>
+        <input id="@Model.Id" name="@Model.Id" class="form-control invisible position-absolute" :value="concatenatedDestinations"/>
+    </div>
+</div>
+<script>
+    var app = Vue.createApp({
+        data() {
+            return {
+                destinations: []
+            }
+        },
+        computed:{
+            concatenatedDestinations(){
+                return this.destinations.map(d => `"${d.name}" <${d.email}>`).join(", ");
+            }
+        },
+        methods: {
+            addDest(e) {
+                Swal.fire({
+                    title: 'Add Destination',
+                    html: `
+                        <input type="text" id="email" class="from-control" placeholder="Email Address">
+                        <input type="text" id="name" class="from-control" placeholder="Name (optional)">
+                    `,
+                    confirmButtonText: 'Add',
+                    focusConfirm: false,
+                    didOpen: () => {
+                        const popup = Swal.getPopup();
+                        var emailInput = popup.querySelector('#email');
+                        var nameInput = popup.querySelector('#name');
+                        emailInput.onkeyup = (event) => event.key === 'Enter' && Swal.clickConfirm();
+                        nameInput.onkeyup = (event) => event.key === 'Enter' && Swal.clickConfirm();
+                    },
+                    preConfirm: () => {
+                        const popup = Swal.getPopup();
+                        var emailInput = popup.querySelector('#email');
+                        var nameInput = popup.querySelector('#name');
+                        var email = emailInput.value;
+                        var name = nameInput.value;
+                        if (!email && !name) {
+                            Swal.showValidationMessage(`Please enter at least an email address.`);
+                        } else if (!email) {
+                            Swal.showValidationMessage(`Please enter at an email address.`);
+                        }
+                        if (name == '') {
+                            name = email;
+                        }
+                        this.destinations.push({ name, email });
+                        return;
+                    },
+                });
+            },
+            removeDest(dest) {
+                var i = this.destinations.indexOf(dest);
+                this.destinations.splice(i, 1);
+            }
+        }
+    });
+    app.mount('#@Html.Raw(@Model.ContainerId)');
+</script>

@@ -4,6 +4,9 @@
     Layout = "_LayoutEmpty";
 }
 @section Head {
+    <link rel="stylesheet" href="~/lib/sweetalert2/sweetalert2.min.css" />
+    <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
+    <script type="text/javascript" src="~/lib/vue.global.prod.js" asp-append-version="true"></script>
     <script src="/lib/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
         tinymce.init({
@@ -67,15 +70,15 @@
 @if (Model.Sent.HasValue && Model.Sent == true)
 {
     <div style="width: 100%; height: 100%" class="d-flex align-items-center justify-content-center">
-        <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
-            <div class="card-body ">
-                <div class="text-center my-2">Message sent.</div>
-                <div class="text-center my-2">
-                    <button class="btn btn-primary" onclick="closeWindow()">Close</button>
-                </div>
+    <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
+        <div class="card-body ">
+            <div class="text-center my-2">Message sent.</div>
+            <div class="text-center my-2">
+                <button class="btn btn-primary" onclick="closeWindow()">Close</button>
             </div>
         </div>
     </div>
+</div>
 }
 else if (Model.Sent.HasValue && Model.Sent == false)
 {
@@ -134,16 +137,6 @@ else
                         aria-label="Text input with dropdown button">
                     <input id="fromName" name="fromName" type="text" class="form-control" placeholder="Display Name"
                         aria-label="Text input with dropdown button">
-                    @* <button class="btn btn-outline-neutral dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#">No Identities configured</a></li>
-                    <li>
-                    <hr class="dropdown-divider">
-                    </li>
-                    <li><a class="dropdown-item" href="#">Manage</a></li>
-                    </ul> *@
                 </div>
 
             </div>
@@ -166,51 +159,41 @@ else
                 </div>
             </div>
         </div>
-        <div id="cc-row" class="row align-items-center my-2  d-none">
-            <div class="col col-auto new--message-label-min-width">
-                Cc:
-            </div>
-            <div class="col">
-                <input id="cc" name="cc" class="form-control" />
-            </div>
-        </div>
-        <div id="bcc-row" class="row align-items-center my-2 d-none">
-            <div class="col col-auto new--message-label-min-width">
-                Bcc:
-            </div>
-            <div class="col">
-                <input id="bcc" name="bcc" class="form-control" />
-            </div>
-        </div>
-        <div class="row align-items-center my-2">
-            <div class="col col-auto new--message-label-min-width">
-                Subject:
-            </div>
-            <div class="col">
-                <input id="subject" name="subject" class="form-control" />
-            </div>
-        </div>
-
-        <textarea id="body" name="body" class="form-control my-2" style="flex: 1 1 100%;"
-            id="exampleFormControlTextarea1" rows="3"></textarea>
-
-        <div class="row align-items-center justify-content-between my-2">
-            <div class="col">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="true" id="html" name="html" checked>
-                    <label class="form-check-label" for="flexCheckChecked">
-                        HTML Message
-                    </label>
+            @{
+                var ccViewModel = new MailAddressListViewModel { ContainerId = "cc-row", Id = "cc", ContainerClass = "d-none", Label = "CC" };
+                var bccViewModel = new MailAddressListViewModel { ContainerId = "bcc-row", Id = "bcc", ContainerClass = "d-none", Label = "BCC" };
+                await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", ccViewModel);
+                await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", bccViewModel);
+            }
+            <div class="row align-items-center my-2">
+                <div class="col col-auto new--message-label-min-width">
+                    Subject:
+                </div>
+                <div class="col">
+                    <input id="subject" name="subject" class="form-control" />
                 </div>
             </div>
 
-            <div class="col col-auto d-flex align-items-center">
-                <button type="submit" class="btn btn-primary ">Send</button>
+            <textarea id="body" name="body" class="form-control my-2" style="flex: 1 1 100%;"
+                id="exampleFormControlTextarea1" rows="3"></textarea>
+
+            <div class="row align-items-center justify-content-between my-2">
+                <div class="col">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="true" id="html" name="html" checked>
+                        <label class="form-check-label" for="flexCheckChecked">
+                            HTML Message
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col col-auto d-flex align-items-center">
+                    <button type="submit" class="btn btn-primary ">Send</button>
+                </div>
             </div>
         </div>
-    </div>
 
-</form>
+    </form>
 }
 @section Scripts {
     <script>
