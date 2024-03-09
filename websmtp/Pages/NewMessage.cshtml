@@ -66,16 +66,16 @@
 }
 @if (Model.Sent.HasValue && Model.Sent == true)
 {
-    <div style="height: 100%" class="d-flex align-items-center justify-content-center">
-    <div class="card" style="flex: 1 1 auto;">
-        <div class="card-body ">
-            <div class="text-center my-2">Message sent.</div>
-            <div class="text-center my-2">
-                <button class="btn btn-primary" onclick="closeWindow()">Close</button>
+    <div style="width: 100%; height: 100%" class="d-flex align-items-center justify-content-center">
+        <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
+            <div class="card-body ">
+                <div class="text-center my-2">Message sent.</div>
+                <div class="text-center my-2">
+                    <button class="btn btn-primary" onclick="closeWindow()">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 }
 else if (Model.Sent.HasValue && Model.Sent == false)
 {
@@ -84,17 +84,17 @@ else if (Model.Sent.HasValue && Model.Sent == false)
         <div class="card-body ">
             <div class="text-center my-2">Error</div>
             <div class="text-center my-2">Trace Id: @Model.TraceId</div>
-            @if(Model.ErrorMessage is not null)
-            {
-                <div class="text-center my-2">Message: @Model.ErrorMessage</div>
-            }
-            <div class="text-center my-2">
-                @* <button class="btn btn-primary" onclick="closeWindow()">Close</button>  *@
-                <button class="btn btn-primary" onclick="history.back()">Back</button>
+            @if (Model.ErrorMessage is not null)
+                {
+                    <div class="text-center my-2">Message: @Model.ErrorMessage</div>
+                }
+                <div class="text-center my-2">
+                    @* <button class="btn btn-primary" onclick="closeWindow()">Close</button> *@
+                    <button class="btn btn-primary" onclick="history.back()">Back</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 }
 else
 {
@@ -135,14 +135,14 @@ else
                     <input id="fromName" name="fromName" type="text" class="form-control" placeholder="Display Name"
                         aria-label="Text input with dropdown button">
                     @* <button class="btn btn-outline-neutral dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
+                    aria-expanded="false">
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#">No Identities configured</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="#">Manage</a></li>
+                    <li><a class="dropdown-item" href="#">No Identities configured</a></li>
+                    <li>
+                    <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item" href="#">Manage</a></li>
                     </ul> *@
                 </div>
 
@@ -160,7 +160,7 @@ else
                     <button id="show--cc" class="btn btn-outline-neutral" type="button" onclick="showCC()">
                         CC
                     </button>
-                    <button id="show--bcc" class="btn btn-outline-neutral" type="button"  onclick="showBCC()">
+                    <button id="show--bcc" class="btn btn-outline-neutral" type="button" onclick="showBCC()">
                         BCC
                     </button>
                 </div>
@@ -190,9 +190,9 @@ else
                 <input id="subject" name="subject" class="form-control" />
             </div>
         </div>
-        
-            <textarea id="body" name="body" class="form-control my-2" style="flex: 1 1 100%;"
-                id="exampleFormControlTextarea1" rows="3"></textarea>
+
+        <textarea id="body" name="body" class="form-control my-2" style="flex: 1 1 100%;"
+            id="exampleFormControlTextarea1" rows="3"></textarea>
 
         <div class="row align-items-center justify-content-between my-2">
             <div class="col">
@@ -238,14 +238,14 @@ else
             let iframeEl = window.parent.document.getElementById('new--message-frame');
             iframeEl.style.height = '0px';
         }
-        function showCC(){
+        function showCC() {
             //cc-row
             let ccRowEl = document.getElementById('cc-row');
             let showCCEl = document.getElementById('show--cc');
             showCCEl.classList.add('d-none');
             ccRowEl.classList.remove('d-none');
         }
-        function showBCC(){
+        function showBCC() {
             //cc-row
             let ccRowEl = document.getElementById('bcc-row');
             let showCCEl = document.getElementById('show--bcc');
@@ -256,9 +256,9 @@ else
             event.preventDefault();
             let sectionEl = window.parent.document.getElementById('new--message');
             let isExpanded = sectionEl.classList.contains('expanded');
-            if(isExpanded){
+            if (isExpanded) {
                 sectionEl.classList.remove('expanded');
-            }else{
+            } else {
                 sectionEl.classList.add('expanded');
             }
         }
@@ -267,7 +267,7 @@ else
             let iframeEl = window.parent.document.getElementById('new--message-frame');
             if (sectionEl.classList.contains('expanded')) {
                 iframeEl.style.height = '100%';
-            }else{
+            } else {
                 iframeEl.style.height = document.documentElement.scrollHeight + 'px';
             }
             requestAnimationFrame(resizeIframe);
