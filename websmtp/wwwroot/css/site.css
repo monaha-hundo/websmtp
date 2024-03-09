@@ -283,6 +283,25 @@ table td {
     position: absolute;
 }
 
+#new--message.expanded{
+    height: unset !important;
+    width: unset !important;
+    max-width: unset !important;
+    top: 0;
+    left: 0;
+}
+
+#new--message.expanded .new--message-frame{
+
+    height: unset !important;
+}
+
+ .tox.tox-tinymce{
+    flex: 1 1 100% !important;
+    height: unset !important;
+    min-height: 400px;
+}
+
 .new--message-header-bg {
     position: absolute;
     top: 0;
