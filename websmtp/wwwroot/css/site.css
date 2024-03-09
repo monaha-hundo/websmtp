@@ -318,3 +318,14 @@ table td {
 .list-group-item-action:hover {
     z-index: unset;
 }
+
+div:where(.swal2-container) div:where(.swal2-popup){
+    background-color: #25283a !important;
+    color: white !important;
+    border: 1pt solid var(--bs-border-color) !important;
+}
+
+div:where(.swal2-container).swal2-backdrop-show, div:where(.swal2-container).swal2-noanimation{
+    background: rgba(50,50,50,0.8) !important;
+    border-radius: 5px !important;
+}

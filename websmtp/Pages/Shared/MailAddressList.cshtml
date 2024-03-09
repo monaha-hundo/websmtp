@@ -10,7 +10,17 @@
         <button class="btn btn-sm btn-primary rounded-pill" @@click="addDest" type="button">
             <i class="bi bi-plus"></i>
         </button>
-        <input id="@Model.Id" name="@Model.Id" class="form-control invisible position-absolute" :value="concatenatedDestinations"/>
+        @if (Model.ShowCCandBCC)
+        {
+            <button id="show--cc" class="btn btn-outline-neutral ms-2" type="button" onclick="showCC()">
+                CC
+            </button>
+            <button id="show--bcc" class="btn btn-outline-neutral ms-2" type="button" onclick="showBCC()">
+                BCC
+            </button>
+        }
+        <input id="@Model.Id" name="@Model.Id" class="form-control invisible position-absolute"
+            :value="concatenatedDestinations" />
     </div>
 </div>
 <script>
@@ -20,8 +30,8 @@
                 destinations: []
             }
         },
-        computed:{
-            concatenatedDestinations(){
+        computed: {
+            concatenatedDestinations() {
                 return this.destinations.map(d => `"${d.name}" <${d.email}>`).join(", ");
             }
         },
@@ -30,10 +40,22 @@
                 Swal.fire({
                     title: 'Add Destination',
                     html: `
-                        <input type="text" id="email" class="from-control" placeholder="Email Address">
-                        <input type="text" id="name" class="from-control" placeholder="Name (optional)">
+                        <input type="text" id="email" class="form-control mb-2" placeholder="Email Address">
+                        <input type="text" id="name" class="form-control" placeholder="Name (optional)">
                     `,
                     confirmButtonText: 'Add',
+                    showCancelButton: true,
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        cancelButton: 'btn btn-secondary ms-2'
+                    },
+                    showClass: {
+                        popup: ''
+                    },
+                    hideClass: {
+                        popup: ''
+                    },
                     focusConfirm: false,
                     didOpen: () => {
                         const popup = Swal.getPopup();

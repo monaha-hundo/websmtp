@@ -142,26 +142,11 @@ else
             </div>
 
         </div>
-        <div class="row align-items-center my-2">
-            <div class="col col-auto new--message-label-min-width">
-                To:
-            </div>
-            <div class="col">
-                <div class="input-group">
-                    <input id="to" name="to" type="text" class="form-control"
-                        aria-label="Text input with dropdown button">
-                    <button id="show--cc" class="btn btn-outline-neutral" type="button" onclick="showCC()">
-                        CC
-                    </button>
-                    <button id="show--bcc" class="btn btn-outline-neutral" type="button" onclick="showBCC()">
-                        BCC
-                    </button>
-                </div>
-            </div>
-        </div>
             @{
+                var toViewModel = new MailAddressListViewModel { ContainerId = "to-row", Id = "to", ContainerClass = "", Label = "To", ShowCCandBCC = true };
                 var ccViewModel = new MailAddressListViewModel { ContainerId = "cc-row", Id = "cc", ContainerClass = "d-none", Label = "CC" };
                 var bccViewModel = new MailAddressListViewModel { ContainerId = "bcc-row", Id = "bcc", ContainerClass = "d-none", Label = "BCC" };
+                await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", toViewModel);
                 await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", ccViewModel);
                 await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", bccViewModel);
             }
