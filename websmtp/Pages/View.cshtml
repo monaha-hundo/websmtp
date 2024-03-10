@@ -5,35 +5,34 @@
 }
 
 @section Head{
-    <style>
-        body{
-            background: transparent !important;
-            background-color: transparent !important;
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/view.css" />
 }
 
+<input id="msg--id" type="hidden" value="@Model.MsgId"/>
+
 <div class="w-100 text-white">
-    <div class="p-2 mb-2 border-bottom d-flex align-items-center" role="group" aria-label="Basic example" style="height: 68px;">
-        <button onclick="closeMsg()" type="button" class="btn btn-secondary me-2">
+    <div id="view--msg--header"
+    class="p-2 mb-2 border-bottom d-flex align-items-center" 
+    role="group" aria-label="Basic example" >
+        <button id="btn--close" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-left"></i>
         </button>
-        <button onclick="previousMsg()" type="button" class="btn btn-secondary me-2">
+        <button  id="btn--previous" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-up"></i>
         </button>
-        <button onclick="nextMsg()" type="button" class="btn btn-secondary me-2">
+        <button  id="btn--next" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-down"></i>
         </button>
-        <button onclick="showRawMsg()" type="button" class="btn btn-secondary me-2">
+        <button  id="btn--raw" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-file-earmark-code"></i>
         </button>
         @if (Model.Message.Deleted)
         {
-            <button onclick="undeleteMsg()" type="button" class="btn btn-secondary"><i class="bi bi-recycle"></i></button>
+            <button  id="btn--delete" type="button" class="btn btn-secondary"><i class="bi bi-recycle"></i></button>
         }
         else
         {
-            <button onclick="deleteMsg()" type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
+            <button  id="btn--undelete"  type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
         }
     </div>
 
@@ -170,53 +169,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        function showHtmlContent(el) {
-            var el = document.getElementById("html-content");
-            let isVisible = el.style.display == 'block';
-            let visibility = isVisible ? 'none' : 'block';
-            el.style.display = visibility;
-        }
-        function showSource(el) {
-            var el = document.getElementById("source-content");
-            let isVisible = el.style.display == 'block';
-            let visibility = isVisible ? 'none' : 'block';
-            el.style.display = visibility;
-        }
-        function closeMsg() {
-            window.parent.postMessage(`close-msg:_`, window.location.origin);
-        }
-        function deleteMsg() {
-            window.parent.postMessage(`delete-msg:@Model.MsgId`, window.location.origin);
-        }
-        function undeleteMsg() {
-            window.parent.postMessage(`undelete-msg:@Model.MsgId`, window.location.origin);
-        }
-        function previousMsg() {
-            window.parent.postMessage(`previous-msg:@Model.MsgId`, window.location.origin);
-        }
-        function nextMsg() {
-            window.parent.postMessage(`next-msg:@Model.MsgId`, window.location.origin);
-        }
-        function showRawMsg() {
-            window.parent.postMessage(`raw-msg:@Model.MsgId`, window.location.origin);
-            //document.location.href = document.location.href + '&showRaw=true';
-        }
-
-        var viewResizeInterval = setInterval(() => window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
-
-        var innerViewResizeInterval = setInterval(() => {
-            let iframeEl = document.getElementById('html-content');
-            if (iframeEl == null) return;
-            let height = iframeEl.contentDocument.documentElement.scrollHeight;
-            if (height == 0) return;
-            iframeEl.height = height;
-        }, 100);
-
-        document.addEventListener('unload', () => {
-            console.log('clearing intervals');
-            clearInterval(viewResizeInterval);
-            clearInterval(innerViewResizeInterval);
-        });
-    </script>
+    <script src="~/js/view.js"> </script>
 }
