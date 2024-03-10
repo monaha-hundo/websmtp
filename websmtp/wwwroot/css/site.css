@@ -264,6 +264,18 @@ table td {
 .text-proton-pink {
     color: var(--proton-pink);
 }
+.bg-proton-pink {
+    background-color: var(--proton-pink);
+}
+
+.text-orangered {
+    color: orangered;
+}
+
+.logo-alpha{
+    top: 5px !important;
+    transform: translate(-50%,-50%)  rotateZ(33deg) !important;
+}
 
 .form-card-shadow {
     box-shadow: 0 0 20px black;
@@ -276,6 +288,10 @@ table td {
 
 .mw-50px {
     min-width: 50px;
+}
+
+.fs-12px {
+    font-size: 12px;
 }
 
 .fs-1_5rem {
