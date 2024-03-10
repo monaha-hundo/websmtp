@@ -8,6 +8,7 @@ html {
 
 body {
     height: 100%;
+    overflow-x: hidden;
 }
 
 .main--container {
@@ -64,7 +65,7 @@ table td {
 .btn-transparent-primary:hover,
 .btn-transparent-primary:focus,
 .btn-transparent-primary:active {
-    background: #252635 !important;
+    background: #313346 !important;
 }
 
 .content .listing .list,

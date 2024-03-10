@@ -116,9 +116,9 @@ namespace MyApp.Namespace
                 mailMessage.Body = Body;
                 mailMessage.Subject = Subject;
 
-                //var mimeMessage = MimeMessage.CreateFromMailMessage(mailMessage);
+                var mimeMessage = MimeMessage.CreateFromMailMessage(mailMessage);
 
-                //_sendMail.SendMail(mimeMessage);
+                _sendMail.SendMail(mimeMessage);
                 Sent = true;
             }
             catch (Exception ex)

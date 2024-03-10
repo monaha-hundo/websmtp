@@ -5,6 +5,16 @@
     var regex = new System.Text.RegularExpressions.Regex(@"""(.+)"" <(.+)>");
 }
 
+@section Head {
+    <style>
+        body {
+            background-color: #16141c;
+            /*background: radial-gradient(circle at 50%, #363242, #16141c);*/
+            background: linear-gradient(to bottom right, #262330, #16141c);
+        }
+    </style>
+}
+
 <a class="btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed" href="/logout"
     style="flex: 1 1 auto; top: 2px; right: 2px; z-index: 1;" title="Sign Out">
     <i class="bi bi-door-open" style="font-size: 1.5rem;"></i>
@@ -93,7 +103,7 @@
 
     <section id="new--message" class="d-none"
         style="position: fixed; bottom: 0; right: 0; width: 640px; max-width: 100vw; z-index: 2;">
-        <iframe id="new--message-frame" src="/NewMessage" style="height: 100%; width: 100%;"></iframe>
+        <iframe id="new--message-frame" src="/NewMessage" style="height: 100%; width: 100%; border-radius: 5px;"></iframe>
     </section>
 </div>
 
@@ -116,7 +126,7 @@
                 const selector = `#btn-mailbox-trash`;
                 const mailboxEl = document.querySelector(selector);
                 mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-dark');
+                mailboxEl.classList.add('btn-dark', 'active');
                 return;
             }
 
@@ -124,21 +134,21 @@
                 const selector = `#btn-mailbox-inbox`;
                 const mailboxEl = document.querySelector(selector);
                 mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-dark');
+                mailboxEl.classList.add('btn-dark', 'active');
             }
 
             if (all) {
                 const selector = `#btn-mailbox-all`;
                 const mailboxEl = document.querySelector(selector);
                 mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-dark');
+                mailboxEl.classList.add('btn-dark', 'active');
             }
 
             if (spam) {
                 const selector = `#btn-mailbox-spam`;
                 const mailboxEl = document.querySelector(selector);
                 mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-dark');
+                mailboxEl.classList.add('btn-dark', 'active');
             }
         }
 

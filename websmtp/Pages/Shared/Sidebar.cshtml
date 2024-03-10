@@ -9,39 +9,41 @@
             New Message
         </button>
     </div>
-    <nav class="nav nav-pills d-flex flex-column">
+    <nav class="nav nav-pills d-flex flex-column ">
         <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
-                id="btn-mailbox-inbox" href="/inbox">
+            <a class="btn  d-flex align-items-center rounded border-0 btn-transparent-primary"
+                style="flex: 1 1 auto; --bs-btn-font-size: 1.125rem;" id="btn-mailbox-inbox" href="/inbox">
                 <i class="bi bi-inbox"></i>
-                <span class="ms-2">Inbox</span>
-                <span style="margin-left: auto;" class="badge text-bg-secondary">@Model.New</span>
+                <span class="ms-2 ">Inbox</span>
+                <span style="margin-left: auto;"
+                    class='badge text-bg-@(Model.New > 0 ? "primary":"dark")'>@Model.New</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
-                id="btn-mailbox-all" href="/all">
+            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary"
+                style="flex: 1 1 auto; --bs-btn-font-size: 1.125rem;" id="btn-mailbox-all" href="/all">
                 <i class="bi bi-inboxes"></i>
                 <span class="ms-2">All Mail</span>
-                <span style="margin-left: auto;" class="badge text-bg-secondary">@Model.Total</span>
+                <span style="margin-left: auto;"
+                    class='badge text-bg-@(Model.AllHasNew ? "primary":"dark")'>@Model.Total</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
-               id="btn-mailbox-spam" href="/spam">
-                <i class="bi bi-trash"></i>
+            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary"
+                style="flex: 1 1 auto; --bs-btn-font-size: 1.125rem;" id="btn-mailbox-spam" href="/spam">
+                <i class="bi bi-envelope-exclamation"></i>
                 <span class="ms-2">Spam</span>
                 <span id="sidebar--spam--count" style="margin-left: auto;"
-                      class="badge text-bg-secondary">@Model.Spam</span>
+                    class='badge text-bg-@(Model.SpamHasNew ? "primary":"dark")'>@Model.Spam</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary" style="flex: 1 1 auto;"
-                id="btn-mailbox-trash" href="/trash">
+            <a class="btn  d-flex align-items-center rounded border-0 btn-transparent-primary"
+                style="flex: 1 1 auto; --bs-btn-font-size: 1.125rem;" id="btn-mailbox-trash" href="/trash">
                 <i class="bi bi-trash"></i>
                 <span class="ms-2">Trash</span>
                 <span id="sidebar--trash--count" style="margin-left: auto;"
-                    class="badge text-bg-secondary">@Model.Deleted</span>
+                    class='badge text-bg-@(Model.TrashHasNew ? "primary":"dark")'>@Model.Deleted</span>
             </a>
         </div>
     </nav>

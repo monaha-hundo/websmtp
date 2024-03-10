@@ -7,7 +7,7 @@
         <span v-for="dest in destinations" :key="'@Html.Raw(@Model.ContainerId)'+dest.name"
             class="text-decoration-none badge rounded-pill text-bg-light fs-6 me-2" :title="dest.email"
             @@click="removeDest(dest)">{{dest.name}}</span>
-        <button class="btn btn-sm btn-primary rounded-pill" @@click="addDest" type="button">
+        <button class="btn btn-outline-neutral" @@click="addDest" type="button">
             <i class="bi bi-plus"></i>
         </button>
         @if (Model.ShowCCandBCC)
