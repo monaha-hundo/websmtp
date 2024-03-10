@@ -261,12 +261,12 @@ table td {
     --bs-form-invalid-border-color: #ea868f;
 }
 
-.text-proton-pink{
+.text-proton-pink {
     color: var(--proton-pink);
 }
 
-.form-card-shadow{
-    box-shadow: 0 0 20px black;  
+.form-card-shadow {
+    box-shadow: 0 0 20px black;
 }
 
 .form-control:focus {
@@ -282,8 +282,37 @@ table td {
     font-size: 1.5rem;
 }
 
+.btn-md {
+    --bs-btn-font-size: 1.125rem;
+}
+
+.flex-1-1-auto {
+    flex: 1 1 auto;
+}
+
+.flex-1-1-100p {
+    flex: 1 1 100%;
+}
+
 .border-bottom {
     border-bottom: 1pt solid var(--bs-border-color);
+}
+
+.border-left-none {
+    border-left: none;
+}
+
+.border-right {
+    border-right: 1pt solid var(--bs-border-color);
+}
+
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+#logo--link {
+    height: 68px;
 }
 
 .new--message-label-min-width {
@@ -295,7 +324,34 @@ table td {
     position: absolute;
 }
 
-#new--message.expanded{
+.logout--btn {
+    flex: 1 1 auto;
+    top: 2px;
+    right: 2px;
+    z-index: 1;
+}
+
+#search--form {
+    flex: 0 0 68px;
+}
+
+#msg {
+    flex: 1 1 auto;
+    resize: vertical;
+    overflow-y: auto;
+    border-left: 1pt solid var(--bs-border-color);
+}
+
+#new--message {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 640px;
+    max-width: 100vw;
+    z-index: 2;
+}
+
+#new--message.expanded {
     height: unset !important;
     width: unset !important;
     max-width: unset !important;
@@ -303,12 +359,18 @@ table td {
     left: 0;
 }
 
-#new--message.expanded .new--message-frame{
+#new--message.expanded .new--message-frame {
 
     height: unset !important;
 }
 
- .tox.tox-tinymce{
+#new--message-frame {
+    height: 100%;
+    width: 100%;
+    border-radius: 5px;
+}
+
+.tox.tox-tinymce {
     flex: 1 1 100% !important;
     height: unset !important;
     min-height: 400px;
@@ -331,13 +393,14 @@ table td {
     z-index: unset;
 }
 
-div:where(.swal2-container) div:where(.swal2-popup){
+div:where(.swal2-container) div:where(.swal2-popup) {
     background-color: #25283a !important;
     color: white !important;
     border: 1pt solid var(--bs-border-color) !important;
 }
 
-div:where(.swal2-container).swal2-backdrop-show, div:where(.swal2-container).swal2-noanimation{
-    background: rgba(50,50,50,0.8) !important;
+div:where(.swal2-container).swal2-backdrop-show,
+div:where(.swal2-container).swal2-noanimation {
+    background: rgba(50, 50, 50, 0.8) !important;
     border-radius: 5px !important;
 }

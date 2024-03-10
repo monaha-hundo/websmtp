@@ -6,18 +6,10 @@
 }
 
 @section Head {
-    <style>
-        body {
-            background-color: #16141c;
-            /*background: radial-gradient(circle at 50%, #363242, #16141c);*/
-            background: linear-gradient(to bottom right, #262330, #16141c);
-        }
-    </style>
 }
 
-<a class="btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed" href="/logout"
-    style="flex: 1 1 auto; top: 2px; right: 2px; z-index: 1;" title="Sign Out">
-    <i class="bi bi-door-open" style="font-size: 1.5rem;"></i>
+<a class="logout--btn btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed" href="/logout" title="Log Out">
+    <i class="bi bi-door-open fs-1_5rem"></i>
 </a>
 
 <partial name="Sidebar" model="Model.Listing" />
@@ -30,16 +22,16 @@
         <div class="list list-group h-100 overflow-y-scroll position-relative">
             @if (Model.Listing.Messages.Count == 0)
             {
-                <div class="list-group-item  d-flex" style="border-left: none;">
+                <div class="list-group-item  d-flex border-left-none">
                     <div colspan="7">No messages... yet!</div>
                 </div>
             }
             @for (int msgId = 0; msgId < Model.Listing.Messages.Count; msgId++)
             {
                 var message = Model.Listing.Messages[msgId];
-                <div href="/View?msgId=@message.Id" onclick="openwMsgView('@message.Id')"
-                    style="cursor: pointer; border-left: none;"
-                    class='list-group-item list-group-item-action  px-1 py-2 @(message.Read ? "" : "unread")'
+                <div href="/View?msgId=@message.Id"
+                    open-msg-view="@message.Id"
+                    class='list-group-item list-group-item-action cursor-pointer border-left-none px-1 py-2 @(message.Read ? "" : "unread")'
                     msg-id="@message.Id">
                     <div class="row align-items-center g-0 px-2">
                         <div class="col-12 col-lg-2">
@@ -93,259 +85,17 @@
 
     </section>
 
-    <section id="msg"
-        style=" flex: 1 1 auto; resize: vertical; overflow-y: auto; border-left: 1pt solid var(--bs-border-color);"
-        class="d-none">
-        <div id="msg-view-container" style="display: none; position: relative;">
+    <section id="msg" class="d-none">
+        <div id="msg-view-container" class="position-relative d-none">
 
         </div>
     </section>
 
-    <section id="new--message" class="d-none"
-        style="position: fixed; bottom: 0; right: 0; width: 640px; max-width: 100vw; z-index: 2;">
-        <iframe id="new--message-frame" src="/NewMessage" style="height: 100%; width: 100%; border-radius: 5px;"></iframe>
+    <section id="new--message" class="d-none">
+        <iframe id="new--message-frame" src="about:blank"></iframe>
     </section>
 </div>
 
 @section Scripts {
-    <script>
-
-
-        window.addEventListener("popstate", (event) => {
-            closeMsgView();
-        });
-
-
-        function initNavbar() {
-            let inbox = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Mailbox == "inbox"));
-            let all = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Mailbox == "all"));
-            let spam = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Mailbox == "spam"));
-            let trash = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Mailbox == "trash"));
-
-            if (trash) {
-                const selector = `#btn-mailbox-trash`;
-                const mailboxEl = document.querySelector(selector);
-                mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-dark', 'active');
-                return;
-            }
-
-            if (inbox) {
-                const selector = `#btn-mailbox-inbox`;
-                const mailboxEl = document.querySelector(selector);
-                mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-dark', 'active');
-            }
-
-            if (all) {
-                const selector = `#btn-mailbox-all`;
-                const mailboxEl = document.querySelector(selector);
-                mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-dark', 'active');
-            }
-
-            if (spam) {
-                const selector = `#btn-mailbox-spam`;
-                const mailboxEl = document.querySelector(selector);
-                mailboxEl.classList.remove('btn-transparent-primary');
-                mailboxEl.classList.add('btn-dark', 'active');
-            }
-        }
-
-        var previousListingScrollPos = 0;
-        async function openwMsgView(msgId, showRaw) {
-            event.preventDefault();
-
-            markMessageAsRead(msgId);
-            let listEl = document.querySelector('.list');
-            let listingEl = document.querySelector('.listing');
-
-            previousListingScrollPos = listEl.scrollTop;
-            listingEl.classList.add('d-none');
-
-            let sectionEl = document.querySelector('#msg');
-            let containerEl = document.querySelector('#msg-view-container');
-
-            let msgViewEl = document.createElement('iframe');
-            msgViewEl.id = 'msg-view';
-            msgViewEl.style.width = '100%';
-            msgViewEl.style.height = '100%';
-            msgViewEl.style.backgroundColor = 'transparent';
-
-            containerEl.appendChild(msgViewEl);
-
-            let url = '/View?msgId=' + msgId;
-            if (showRaw === true) {
-                url = url + '&showRaw=true';
-            }
-            msgViewEl.setAttribute('src', url);
-            sectionEl.classList.remove('d-none');
-            containerEl.style.display = 'block';
-
-            if (showRaw !== true) {
-                history.pushState({ page: 'view', msgId }, "");
-            }
-        }
-
-        function closeMsgView() {
-            let msgViewEl = document.getElementById('msg-view');
-            msgViewEl.parentElement.removeChild(msgViewEl);
-            let sectionEl = document.querySelector('#msg');
-            sectionEl.classList.add('d-none');
-            let listingEl = document.querySelector('.listing');
-            listingEl.classList.remove('d-none');
-            let containerEl = document.querySelector('#msg-view-container');
-            containerEl.style.display = 'none';
-            let listEl = document.querySelector('.list');
-            listEl.scroll(0, previousListingScrollPos);
-        }
-
-        async function markMessageAsRead(msgId) {
-            const response = await fetch(`/api/messages/${msgId}/mark-as-read/`, {
-                method: 'post'
-            });
-            const success = response.status == 200;
-            if (success) {
-                const selector = `[msg-id='${msgId}']`;
-                const checkMarkEl = document.querySelector(selector);
-                checkMarkEl.classList.remove('unread');
-            }
-        }
-
-        function updateTrashCount(count) {
-            if (count == null) count = 1;
-            const selector = 'sidebar--trash--count';
-            const trashCountEl = document.getElementById(selector);
-            const currentCount = parseInt(trashCountEl.innerText);
-            trashCountEl.innerText = currentCount + 1;
-        }
-
-        async function undeleteMessage(msgId) {
-            const call = async () => {
-                const response = await fetch(`/api/messages/${msgId}/undelete/`, {
-                    method: 'post'
-                });
-                const success = response.status == 200;
-                if (success) {
-                    const selector = `[msg-id='${msgId}']`;
-                    const checkMarkEl = document.querySelector(selector);
-                    checkMarkEl.parentElement.removeChild(checkMarkEl);
-                    updateTrashCount(-1);
-                    //closeMsgView();
-                    let msgViewEl = document.getElementById('msg-view');
-                    let url = msgViewEl.getAttribute('src');
-                    msgViewEl.setAttribute('src', url);
-                } else {
-                    Swal.fire({
-                        title: `Error`,
-                        text: 'Could not process request.'
-                    });
-                }
-            };
-
-            let result = await Swal.fire({
-                title: "Restore message?",
-                showCancelButton: true,
-                confirmButtonText: "Yes",
-                showLoaderOnConfirm: true,
-                preConfirm: call,
-                allowOutsideClick: () => !Swal.isLoading()
-            });
-
-        }
-
-
-        async function deleteMessage(msgId) {
-            const call = async () => {
-                const response = await fetch(`/api/messages/${msgId}/delete/`, {
-                    method: 'post'
-                });
-                const success = response.status == 200;
-                if (success) {
-                    const selector = `[msg-id='${msgId}']`;
-                    const checkMarkEl = document.querySelector(selector);
-                    checkMarkEl.parentElement.removeChild(checkMarkEl);
-                    updateTrashCount(1);
-                    closeMsgView();
-                } else {
-                    Swal.fire({
-                        title: `Error`,
-                        text: 'Could not process request.'
-                    });
-                }
-            };
-
-            let result = await Swal.fire({
-                title: "Move message to trash?",
-                showCancelButton: true,
-                confirmButtonText: "Yes",
-                showLoaderOnConfirm: true,
-                preConfirm: call,
-                allowOutsideClick: () => !Swal.isLoading()
-            });
-
-        }
-
-        function previousMessage(msgId) {
-            const selector = `[msg-id='${msgId}']`;
-            const checkMarkEl = document.querySelector(selector);
-            const prevMsgId = checkMarkEl.previousElementSibling.getAttribute('msg-id');
-            closeMsgView();
-            openwMsgView(prevMsgId);
-        }
-
-        function nextMessage(msgId) {
-            const selector = `[msg-id='${msgId}']`;
-            const checkMarkEl = document.querySelector(selector);
-            const prevMsgId = checkMarkEl.nextElementSibling.getAttribute('msg-id');
-            closeMsgView();
-            openwMsgView(prevMsgId);
-        }
-
-        function handleMessage(event) {
-            if (event.origin != window.location.origin) { return; }
-            let msgType = event.data.split(':')[0];
-            let msgParam = event.data.split(':')[1];
-            switch (msgType) {
-                case 'set-size':
-                    document.querySelector('#msg-view').style.height = msgParam + 'px';
-                    return;
-                case 'close-msg':
-                    //closeMsgView();
-                    history.back();
-                    return;
-                case 'undelete-msg':
-                    undeleteMessage(msgParam);
-                    return;
-                case 'delete-msg':
-                    deleteMessage(msgParam);
-                    return;
-                case 'previous-msg':
-                    previousMessage(msgParam);
-                    return;
-                case 'next-msg':
-                    nextMessage(msgParam);
-                    return;
-                case 'raw-msg':
-                    closeMsgView();
-                    openwMsgView(msgParam, true);
-                    return;
-            }
-        }
-
-        function newMessage(to) {
-            let sectionEl = window.parent.document.getElementById('new--message');
-            let iframeEl = window.parent.document.getElementById('new--message-frame');
-            if (to == null) {
-                iframeEl.src = '/NewMessage';
-            } else {
-                iframeEl.src = '/NewMessage?initialTo=' + to;
-            }
-            sectionEl.classList.remove('expanded');
-            sectionEl.classList.remove('d-none');
-        }
-
-        window.addEventListener('message', handleMessage, false);
-        initNavbar();
-    </script>
+    <script src="~/js/index.js"></script>
 }

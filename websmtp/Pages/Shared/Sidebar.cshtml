@@ -1,49 +1,47 @@
 ﻿@model websmtp.ListResult
-<nav class="sidebar" style="border-right: 1pt solid var(--bs-border-color);">
-    <a href="/" class="h2 py-2 d-inline-flex align-items-center" style="text-decoration: none; height: 68px;">
+<nav class="sidebar border-right">
+    <a id="logo--link" href="/" class="h2 py-2 d-inline-flex align-items-center text-decoration-none">
         <i class="bi bi-fire me-3"></i>
         <span>websmtp</span>
     </a>
     <div class="pb-5">
-        <button class="btn btn-lg btn-primary w-100" onclick="newMessage()">
+        <button id="new--msg--btn" class="btn btn-lg btn-primary w-100" >
             New Message
         </button>
     </div>
     <nav class="nav nav-pills d-flex flex-column ">
         <div class="nav-item mb-2 d-flex">
-            <a class="btn  d-flex align-items-center rounded border-0 btn-transparent-primary"
-                style="flex: 1 1 auto; --bs-btn-font-size: 1.125rem;" id="btn-mailbox-inbox" href="/inbox">
+            <a class="btn btn-md d-flex align-items-center rounded border-0 btn-transparent-primary flex-1-1-auto"
+                id="btn-mailbox-inbox" href="/inbox">
                 <i class="bi bi-inbox"></i>
                 <span class="ms-2 ">Inbox</span>
-                <span style="margin-left: auto;"
-                    class='badge text-bg-@(Model.New > 0 ? "primary":"dark")'>@Model.New</span>
+                <span class='badge ms-auto text-bg-@(Model.New > 0 ? "primary":"dark")'>@Model.New</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary"
-                style="flex: 1 1 auto; --bs-btn-font-size: 1.125rem;" id="btn-mailbox-all" href="/all">
+            <a class="btn btn-md d-flex align-items-center rounded border-0 btn-transparent-primary flex-1-1-auto"
+                id="btn-mailbox-all" href="/all">
                 <i class="bi bi-inboxes"></i>
                 <span class="ms-2">All Mail</span>
-                <span style="margin-left: auto;"
-                    class='badge text-bg-@(Model.AllHasNew ? "primary":"dark")'>@Model.Total</span>
+                <span class='badge ms-auto text-bg-@(Model.AllHasNew ? "primary":"dark")'>@Model.Total</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
-            <a class="btn d-flex align-items-center rounded border-0 btn-transparent-primary"
-                style="flex: 1 1 auto; --bs-btn-font-size: 1.125rem;" id="btn-mailbox-spam" href="/spam">
+            <a class="btn btn-md d-flex align-items-center rounded border-0 btn-transparent-primary flex-1-1-auto"
+                id="btn-mailbox-spam" href="/spam">
                 <i class="bi bi-envelope-exclamation"></i>
                 <span class="ms-2">Spam</span>
-                <span id="sidebar--spam--count" style="margin-left: auto;"
-                    class='badge text-bg-@(Model.SpamHasNew ? "primary":"dark")'>@Model.Spam</span>
+                <span id="sidebar--spam--count" 
+                    class='badge ms-auto text-bg-@(Model.SpamHasNew ? "primary":"dark")'>@Model.Spam</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
-            <a class="btn  d-flex align-items-center rounded border-0 btn-transparent-primary"
-                style="flex: 1 1 auto; --bs-btn-font-size: 1.125rem;" id="btn-mailbox-trash" href="/trash">
+            <a class="btn btn-md d-flex align-items-center rounded border-0 btn-transparent-primary flex-1-1-auto"
+                id="btn-mailbox-trash" href="/trash">
                 <i class="bi bi-trash"></i>
                 <span class="ms-2">Trash</span>
-                <span id="sidebar--trash--count" style="margin-left: auto;"
-                    class='badge text-bg-@(Model.TrashHasNew ? "primary":"dark")'>@Model.Deleted</span>
+                <span id="sidebar--trash--count" 
+                    class='badge ms-auto text-bg-@(Model.TrashHasNew ? "primary":"dark")'>@Model.Deleted</span>
             </a>
         </div>
     </nav>
