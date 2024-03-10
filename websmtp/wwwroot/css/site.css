@@ -9,6 +9,8 @@ html {
 body {
     height: 100%;
     overflow-x: hidden;
+    background-color: #16141c;
+    background: radial-gradient(circle at 50%, #262330, #16141c);
 }
 
 .main--container {
@@ -134,6 +136,7 @@ table td {
 }
 
 :root {
+    --proton-pink: rgb(203, 29, 78);
     --bs-blue: #0d6efd;
     --bs-indigo: #6610f2;
     --bs-purple: #6f42c1;
@@ -256,6 +259,14 @@ table td {
     --bs-form-valid-border-color: #75b798;
     --bs-form-invalid-color: #ea868f;
     --bs-form-invalid-border-color: #ea868f;
+}
+
+.text-proton-pink{
+    color: var(--proton-pink);
+}
+
+.form-card-shadow{
+    box-shadow: 0 0 20px black;  
 }
 
 .form-control:focus {
