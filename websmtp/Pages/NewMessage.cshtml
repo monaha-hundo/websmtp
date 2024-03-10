@@ -74,7 +74,7 @@
         <div class="card-body ">
             <div class="text-center my-2">Message sent.</div>
             <div class="text-center my-2">
-                <button class="btn btn-primary" onclick="closeWindow()">Close</button>
+                <button class="btn btn-primary" onclick=" deleteMessageBackup(); closeWindow();">Close</button>
             </div>
         </div>
     </div>
@@ -142,10 +142,31 @@ else
             </div>
 
         </div>
-            @{
-                var toViewModel = new MailAddressListViewModel { ContainerId = "to-row", Id = "to", ContainerClass = "", Label = "To", ShowCCandBCC = true };
-                var ccViewModel = new MailAddressListViewModel { ContainerId = "cc-row", Id = "cc", ContainerClass = "d-none", Label = "CC" };
-                var bccViewModel = new MailAddressListViewModel { ContainerId = "bcc-row", Id = "bcc", ContainerClass = "d-none", Label = "BCC" };
+        @{
+                var toViewModel = new MailAddressListViewModel
+                {
+                    ContainerId = "to-row",
+                    Id = "to",
+                    ContainerClass = "",
+                    Label =
+                "To",
+                    ShowCCandBCC = true
+                };
+                var ccViewModel = new MailAddressListViewModel
+                {
+                    ContainerId = "cc-row",
+                    Id = "cc",
+                    ContainerClass = "d-none",
+                    Label = "CC"
+                };
+                var bccViewModel = new MailAddressListViewModel
+                {
+                    ContainerId = "bcc-row",
+                    Id = "bcc",
+                    ContainerClass =
+                "d-none",
+                    Label = "BCC"
+                };
                 await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", toViewModel);
                 await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", ccViewModel);
                 await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", bccViewModel);
@@ -199,12 +220,40 @@ else
         function onFormSubmit() {
             //event.preventDefault();
             //console.log('form submit');
+
+            saveMessage();
+
             let composerEl = document.getElementById('new--message-body');
             let loadingEl = document.getElementById('new--message-sending');
             composerEl.classList.add('d-none');
             loadingEl.classList.remove('d-none');
             let iframeEl = window.parent.document.getElementById('new--message-frame');
             iframeEl.style.height = '0px';
+        }
+        function saveMessage() {
+            let formEls = document.querySelectorAll("#fromEmail, #fromName, #to, #cc, #bcc, #subject, #body");
+            let data = {};
+
+            formEls.forEach(el => {
+                data[el.id] = el.value;
+            });
+            localStorage.setItem('previous-draft', JSON.stringify(data));
+        }
+        function deleteMessageBackup(){
+            localStorage.setItem('previous-draft', null);
+        }
+        function restoreDraft() {
+            let formEls = document.querySelectorAll("#fromEmail, #fromName, #to, #cc, #bcc, #subject, #body");
+            let rawStorage = localStorage.getItem('previous-draft');
+            let data = JSON.parse(rawStorage);
+
+            const changeEvent = new Event("change");
+            if (data != null) {
+                for (const field in data) {
+                    document.getElementById(field).value = data[field];
+                    document.getElementById(field).dispatchEvent(changeEvent);
+                }
+            }
         }
         function showCC() {
             //cc-row
@@ -230,7 +279,7 @@ else
                 sectionEl.classList.add('expanded');
             }
         }
-        function resizeIframe() {
+        async function resizeIframe() {
             let sectionEl = window.parent.document.getElementById('new--message');
             let iframeEl = window.parent.document.getElementById('new--message-frame');
             if (sectionEl.classList.contains('expanded')) {
@@ -241,6 +290,7 @@ else
             requestAnimationFrame(resizeIframe);
         }
         resizeIframe();
+        restoreDraft();
         //setInterval(resizeIframe, 10);
     </script>
 }
