@@ -1,0 +1,6 @@
+﻿@page
+@model MyApp.Namespace.MailAddressListModel
+@{
+    var q  = new MailAddressListViewModel{ ContainerId = "row-cc", Id="cc" };
+}
+<partial name="./Shared/MailAddressList.cshtml" model="q" />

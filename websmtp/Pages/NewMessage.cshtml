@@ -4,6 +4,9 @@
     Layout = "_LayoutEmpty";
 }
 @section Head {
+    <link rel="stylesheet" href="~/lib/sweetalert2/sweetalert2.min.css" />
+    <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
+    <script type="text/javascript" src="~/lib/vue.global.prod.js" asp-append-version="true"></script>
     <script src="/lib/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
         tinymce.init({
@@ -66,12 +69,12 @@
 }
 @if (Model.Sent.HasValue && Model.Sent == true)
 {
-    <div style="height: 100%" class="d-flex align-items-center justify-content-center">
-    <div class="card" style="flex: 1 1 auto;">
+    <div style="width: 100%; height: 100%" class="d-flex align-items-center justify-content-center">
+    <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
         <div class="card-body ">
             <div class="text-center my-2">Message sent.</div>
             <div class="text-center my-2">
-                <button class="btn btn-primary" onclick="closeWindow()">Close</button>
+                <button class="btn btn-primary" onclick=" deleteMessageBackup(); closeWindow();">Close</button>
             </div>
         </div>
     </div>
@@ -83,126 +86,120 @@ else if (Model.Sent.HasValue && Model.Sent == false)
     <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
         <div class="card-body ">
             <div class="text-center my-2">Error</div>
-            <div class="text-center my-2">Request ID: 123091283098123098</div>
-            <div class="text-center my-2">
-                <button class="btn btn-primary" onclick="closeWindow()">Close</button>
+            <div class="text-center my-2">Trace Id: @Model.TraceId</div>
+            @if (Model.ErrorMessage is not null)
+                {
+                    <div class="text-center my-2">Message: @Model.ErrorMessage</div>
+                }
+                <div class="text-center my-2">
+                    @* <button class="btn btn-primary" onclick="closeWindow()">Close</button> *@
+                    <button class="btn btn-primary" onclick="history.back()">Back</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 }
 else
 {
-    <form class="position-relative card card-outlined container-fluid text-white d-flex flex-column mb-2"
-     method="post"  style="height: 100%;" enctype="application/x-www-form-urlencoded" onsubmit="onFormSubmit()">
+    <form class="position-relative card card-outlined container-fluid text-white d-flex flex-column mb-2" method="post"
+    style="height: 100%;" enctype="application/x-www-form-urlencoded" onsubmit="onFormSubmit()">
 
     <div id="new--message-sending" class="card-body d-none d-flex align-items-center" style="height: 100%;">
-            <strong role="status">Sending message...</strong>
-            <div class="spinner-border ms-auto" aria-hidden="true"></div>
+        <strong role="status">Sending message...</strong>
+        <div class="spinner-border ms-auto" aria-hidden="true"></div>
     </div>
 
-    <div id="new--message-body" class="card-body">
+    <div id="new--message-body" class="card-body d-flex flex-column">
         <div class="new--message-header-bg"></div>
-        <span class="h5 card-title mb-5" style="position: relative; z-index: 55;">
+        <span class="h5 card-title mb-3" style="position: relative; z-index: 55;">
 
-            <div class="row align-items-center justify-content-between">
+            <div class="row align-items-center justify-content-between position-relative">
                 <div class="col col-auto">New Message</div>
-                <div class="col col-auto position-relative">
-                    <button class="btn btn-transparent position-absolute"
-                        style="right: 14px; top: 50%; transform: translateY(-50%)" onclick="saveAndCloseDraft()">
+                <div class="col col-auto position-absolute" style="right: 14px; top: 50%; transform: translateY(-50%)">
+                    <button class="btn btn-transparent " onclick="expandWindow()">
+                        <i class="bi bi-arrows-angle-expand fw-bolder"></i>
+                    </button>
+                    <button class="btn btn-transparent " onclick="saveAndCloseDraft()">
                         <i class="bi bi-x-lg fw-bolder"></i>
                     </button>
                 </div>
             </div>
         </span>
 
-        <div class="row align-items-center mb-2 mt-4 gx-0">
+        <div class="row align-items-center mb-2 mt-3 gx-0">
             <div class="col col-auto new--message-label-min-width">
                 From:
             </div>
             <div class="col">
 
                 <div class="input-group">
-                    <input id="from" name="from" type="text" class="form-control"
+                    <input id="fromEmail" name="fromEmail" type="text" class="form-control" placeholder="Address"
                         aria-label="Text input with dropdown button">
-                    <button class="btn btn-outline-neutral dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#">No Identities configured</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="#">Manage</a></li>
-                    </ul>
+                    <input id="fromName" name="fromName" type="text" class="form-control" placeholder="Display Name"
+                        aria-label="Text input with dropdown button">
                 </div>
 
             </div>
 
         </div>
-        <div class="row align-items-center my-2">
-            <div class="col col-auto new--message-label-min-width">
-                To:
-            </div>
-            <div class="col">
-                <div class="input-group">
-                    <input id="to" name="to" type="text" class="form-control"
-                        aria-label="Text input with dropdown button">
-                    <button class="btn btn-outline-neutral" type="button">
-                        CC
-                    </button>
-                    <button class="btn btn-outline-neutral" type="button">
-                        BCC
-                    </button>
+        @{
+                var toViewModel = new MailAddressListViewModel
+                {
+                    ContainerId = "to-row",
+                    Id = "to",
+                    ContainerClass = "",
+                    Label =
+                "To",
+                    ShowCCandBCC = true
+                };
+                var ccViewModel = new MailAddressListViewModel
+                {
+                    ContainerId = "cc-row",
+                    Id = "cc",
+                    ContainerClass = "d-none",
+                    Label = "CC"
+                };
+                var bccViewModel = new MailAddressListViewModel
+                {
+                    ContainerId = "bcc-row",
+                    Id = "bcc",
+                    ContainerClass =
+                "d-none",
+                    Label = "BCC"
+                };
+                await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", toViewModel);
+                await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", ccViewModel);
+                await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", bccViewModel);
+            }
+            <div class="row align-items-center my-2">
+                <div class="col col-auto new--message-label-min-width">
+                    Subject:
+                </div>
+                <div class="col">
+                    <input id="subject" name="subject" class="form-control" />
                 </div>
             </div>
-        </div>
-        <div id="cc-row" class="row align-items-center my-2  d-none">
-            <div class="col col-auto new--message-label-min-width">
-                Cc:
-            </div>
-            <div class="col">
-                <input id="cc" name="cc" class="form-control" />
-            </div>
-        </div>
-        <div id="bcc-row" class="row align-items-center my-2 d-none">
-            <div class="col col-auto new--message-label-min-width">
-                Bcc:
-            </div>
-            <div class="col">
-                <input id="bcc" name="bcc" class="form-control" />
-            </div>
-        </div>
-        <div class="row align-items-center my-2">
-            <div class="col col-auto new--message-label-min-width">
-                Subject:
-            </div>
-            <div class="col">
-                <input id="subject" name="subject" class="form-control" />
-            </div>
-        </div>
-        <div class="my-2">
-            <textarea id="body" name="body" class="form-control" style="flex: 1 1 100%;"
+
+            <textarea id="body" name="body" class="form-control my-2" style="flex: 1 1 100%;"
                 id="exampleFormControlTextarea1" rows="3"></textarea>
-        </div>
 
-        <div class="row align-items-center justify-content-between my-2">
-            <div class="col">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="true" id="html" name="html" checked>
-                    <label class="form-check-label" for="flexCheckChecked">
-                        HTML Message
-                    </label>
+            <div class="row align-items-center justify-content-between my-2">
+                <div class="col">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="true" id="html" name="html" checked>
+                        <label class="form-check-label" for="flexCheckChecked">
+                            HTML Message
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col col-auto d-flex align-items-center">
+                    <button type="submit" class="btn btn-primary ">Send</button>
                 </div>
             </div>
-
-            <div class="col col-auto d-flex align-items-center">
-                <button type="submit" class="btn btn-primary ">Send</button>
-            </div>
         </div>
-    </div>
 
-</form>
+    </form>
 }
 @section Scripts {
     <script>
@@ -223,6 +220,9 @@ else
         function onFormSubmit() {
             //event.preventDefault();
             //console.log('form submit');
+
+            saveMessage();
+
             let composerEl = document.getElementById('new--message-body');
             let loadingEl = document.getElementById('new--message-sending');
             composerEl.classList.add('d-none');
@@ -230,12 +230,67 @@ else
             let iframeEl = window.parent.document.getElementById('new--message-frame');
             iframeEl.style.height = '0px';
         }
-        function resizeIframe() {
+        function saveMessage() {
+            let formEls = document.querySelectorAll("#fromEmail, #fromName, #to, #cc, #bcc, #subject, #body");
+            let data = {};
+
+            formEls.forEach(el => {
+                data[el.id] = el.value;
+            });
+            localStorage.setItem('previous-draft', JSON.stringify(data));
+        }
+        function deleteMessageBackup(){
+            localStorage.setItem('previous-draft', null);
+        }
+        function restoreDraft() {
+            let formEls = document.querySelectorAll("#fromEmail, #fromName, #to, #cc, #bcc, #subject, #body");
+            let rawStorage = localStorage.getItem('previous-draft');
+            let data = JSON.parse(rawStorage);
+
+            const changeEvent = new Event("change");
+            if (data != null) {
+                for (const field in data) {
+                    document.getElementById(field).value = data[field];
+                    document.getElementById(field).dispatchEvent(changeEvent);
+                }
+            }
+        }
+        function showCC() {
+            //cc-row
+            let ccRowEl = document.getElementById('cc-row');
+            let showCCEl = document.getElementById('show--cc');
+            showCCEl.classList.add('d-none');
+            ccRowEl.classList.remove('d-none');
+        }
+        function showBCC() {
+            //cc-row
+            let ccRowEl = document.getElementById('bcc-row');
+            let showCCEl = document.getElementById('show--bcc');
+            showCCEl.classList.add('d-none');
+            ccRowEl.classList.remove('d-none');
+        }
+        function expandWindow() {
+            event.preventDefault();
+            let sectionEl = window.parent.document.getElementById('new--message');
+            let isExpanded = sectionEl.classList.contains('expanded');
+            if (isExpanded) {
+                sectionEl.classList.remove('expanded');
+            } else {
+                sectionEl.classList.add('expanded');
+            }
+        }
+        async function resizeIframe() {
+            let sectionEl = window.parent.document.getElementById('new--message');
             let iframeEl = window.parent.document.getElementById('new--message-frame');
-            iframeEl.style.height = document.documentElement.scrollHeight + 'px';
+            if (sectionEl.classList.contains('expanded')) {
+                iframeEl.style.height = '100%';
+            } else {
+                iframeEl.style.height = document.documentElement.scrollHeight + 'px';
+            }
             requestAnimationFrame(resizeIframe);
         }
         resizeIframe();
+        restoreDraft();
         //setInterval(resizeIframe, 10);
     </script>
 }

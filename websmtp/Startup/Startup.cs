@@ -67,11 +67,14 @@ public static class Startup
 
         builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySQL(cs), ServiceLifetime.Transient, ServiceLifetime.Transient);
 
-        builder.Services.AddResponseCompression(options =>
-         {
-             options.EnableForHttps = true;
-         });
-         
+        if (builder.Environment.IsProduction())
+        {
+            builder.Services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+            });
+        }
+
         builder.Services.AddAntiforgery();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
@@ -95,7 +98,10 @@ public static class Startup
 
     public static void ConfigureAppPipeline(WebApplication app)
     {
-        app.UseResponseCompression();
+        if (app.Environment.IsProduction())
+        {
+            app.UseResponseCompression();
+        }
         app.UseAntiforgery();
         app.UseAuthentication();
         app.UseAuthorization();

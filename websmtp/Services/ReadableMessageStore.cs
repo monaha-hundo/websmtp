@@ -22,10 +22,16 @@ public class ReadableMessageStore : IReadableMessageStore
         _dataContext.ChangeTracker.LazyLoadingEnabled = false;
         _dataContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
-        var newCount = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.Read && (!msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass));
-        var total = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var newCount = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.Read && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+
+        var allMailCount = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var AllHasNew = newCount > 0;
+        
         var spamnCount = _dataContext.Messages.Count(msg => !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
-        var deletedCount = _dataContext.Messages.Count(msg => msg.Deleted && (!msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass));
+        var spamHasNew = _dataContext.Messages.Any(msg => !msg.Read && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
+
+        var trashCount = _dataContext.Messages.Count(msg => msg.Deleted && (!msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass));
+        var trashHasNew = _dataContext.Messages.Any(msg => !msg.Read && msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
 
         var query = _dataContext.Messages
             .AsNoTracking()
@@ -91,8 +97,11 @@ public class ReadableMessageStore : IReadableMessageStore
             Count = messages.Count,
             New = newCount,
             Spam = spamnCount,
-            Deleted = deletedCount,
-            Total = total,
+            Deleted = trashCount,
+            Total = allMailCount,
+            AllHasNew = AllHasNew,
+            SpamHasNew = spamHasNew,
+            TrashHasNew = trashHasNew,
             Messages = messages
         };
     }

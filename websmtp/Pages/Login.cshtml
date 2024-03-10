@@ -1,14 +1,23 @@
 ﻿@page
 @model MyApp.Namespace.LoginModel
 
+@section Head {
+    <style>
+        body{
+            background-color: #16141c;
+            /*background: radial-gradient(circle at 50%, #363242, #16141c);*/
+            background: radial-gradient(circle at 50%, #262330, #16141c);
+        }
+    </style>
+}
 
-<div class="card login-card rounded-3 ma-4">
+<div class="card login-card rounded-3 ma-4" style="box-shadow: 0 0 20px black;">
     <div class="row g-0 ">
         <div class="col-lg-12">
             <div class="card-body p-4">
 
                 <div class="text-center">
-                    <h4 class="mt-1 pb-3"> <i class="bi bi-fire "></i> websmtp</h4>
+                    <h4 class="mt-1 "> <i class="bi bi-fire "></i> web<span style="color: rgb(203, 29, 78);">s</span>mtp</h4>
                 </div>
 
                 <form method="post">
@@ -17,13 +26,13 @@
 
                     @if (Model.Error)
                     {
-                        <p class="text-center my-4 red" style="color: red;">
+                        <p class="text-center mt-4 red" style="color: rgb(203, 29, 78);">
                             <strong>Could not login.</strong>
                         </p>
                     }
 
-                    <div class="form-outline mb-4">
-                        <input type="text" id="username" name="username" class="form-control text-center"
+                    <div class="form-outline my-4">
+                        <input type="text" id="username" name="username" focus tabindex="0" class="form-control text-center"
                                placeholder="Username" />
                         <label class="form-label visually-hidden" for="username">Username</label>
                     </div>
@@ -54,4 +63,5 @@
             </div>
         </div>
     </div>
+    <script>document.getElementById('username').focus()</script>
 </div>

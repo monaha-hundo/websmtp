@@ -8,6 +8,7 @@ html {
 
 body {
     height: 100%;
+    overflow-x: hidden;
 }
 
 .main--container {
@@ -64,7 +65,7 @@ table td {
 .btn-transparent-primary:hover,
 .btn-transparent-primary:focus,
 .btn-transparent-primary:active {
-    background: #252635 !important;
+    background: #313346 !important;
 }
 
 .content .listing .list,
@@ -283,6 +284,25 @@ table td {
     position: absolute;
 }
 
+#new--message.expanded{
+    height: unset !important;
+    width: unset !important;
+    max-width: unset !important;
+    top: 0;
+    left: 0;
+}
+
+#new--message.expanded .new--message-frame{
+
+    height: unset !important;
+}
+
+ .tox.tox-tinymce{
+    flex: 1 1 100% !important;
+    height: unset !important;
+    min-height: 400px;
+}
+
 .new--message-header-bg {
     position: absolute;
     top: 0;
@@ -298,4 +318,15 @@ table td {
 .list-group-item-action:focus,
 .list-group-item-action:hover {
     z-index: unset;
+}
+
+div:where(.swal2-container) div:where(.swal2-popup){
+    background-color: #25283a !important;
+    color: white !important;
+    border: 1pt solid var(--bs-border-color) !important;
+}
+
+div:where(.swal2-container).swal2-backdrop-show, div:where(.swal2-container).swal2-noanimation{
+    background: rgba(50,50,50,0.8) !important;
+    border-radius: 5px !important;
 }
