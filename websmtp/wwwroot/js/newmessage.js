@@ -8,18 +8,28 @@ document.getElementById('new--message-close-btn')
 });
 document.getElementById('new--message-form')
 ?.addEventListener("formSubmit", () => {
-    //onFormSubmit();
+    onFormSubmit();
 });
-// document.getElementById('show--cc')
-// ?.addEventListener("click", () => {
-//     showCC();
-//     //bindMailAddressLists();
-// });
-// document.getElementById('show--bcc')
-// ?.addEventListener("click", () => {
-//     showBCC();
-//     //bindMailAddressLists();
-// });
+document.getElementById('show--cc')
+?.addEventListener("click", () => {
+    console.log('show-cc');
+    showCC();
+});
+document.getElementById('show--bcc')
+?.addEventListener("click", () => {
+    showBCC();
+});
+document.getElementById('new--msg--close')
+?.addEventListener("click", () => {
+    deleteMessageBackup(); 
+    closeWindow();
+});
+document.getElementById('new--msg--back')
+?.addEventListener("click", () => {
+    history.back()
+});
+
+
         function makeMessageHtml(){
             // tinymce.init({
             //     selector: '#body',
@@ -80,109 +90,6 @@ document.getElementById('new--message-form')
             
         }
 
-        function bindMailAddressLists(){
-            let els = document.querySelectorAll('[mail-address-list]');
-            els.forEach(el => {
-                initMailAddressList(el.id);
-            });
-        }
-
-        function initMailAddressList(containerId){
-            Vue.createApp({
-                data() {
-                    return {
-                        destinations: []
-                    }
-                },
-                computed: {
-                    concatenatedDestinations() {
-                        return this.destinations.map(d => `"${d.name}" <${d.email}>`).join(", ");
-                    }
-                },
-                methods: {
-                    addDest(e) {
-                        Swal.fire({
-                            title: 'Add Destination',
-                            html: `
-                                <input type="text" id="email" class="form-control mb-2" placeholder="Email Address">
-                                <input type="text" id="name" class="form-control" placeholder="Name (optional)">
-                            `,
-                            confirmButtonText: 'Add',
-                            showCancelButton: true,
-                            buttonsStyling: false,
-                            customClass: {
-                                confirmButton: 'btn btn-primary',
-                                cancelButton: 'btn btn-secondary ms-2'
-                            },
-                            showClass: {
-                                popup: ''
-                            },
-                            hideClass: {
-                                popup: ''
-                            },
-                            focusConfirm: false,
-                            didOpen: () => {
-                                const popup = Swal.getPopup();
-                                var emailInput = popup.querySelector('#email');
-                                var nameInput = popup.querySelector('#name');
-                                emailInput.onkeyup = (event) => event.key === 'Enter' && Swal.clickConfirm();
-                                nameInput.onkeyup = (event) => event.key === 'Enter' && Swal.clickConfirm();
-                            },
-                            preConfirm: () => {
-                                const popup = Swal.getPopup();
-                                var emailInput = popup.querySelector('#email');
-                                var nameInput = popup.querySelector('#name');
-                                var email = emailInput.value;
-                                var name = nameInput.value;
-                                if (!email && !name) {
-                                    Swal.showValidationMessage(`Please enter at least an email address.`);
-                                } else if (!email) {
-                                    Swal.showValidationMessage(`Please enter at an email address.`);
-                                }
-                                if (name == '') {
-                                    name = email;
-                                }
-                                this.destinations.push({ name, email });
-                                return;
-                            },
-                        });
-                    },
-                    removeDest(dest) {
-                        var i = this.destinations.indexOf(dest);
-                        this.destinations.splice(i, 1);
-                    },
-                    valueChanged(evt) {
-                        let newValue = this.$refs['input'].value;
-                        if (newValue == null || newValue == '') return;
-
-                        var splitedValues = newValue.split(',');
-
-                        for (var i = 0; i < splitedValues.length; i++) {
-                            const regex = /"(.+)" <(.+)>/g;
-                            let val = splitedValues[i];
-                            let newDests = [...val.matchAll(regex)];
-                            console.log('sdfaasdf:' + newDests);
-
-                            if (newDests.length == 0) {
-                                this.destinations.push({ name: val, email: val });
-                                continue;
-                            }
-
-                            let name = newDests[0][1];
-                            let email = newDests[0][2];
-                            this.destinations.push({ name, email });
-                        }
-                    },
-                    showCC(){
-                        window.showCC();
-                    },
-                    showBCC(){
-                        window.showBCC();
-                    }
-                }
-            }).mount('#'+containerId);
-        }
-
         function closeWindow() {
             event.preventDefault();
             let sectionEl = window.parent.document.getElementById('new--message');
@@ -236,8 +143,6 @@ document.getElementById('new--message-form')
             }
         }
         function showCC() {
-            //cc-row
-            console.log('show cc');
             let ccRowEl = document.getElementById('cc-row');
             let showCCEl = document.getElementById('show--cc');
             showCCEl.classList.add('d-none');
@@ -270,7 +175,6 @@ document.getElementById('new--message-form')
             }
             requestAnimationFrame(resizeIframe);
         }
-        bindMailAddressLists();
         resizeIframe();
         restoreDraft();
         //setInterval(resizeIframe, 10);

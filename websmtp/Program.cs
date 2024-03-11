@@ -12,7 +12,7 @@ var app = builder.Build();
 
 app.Use(async (context, next) =>
 {
-    var cspHeaderName = "Content-Security-Policy-Report-Only";
+    var cspHeaderName = "Content-Security-Policy";
     var csp = new Dictionary<string, List<string>>()
     {
         {"default-src", new List<string>{"self"}},

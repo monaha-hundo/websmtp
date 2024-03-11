@@ -6,7 +6,6 @@
 @section Head {
     <link rel="stylesheet" href="~/css/view.css" />
     <link rel="stylesheet" href="~/lib/sweetalert2/sweetalert2.min.css" />
-    <script type="text/javascript" src="~/lib/vue.global.prod.js" asp-append-version="true"></script>
 }
 @if (Model.Sent.HasValue && Model.Sent == true)
 {
@@ -15,7 +14,7 @@
         <div class="card-body ">
             <div class="text-center my-2">Message sent.</div>
             <div class="text-center my-2">
-                <button class="btn btn-primary" onclick=" deleteMessageBackup(); closeWindow();">Close</button>
+                <button id="new--msg--close" class="btn btn-primary">Close</button>
             </div>
         </div>
     </div>
@@ -33,8 +32,7 @@ else if (Model.Sent.HasValue && Model.Sent == false)
                     <div class="text-center my-2">Message: @Model.ErrorMessage</div>
                 }
                 <div class="text-center my-2">
-                    @* <button class="btn btn-primary" onclick="closeWindow()">Close</button> *@
-                    <button class="btn btn-primary" onclick="history.back()">Back</button>
+                    <button id="new--msg--back" class="btn btn-primary">Back</button>
                 </div>
             </div>
         </div>
@@ -42,8 +40,9 @@ else if (Model.Sent.HasValue && Model.Sent == false)
 }
 else
 {
-    <form id="new--message-form" class="position-relative card card-outlined container-fluid text-white d-flex flex-column mb-2 h-100"
-    method="post" enctype="application/x-www-form-urlencoded" >
+    <form id="new--message-form"
+    class="position-relative card card-outlined container-fluid text-white d-flex flex-column mb-2 h-100" method="post"
+    enctype="application/x-www-form-urlencoded">
 
     <div id="new--message-sending" class="card-body d-none d-flex align-items-center h-100">
         <strong role="status">Sending message...</strong>
@@ -79,69 +78,76 @@ else
                     <input id="fromName" name="fromName" type="text" class="form-control" placeholder="Display Name"
                         aria-label="Text input with dropdown button">
                 </div>
-
-            </div>
-
-        </div>
-        @{
-                var toViewModel = new MailAddressListViewModel
-                {
-                    ContainerId = "to-row",
-                    Id = "to",
-                    ContainerClass = "",
-                    Label =
-                "To",
-                    ShowCCandBCC = true
-                };
-                var ccViewModel = new MailAddressListViewModel
-                {
-                    ContainerId = "cc-row",
-                    Id = "cc",
-                    ContainerClass = "d-none",
-                    Label = "CC"
-                };
-                var bccViewModel = new MailAddressListViewModel
-                {
-                    ContainerId = "bcc-row",
-                    Id = "bcc",
-                    ContainerClass =
-                "d-none",
-                    Label = "BCC"
-                };
-                await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", toViewModel);
-                await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", ccViewModel);
-                await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", bccViewModel);
-            }
-            
-            <div class="row align-items-center my-2">
-                <div class="col col-auto new--message-label-min-width">
-                    Subject:
-                </div>
-                <div class="col">
-                    <input id="subject" name="subject" class="form-control" />
-                </div>
-            </div>
-
-            <textarea id="body" name="body" class="form-control my-2 flex-1-1-100p" id="exampleFormControlTextarea1"
-                rows="6"></textarea>
-
-            <div class="row align-items-center justify-content-between my-2">
-                <div class="col">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="true" id="html" name="html">
-                        <label class="form-check-label" for="flexCheckChecked">
-                            HTML Message
-                        </label>
-                    </div>
-                </div>
-
-                <div class="col col-auto d-flex align-items-center">
-                    <button type="submit" class="btn btn-primary ">Send</button>
-                </div>
             </div>
         </div>
 
-    </form>
+        <div class="row align-items-center mb-2 mt-3 gx-0">
+            <div class="col col-auto new--message-label-min-width">
+                To:
+            </div>
+            <div class="col">
+                <input id="to" name="to" type="text" class="form-control" placeholder="Destination(s)"
+                    aria-label="Text input with dropdown button">
+            </div>
+            <div class="col col-auto">
+
+                <button id="show--cc" class="btn btn-outline-neutral ms-2" type="button">
+                    CC
+                </button>
+                <button id="show--bcc" class="btn btn-outline-neutral ms-2" type="button">
+                    BCC
+                </button>
+            </div>
+        </div>
+
+        <div id="cc-row" class="row align-items-center mb-2 mt-3 gx-0 d-none">
+            <div class="col col-auto new--message-label-min-width">
+                Cc:
+            </div>
+            <div class="col">
+                <input id="cc" name="cc" type="text" class="form-control" placeholder="Carbon Copies)"
+                    aria-label="Text input with dropdown button">
+            </div>
+        </div>
+
+        <div id="bcc-row" class="row align-items-center mb-2 mt-3 gx-0 d-none">
+            <div class="col col-auto new--message-label-min-width">
+                Bcc:
+            </div>
+            <div class="col">
+                <input id="bcc" name="bcc" type="text" class="form-control" placeholder="Blind carbon Copies)"
+                    aria-label="Text input with dropdown button">
+            </div>
+        </div>
+
+        <div class="row align-items-center my-2">
+            <div class="col col-auto new--message-label-min-width">
+                Subject:
+            </div>
+            <div class="col">
+                <input id="subject" name="subject" class="form-control" />
+            </div>
+        </div>
+
+        <textarea id="body" name="body" class="form-control my-2 flex-1-1-100p" rows="6"></textarea>
+
+        <div class="row align-items-center justify-content-between my-2">
+            <div class="col">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="true" id="html" name="html">
+                    <label class="form-check-label" for="flexCheckChecked">
+                        HTML Message
+                    </label>
+                </div>
+            </div>
+
+            <div class="col col-auto d-flex align-items-center">
+                <button type="submit" class="btn btn-primary ">Send</button>
+            </div>
+        </div>
+    </div>
+
+</form>
 }
 @section Scripts {
     <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
