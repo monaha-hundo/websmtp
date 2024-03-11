@@ -1,5 +1,7 @@
 @model MailAddressListViewModel
-<div id="@Model.ContainerId" class="row align-items-center my-2 g-o position-relative @Model.ContainerClass">
+<div id="@Model.ContainerId" 
+    mail-address-list
+    class="row align-items-center my-2 g-o position-relative @Model.ContainerClass">
     <div class="col col-auto new--message-label-min-width">
         @Model.Label:
     </div>
@@ -12,10 +14,10 @@
         </button>
         @if (Model.ShowCCandBCC)
         {
-            <button id="show--cc" class="btn btn-outline-neutral ms-2" type="button" onclick="showCC()">
+            <button id="show--cc" class="btn btn-outline-neutral ms-2" type="button" @@click="showCC">
                 CC
             </button>
-            <button id="show--bcc" class="btn btn-outline-neutral ms-2" type="button" onclick="showBCC()">
+            <button id="show--bcc" class="btn btn-outline-neutral ms-2" type="button" @@click="showBCC">
                 BCC
             </button>
         }
@@ -23,93 +25,3 @@
             :value="concatenatedDestinations" @@change="valueChanged" />
     </div>
 </div>
-<script>
-    var app = Vue.createApp({
-        data() {
-            return {
-                destinations: []
-            }
-        },
-        computed: {
-            concatenatedDestinations() {
-                return this.destinations.map(d => `"${d.name}" <${d.email}>`).join(", ");
-            }
-        },
-        methods: {
-            addDest(e) {
-                Swal.fire({
-                    title: 'Add Destination',
-                    html: `
-                        <input type="text" id="email" class="form-control mb-2" placeholder="Email Address">
-                        <input type="text" id="name" class="form-control" placeholder="Name (optional)">
-                    `,
-                    confirmButtonText: 'Add',
-                    showCancelButton: true,
-                    buttonsStyling: false,
-                    customClass: {
-                        confirmButton: 'btn btn-primary',
-                        cancelButton: 'btn btn-secondary ms-2'
-                    },
-                    showClass: {
-                        popup: ''
-                    },
-                    hideClass: {
-                        popup: ''
-                    },
-                    focusConfirm: false,
-                    didOpen: () => {
-                        const popup = Swal.getPopup();
-                        var emailInput = popup.querySelector('#email');
-                        var nameInput = popup.querySelector('#name');
-                        emailInput.onkeyup = (event) => event.key === 'Enter' && Swal.clickConfirm();
-                        nameInput.onkeyup = (event) => event.key === 'Enter' && Swal.clickConfirm();
-                    },
-                    preConfirm: () => {
-                        const popup = Swal.getPopup();
-                        var emailInput = popup.querySelector('#email');
-                        var nameInput = popup.querySelector('#name');
-                        var email = emailInput.value;
-                        var name = nameInput.value;
-                        if (!email && !name) {
-                            Swal.showValidationMessage(`Please enter at least an email address.`);
-                        } else if (!email) {
-                            Swal.showValidationMessage(`Please enter at an email address.`);
-                        }
-                        if (name == '') {
-                            name = email;
-                        }
-                        this.destinations.push({ name, email });
-                        return;
-                    },
-                });
-            },
-            removeDest(dest) {
-                var i = this.destinations.indexOf(dest);
-                this.destinations.splice(i, 1);
-            },
-            valueChanged(evt) {
-                let newValue = this.$refs['input'].value;
-                if (newValue == null || newValue == '') return;
-
-                var splitedValues = newValue.split(',');
-
-                for (var i = 0; i < splitedValues.length; i++) {
-                    const regex = /"(.+)" <(.+)>/g;
-                    let val = splitedValues[i];
-                    let newDests = [...val.matchAll(regex)];
-                    console.log('sdfaasdf:' + newDests);
-
-                    if (newDests.length == 0) {
-                        this.destinations.push({ name: val, email: val });
-                        continue;
-                    }
-
-                    let name = newDests[0][1];
-                    let email = newDests[0][2];
-                    this.destinations.push({ name, email });
-                }
-            }
-        }
-    });
-    app.mount('#@Html.Raw(@Model.ContainerId)');
-</script>

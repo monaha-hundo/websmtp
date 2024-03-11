@@ -69,11 +69,11 @@ public static class Startup
 
         if (builder.Environment.IsProduction())
         {
+        }
             builder.Services.AddResponseCompression(options =>
             {
                 options.EnableForHttps = true;
             });
-        }
 
         builder.Services.AddAntiforgery();
         builder.Services.AddHttpContextAccessor();
@@ -100,8 +100,8 @@ public static class Startup
     {
         if (app.Environment.IsProduction())
         {
-            app.UseResponseCompression();
         }
+            app.UseResponseCompression();
         app.UseAntiforgery();
         app.UseAuthentication();
         app.UseAuthorization();

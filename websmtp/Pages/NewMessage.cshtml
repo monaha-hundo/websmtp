@@ -4,73 +4,14 @@
     Layout = "_LayoutEmpty";
 }
 @section Head {
+    <link rel="stylesheet" href="~/css/view.css" />
     <link rel="stylesheet" href="~/lib/sweetalert2/sweetalert2.min.css" />
-    <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
     <script type="text/javascript" src="~/lib/vue.global.prod.js" asp-append-version="true"></script>
-    <script src="/lib/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
-    <script>
-        tinymce.init({
-            selector: '#body',
-            skin: 'polaris',
-            promotion: false,
-            branding: false,
-            plugins: 'lists link emoticons image code',
-            toolbar: 'undo redo | formatgroup | link emoticons image | code removeformat',
-
-            toolbar_groups: {
-                formatgroup: {
-                    icon: 'format',
-                    tooltip: 'Formatting',
-                    items: 'fontselect | formatselect | bold italic underline strikethrough forecolor | align bullist numlist outdent indent blockquote'
-                }
-            },
-            forced_root_block: 'p',
-            forced_root_block_attrs: { 'style': 'font-size: 14px; font-family: helvetica, arial, sans-serif;' },
-            automatic_uploads: true,
-            images_upload_handler: (blobInfo) => {
-                const base64str =
-                    "data:" +
-                    blobInfo.blob().type +
-                    ";base64," +
-                    blobInfo.base64();
-                return Promise.resolve(base64str);
-            },
-            file_picker_callback: (cb, value, meta) => {
-                const input = document.createElement('input');
-                input.setAttribute('type', 'file');
-                input.setAttribute('accept', 'image/*');
-
-                input.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-
-                    const reader = new FileReader();
-                    reader.addEventListener('load', () => {
-                        /*
-                          Note: Now we need to register the blob in TinyMCEs image blob
-                          registry. In the next release this part hopefully won't be
-                          necessary, as we are looking to handle it internally.
-                        */
-                        const id = 'blobid' + (new Date()).getTime();
-                        const blobCache = tinymce.activeEditor.editorUpload.blobCache;
-                        const base64 = reader.result.split(',')[1];
-                        const blobInfo = blobCache.create(id, file, base64);
-                        blobCache.add(blobInfo);
-
-                        /* call the callback and populate the Title field with the file name */
-                        cb(blobInfo.blobUri(), { title: file.name });
-                    });
-                    reader.readAsDataURL(file);
-                });
-
-                input.click();
-            },
-        });
-    </script>
 }
 @if (Model.Sent.HasValue && Model.Sent == true)
 {
-    <div style="width: 100%; height: 100%" class="d-flex align-items-center justify-content-center">
-    <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
+    <div class="d-flex align-items-center justify-content-center w-100 h-100">
+    <div class="card flex-1-1-auto new--message--dialog">
         <div class="card-body ">
             <div class="text-center my-2">Message sent.</div>
             <div class="text-center my-2">
@@ -82,8 +23,8 @@
 }
 else if (Model.Sent.HasValue && Model.Sent == false)
 {
-    <div style="width: 100%; height: 100%" class="d-flex align-items-center justify-content-center">
-    <div class="card" style="flex: 1 1 auto; max-width: 300px; max-height: 200px;">
+    <div class="d-flex align-items-center justify-content-center  w-100 h-100">
+    <div class="card flex-1-1-auto new--message--dialog">
         <div class="card-body ">
             <div class="text-center my-2">Error</div>
             <div class="text-center my-2">Trace Id: @Model.TraceId</div>
@@ -101,25 +42,25 @@ else if (Model.Sent.HasValue && Model.Sent == false)
 }
 else
 {
-    <form class="position-relative card card-outlined container-fluid text-white d-flex flex-column mb-2" method="post"
-    style="height: 100%;" enctype="application/x-www-form-urlencoded" onsubmit="onFormSubmit()">
+    <form id="new--message-form" class="position-relative card card-outlined container-fluid text-white d-flex flex-column mb-2 h-100"
+    method="post" enctype="application/x-www-form-urlencoded" >
 
-    <div id="new--message-sending" class="card-body d-none d-flex align-items-center" style="height: 100%;">
+    <div id="new--message-sending" class="card-body d-none d-flex align-items-center h-100">
         <strong role="status">Sending message...</strong>
         <div class="spinner-border ms-auto" aria-hidden="true"></div>
     </div>
 
     <div id="new--message-body" class="card-body d-flex flex-column">
         <div class="new--message-header-bg"></div>
-        <span class="h5 card-title mb-3" style="position: relative; z-index: 55;">
+        <span class="h5 card-title mb-3 position-relative z-55">
 
             <div class="row align-items-center justify-content-between position-relative">
                 <div class="col col-auto">New Message</div>
-                <div class="col col-auto position-absolute" style="right: 14px; top: 50%; transform: translateY(-50%)">
-                    <button class="btn btn-transparent " onclick="expandWindow()">
+                <div class="col col-auto position-absolute new-message-window-buttons">
+                    <button id="new--message-expand-btn" class="btn btn-transparent ">
                         <i class="bi bi-arrows-angle-expand fw-bolder"></i>
                     </button>
-                    <button class="btn btn-transparent " onclick="saveAndCloseDraft()">
+                    <button id="new--message-close-btn" class="btn btn-transparent ">
                         <i class="bi bi-x-lg fw-bolder"></i>
                     </button>
                 </div>
@@ -171,6 +112,7 @@ else
                 await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", ccViewModel);
                 await Html.RenderPartialAsync("./Shared/MailAddressList.cshtml", bccViewModel);
             }
+            
             <div class="row align-items-center my-2">
                 <div class="col col-auto new--message-label-min-width">
                     Subject:
@@ -180,13 +122,13 @@ else
                 </div>
             </div>
 
-            <textarea id="body" name="body" class="form-control my-2" style="flex: 1 1 100%;"
-                id="exampleFormControlTextarea1" rows="3"></textarea>
+            <textarea id="body" name="body" class="form-control my-2 flex-1-1-100p" id="exampleFormControlTextarea1"
+                rows="6"></textarea>
 
             <div class="row align-items-center justify-content-between my-2">
                 <div class="col">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="true" id="html" name="html" checked>
+                        <input class="form-check-input" type="checkbox" value="true" id="html" name="html">
                         <label class="form-check-label" for="flexCheckChecked">
                             HTML Message
                         </label>
@@ -202,95 +144,7 @@ else
     </form>
 }
 @section Scripts {
-    <script>
-        function closeWindow() {
-            event.preventDefault();
-            let sectionEl = window.parent.document.getElementById('new--message');
-            let iframeEl = window.parent.document.getElementById('new--message-frame');
-            sectionEl.classList.add('d-none');
-            iframeEl.src = 'about:blank';
-        }
-        function saveAndCloseDraft() {
-            event.preventDefault();
-            let sectionEl = window.parent.document.getElementById('new--message');
-            let iframeEl = window.parent.document.getElementById('new--message-frame');
-            sectionEl.classList.add('d-none');
-            iframeEl.src = 'about:blank';
-        }
-        function onFormSubmit() {
-            //event.preventDefault();
-            //console.log('form submit');
-
-            saveMessage();
-
-            let composerEl = document.getElementById('new--message-body');
-            let loadingEl = document.getElementById('new--message-sending');
-            composerEl.classList.add('d-none');
-            loadingEl.classList.remove('d-none');
-            let iframeEl = window.parent.document.getElementById('new--message-frame');
-            iframeEl.style.height = '0px';
-        }
-        function saveMessage() {
-            let formEls = document.querySelectorAll("#fromEmail, #fromName, #to, #cc, #bcc, #subject, #body");
-            let data = {};
-
-            formEls.forEach(el => {
-                data[el.id] = el.value;
-            });
-            localStorage.setItem('previous-draft', JSON.stringify(data));
-        }
-        function deleteMessageBackup(){
-            localStorage.setItem('previous-draft', null);
-        }
-        function restoreDraft() {
-            let formEls = document.querySelectorAll("#fromEmail, #fromName, #to, #cc, #bcc, #subject, #body");
-            let rawStorage = localStorage.getItem('previous-draft');
-            let data = JSON.parse(rawStorage);
-
-            const changeEvent = new Event("change");
-            if (data != null) {
-                for (const field in data) {
-                    document.getElementById(field).value = data[field];
-                    document.getElementById(field).dispatchEvent(changeEvent);
-                }
-            }
-        }
-        function showCC() {
-            //cc-row
-            let ccRowEl = document.getElementById('cc-row');
-            let showCCEl = document.getElementById('show--cc');
-            showCCEl.classList.add('d-none');
-            ccRowEl.classList.remove('d-none');
-        }
-        function showBCC() {
-            //cc-row
-            let ccRowEl = document.getElementById('bcc-row');
-            let showCCEl = document.getElementById('show--bcc');
-            showCCEl.classList.add('d-none');
-            ccRowEl.classList.remove('d-none');
-        }
-        function expandWindow() {
-            event.preventDefault();
-            let sectionEl = window.parent.document.getElementById('new--message');
-            let isExpanded = sectionEl.classList.contains('expanded');
-            if (isExpanded) {
-                sectionEl.classList.remove('expanded');
-            } else {
-                sectionEl.classList.add('expanded');
-            }
-        }
-        async function resizeIframe() {
-            let sectionEl = window.parent.document.getElementById('new--message');
-            let iframeEl = window.parent.document.getElementById('new--message-frame');
-            if (sectionEl.classList.contains('expanded')) {
-                iframeEl.style.height = '100%';
-            } else {
-                iframeEl.style.height = document.documentElement.scrollHeight + 'px';
-            }
-            requestAnimationFrame(resizeIframe);
-        }
-        resizeIframe();
-        restoreDraft();
-        //setInterval(resizeIframe, 10);
-    </script>
+    <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
+    <script src="~/lib/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="~/js/newmessage.js"> </script>
 }

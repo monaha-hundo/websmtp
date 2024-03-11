@@ -25,9 +25,9 @@ document.getElementById('btn--delete')
     });
 
 document.getElementById('btn--undelete')
-    ?.addEventListener("click", () => {
-        undeleteMsg();
-    });
+?.addEventListener("click", () => {
+    undeleteMsg();
+});
 
 
 

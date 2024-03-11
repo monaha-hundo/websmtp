@@ -335,6 +335,10 @@ table td {
     min-width: 80px;
 }
 
+.new--message--dialog{
+    max-width: 300px; max-height: 200px;
+}
+
 .icon-125::before {
     font-size: 1.5rem;
     position: absolute;
@@ -386,6 +390,11 @@ table td {
     border-radius: 5px;
 }
 
+.new-message-window-buttons{
+    position: absolute;
+    right: 14px; top: 50%; transform: translateY(-50%)
+}
+
 .tox.tox-tinymce {
     flex: 1 1 100% !important;
     height: unset !important;
@@ -417,6 +426,10 @@ div:where(.swal2-container) div:where(.swal2-popup) {
 
 div:where(.swal2-container).swal2-backdrop-show,
 div:where(.swal2-container).swal2-noanimation {
-    background: rgba(50, 50, 50, 0.8) !important;
+    background: rgba(22, 20, 28, 0.9) !important;
     border-radius: 5px !important;
+}
+
+.z-55{
+    z-index: 55;
 }
