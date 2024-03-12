@@ -148,14 +148,14 @@
 
         @if (!string.IsNullOrEmpty(Model.Message.HtmlContent))
         {
-            <div class="fw-bold">Html Content</div>
-            <iframe id="html-content" class="w-100" src="/api/messages/@(Model.Message.Id).html"></iframe>
+            <div class="fw-bold my-2">Html Content</div>
+            <iframe id="html-content" class="w-100 rounded-3" src="/api/messages/@(Model.Message.Id).html"></iframe>
         }
 
         @if (!string.IsNullOrEmpty(Model.Message.TextContent))
         {
-            <div class="fw-bold">Text Content</div>
-            <div class="">@Model.Message.TextContent</div>
+            <div class="fw-bold my-2">Text Content</div>
+            <div class="card outlined p-2 text-white">@Model.Message.TextContent</div>
         }
 
         @if (Model.Message.RawMessage != null)

@@ -395,10 +395,10 @@ table td {
     right: 14px; top: 50%; transform: translateY(-50%)
 }
 
-.tox.tox-tinymce {
+#body {
     flex: 1 1 100% !important;
     height: unset !important;
-    min-height: 400px;
+    min-height: 300px;
 }
 
 .new--message-header-bg {
@@ -432,4 +432,15 @@ div:where(.swal2-container).swal2-noanimation {
 
 .z-55{
     z-index: 55;
+}
+
+
+[id^=msg--list-star_] .bi {
+    position: relative;
+    top: -2px;
+}
+
+[id^=msg--list-checkbox_] .bi {
+    position: relative;
+    top: -1px;
 }

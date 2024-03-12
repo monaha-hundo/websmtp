@@ -3,19 +3,75 @@ window.addEventListener("popstate", (event) => {
     closeMsgView();
 });
 
-let openMsgViewBtn = document.querySelectorAll('[open-msg-view]');
-openMsgViewBtn.forEach(btn => {
-    btn.addEventListener("click", (event) => {
-        let msgId = btn.getAttribute('open-msg-view');
-        openwMsgView(msgId);
-    });    
-});
+document.querySelectorAll('[open-msg-view]')
+    .forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            let msgId = btn.getAttribute('open-msg-view');
+            openwMsgView(msgId);
+        });
+    });
+
+document.querySelectorAll('[delete-msg-id]')
+    .forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            debugger;
+            let msgId = btn.getAttribute('delete-msg-id');
+            deleteMessage(msgId);
+        });
+    });
+
+document.querySelectorAll('[undelete-msg-id]')
+    .forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            debugger;
+            let msgId = btn.getAttribute('undelete-msg-id');
+            undeleteMessage(msgId);
+        });
+    });
 
 //new--msg--btn
 let newMsgBtn = document.getElementById('new--msg--btn');
 newMsgBtn.addEventListener("click", () => {
     newMessage();
 });
+
+document.querySelectorAll('[id^=msg--list-checkbox_]')
+    .forEach(el => {
+        el.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.bubbles = false;
+            let containerEl = event.currentTarget;
+            let isStared = containerEl.getAttribute('checked') === "true";
+            let newStatus = !isStared;
+            containerEl.setAttribute('checked', newStatus);
+            if (newStatus) {
+                containerEl.querySelectorAll('.bi.bi-square')[0].classList.add('d-none');
+                containerEl.querySelectorAll('.bi.bi-check-square')[0].classList.remove('d-none');
+            } else {
+                containerEl.querySelectorAll('.bi.bi-square')[0].classList.remove('d-none');
+                containerEl.querySelectorAll('.bi.bi-check-square')[0].classList.add('d-none');
+            }
+        });
+    });
+
+document.querySelectorAll('[id^=msg--list-star_]')
+    .forEach(el => {
+        el.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.bubbles = false;
+            let containerEl = event.currentTarget;
+            let isStared = containerEl.getAttribute('checked') === "true";
+            let newStatus = !isStared;
+            containerEl.setAttribute('checked', newStatus);
+            if (newStatus) {
+                containerEl.querySelectorAll('.bi.bi-star')[0].classList.add('d-none');
+                containerEl.querySelectorAll('.bi.bi-star-fill')[0].classList.remove('d-none');
+            } else {
+                containerEl.querySelectorAll('.bi.bi-star')[0].classList.remove('d-none');
+                containerEl.querySelectorAll('.bi.bi-star-fill')[0].classList.add('d-none');
+            }
+        });
+    });
 
 function initNavbar() {
     let inbox = window.location.href.endsWith('/inbox');
@@ -89,16 +145,20 @@ async function openwMsgView(msgId, showRaw) {
 }
 
 function closeMsgView() {
-    let msgViewEl = document.getElementById('msg-view');
-    msgViewEl.parentElement.removeChild(msgViewEl);
-    let sectionEl = document.querySelector('#msg');
-    sectionEl.classList.add('d-none');
-    let listingEl = document.querySelector('.listing');
-    listingEl.classList.remove('d-none');
-    let containerEl = document.querySelector('#msg-view-container');
-    containerEl.classList.add('d-none');
-    let listEl = document.querySelector('.list');
-    listEl.scroll(0, previousListingScrollPos);
+    try {
+        let msgViewEl = document.getElementById('msg-view');
+        msgViewEl.parentElement.removeChild(msgViewEl);
+        let sectionEl = document.querySelector('#msg');
+        sectionEl.classList.add('d-none');
+        let listingEl = document.querySelector('.listing');
+        listingEl.classList.remove('d-none');
+        let containerEl = document.querySelector('#msg-view-container');
+        containerEl.classList.add('d-none');
+        let listEl = document.querySelector('.list');
+        listEl.scroll(0, previousListingScrollPos);
+    } catch (ex) {
+        console.info("Tried to close msg view, but no msg view found.");
+    }
 }
 
 async function markMessageAsRead(msgId) {
@@ -132,10 +192,10 @@ async function undeleteMessage(msgId) {
             const checkMarkEl = document.querySelector(selector);
             checkMarkEl.parentElement.removeChild(checkMarkEl);
             updateTrashCount(-1);
-            //closeMsgView();
-            let msgViewEl = document.getElementById('msg-view');
-            let url = msgViewEl.getAttribute('src');
-            msgViewEl.setAttribute('src', url);
+            closeMsgView();
+            //let msgViewEl = document.getElementById('msg-view');
+            //let url = msgViewEl.getAttribute('src');
+            //msgViewEl.setAttribute('src', url);
         } else {
             Swal.fire({
                 title: `Error`,
