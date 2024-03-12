@@ -29,67 +29,6 @@ document.getElementById('new--msg--back')
     history.back()
 });
 
-
-        function makeMessageHtml(){
-            // tinymce.init({
-            //     selector: '#body',
-            //     skin: 'polaris',
-            //     promotion: false,
-            //     branding: false,
-            //     plugins: 'lists link emoticons image code',
-            //     toolbar: 'undo redo | formatgroup | link emoticons image | code removeformat',
-
-            //     toolbar_groups: {
-            //         formatgroup: {
-            //             icon: 'format',
-            //             tooltip: 'Formatting',
-            //             items: 'fontselect | formatselect | bold italic underline strikethrough forecolor | align bullist numlist outdent indent blockquote'
-            //         }
-            //     },
-            //     forced_root_block: 'p',
-            //     forced_root_block_attrs: { 'style': 'font-size: 14px; font-family: helvetica, arial, sans-serif;' },
-            //     automatic_uploads: true,
-            //     images_upload_handler: (blobInfo) => {
-            //         const base64str =
-            //             "data:" +
-            //             blobInfo.blob().type +
-            //             ";base64," +
-            //             blobInfo.base64();
-            //         return Promise.resolve(base64str);
-            //     },
-            //     file_picker_callback: (cb, value, meta) => {
-            //         const input = document.createElement('input');
-            //         input.setAttribute('type', 'file');
-            //         input.setAttribute('accept', 'image/*');
-
-            //         input.addEventListener('change', (e) => {
-            //             const file = e.target.files[0];
-
-            //             const reader = new FileReader();
-            //             reader.addEventListener('load', () => {
-            //                 /*
-            //                   Note: Now we need to register the blob in TinyMCEs image blob
-            //                   registry. In the next release this part hopefully won't be
-            //                   necessary, as we are looking to handle it internally.
-            //                 */
-            //                 const id = 'blobid' + (new Date()).getTime();
-            //                 const blobCache = tinymce.activeEditor.editorUpload.blobCache;
-            //                 const base64 = reader.result.split(',')[1];
-            //                 const blobInfo = blobCache.create(id, file, base64);
-            //                 blobCache.add(blobInfo);
-
-            //                 /* call the callback and populate the Title field with the file name */
-            //                 cb(blobInfo.blobUri(), { title: file.name });
-            //             });
-            //             reader.readAsDataURL(file);
-            //         });
-
-            //         input.click();
-            //     },
-            // });
-            
-        }
-
         function closeWindow() {
             event.preventDefault();
             let sectionEl = window.parent.document.getElementById('new--message');
