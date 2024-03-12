@@ -7,7 +7,7 @@ using websmtp.Database;
 
 namespace websmtp.Startup;
 
-public static class CommandLine
+public class CommandLine
 {
     public static int? ParseStartupArgs(string[] args)
     {
@@ -53,7 +53,7 @@ public static class CommandLine
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
                 logger.LogInformation("Database.EnsureCreated");
                 dbContext.Database.EnsureCreated();
             }
@@ -72,7 +72,7 @@ public static class CommandLine
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
                 logger.LogInformation("Applying migrations");
                 dbContext.Database.Migrate();
             }
@@ -91,7 +91,7 @@ public static class CommandLine
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
                 logger.LogInformation("Running setup.sql");
                 var sql = File.ReadAllText("setup.sql");
                 dbContext.Database.ExecuteSqlRaw(sql);

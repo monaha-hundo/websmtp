@@ -1,0 +1,9 @@
+
+body{
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+#view--msg--header{
+    height: 68px;
+}

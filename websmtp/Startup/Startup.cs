@@ -69,11 +69,11 @@ public static class Startup
 
         if (builder.Environment.IsProduction())
         {
-            builder.Services.AddResponseCompression(options =>
-            {
-                options.EnableForHttps = true;
-            });
         }
+        builder.Services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+        });
 
         builder.Services.AddAntiforgery();
         builder.Services.AddHttpContextAccessor();
@@ -96,12 +96,42 @@ public static class Startup
         opts.SlidingExpiration = true;
     }
 
+    public static void ConfigureSecurity(WebApplication app)
+    {
+        if (app.Environment.IsProduction())
+        {
+            app.UseHsts();
+        }
+
+        var cspHeaderName = "Content-Security-Policy";
+        var csp = new Dictionary<string, List<string>>()
+    {
+        {"default-src", new List<string>{"self"}},
+        {"connect-src", new List<string>{"self"}},
+        {"script-src", new List<string>{"self"}},
+        {"img-src", new List<string>{"self"}},
+        {"style-src", new List<string>{"self"}},
+        {"frame-src", new List<string>{"self"}}
+    };
+        var cspHeaderValue = string.Join("; ", csp.Keys.Select(c => $"{c} {string.Join(' ', csp[c].Select(s => s == "data:" ? s : "'" + s + "'"))}"));
+
+        app.Use(async (context, next) =>
+        {
+            if (!context.Request.Path.StartsWithSegments(new PathString("/api")))
+            {
+                context.Response.Headers.Append(cspHeaderName, cspHeaderValue);
+            }
+            await next.Invoke();
+            // Do logging or other work that doesn't write to the Response.
+        });
+    }
+
     public static void ConfigureAppPipeline(WebApplication app)
     {
         if (app.Environment.IsProduction())
         {
-            app.UseResponseCompression();
         }
+        app.UseResponseCompression();
         app.UseAntiforgery();
         app.UseAuthentication();
         app.UseAuthorization();

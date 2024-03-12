@@ -14,7 +14,7 @@ public static class MessagesEndpoints
         {
             var contentBytes = Convert.FromBase64String(message.HtmlContent);
             var html = System.Text.Encoding.Default.GetString(contentBytes);
-            var mimeType = "text/html";
+            var mimeType = "text/plain";
             return Results.Content(html, mimeType);
         }
         if (!string.IsNullOrWhiteSpace(message.TextContent))

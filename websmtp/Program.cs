@@ -10,12 +10,13 @@ Startup.ConfigureServices(builder);
 
 var app = builder.Build();
 
+Startup.ConfigureSecurity(app);
 Startup.ConfigureAppPipeline(app);
 Startup.MapEndpoints(app);
 
 CommandLine.ParseModifiersArgs(args, app);
 
-if(app.Environment.IsEnvironment("Test"))
+if (app.Environment.IsEnvironment("Test"))
 {
     CommandLine.MigrateDatabase(app);
 }
