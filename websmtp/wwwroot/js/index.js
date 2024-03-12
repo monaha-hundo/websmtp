@@ -14,7 +14,6 @@ document.querySelectorAll('[open-msg-view]')
 document.querySelectorAll('[delete-msg-id]')
     .forEach(btn => {
         btn.addEventListener("click", (event) => {
-            debugger;
             let msgId = btn.getAttribute('delete-msg-id');
             deleteMessage(msgId);
         });
@@ -23,7 +22,6 @@ document.querySelectorAll('[delete-msg-id]')
 document.querySelectorAll('[undelete-msg-id]')
     .forEach(btn => {
         btn.addEventListener("click", (event) => {
-            debugger;
             let msgId = btn.getAttribute('undelete-msg-id');
             undeleteMessage(msgId);
         });
