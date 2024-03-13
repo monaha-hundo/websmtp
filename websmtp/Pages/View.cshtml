@@ -4,36 +4,41 @@
     Layout = "_LayoutEmpty";
 }
 
-@section Head{
+@section Head {
     <link rel="stylesheet" href="~/css/view.css" />
 }
 
-<input id="msg--id" type="hidden" value="@Model.MsgId"/>
+<input id="msg--id" type="hidden" value="@Model.MsgId" />
 
 <div class="w-100 text-white">
-    <div id="view--msg--header"
-    class="p-2 mb-2 border-bottom d-flex align-items-center" 
-    role="group" aria-label="Basic example" >
+    <div id="view--msg--header" class="p-2 mb-2 border-bottom d-flex align-items-center" role="group"
+        aria-label="Basic example">
         <button id="btn--close" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-left"></i>
         </button>
-        <button  id="btn--previous" type="button" class="btn btn-secondary me-2">
+        <button id="btn--previous" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-up"></i>
         </button>
-        <button  id="btn--next" type="button" class="btn btn-secondary me-2">
+        <button id="btn--next" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-down"></i>
         </button>
-        <button  id="btn--raw" type="button" class="btn btn-secondary me-2">
+        <button id="btn--raw" type="button" class="btn btn-secondary me-2">
             <i class="bi bi-file-earmark-code"></i>
         </button>
-        @if (Model.Message.Deleted)
-        {
-            <button  id="btn--delete" type="button" class="btn btn-secondary"><i class="bi bi-recycle"></i></button>
-        }
-        else
-        {
-            <button  id="btn--undelete"  type="button" class="btn btn-secondary"><i class="bi bi-trash"></i></button>
-        }
+        <div class="me-2">
+            <button id="btn--undelete" type="button" class='btn btn-secondary @(Model.Message.Deleted?"":"d-none")'>
+                <i class="bi bi-recycle"></i>
+            </button>
+            <button id="btn--delete" type="button" class='btn btn-secondary @(Model.Message.Deleted?"d-none":"")'>
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+        <div class="me-2">
+            <button id="btn--unread" type="button" class='btn btn-secondary @(Model.Message.Read?"":"d-none")'>Mark
+                Unread</button>
+            <button id="btn--read" type="button" class='btn btn-secondary @(Model.Message.Read?"d-none":"")'>Mark as
+                read</button>
+        </div>
     </div>
 
     <h3 class="my-3 mx-4 px-1 pe-5">@Model.Message.Subject</h3>
@@ -41,24 +46,22 @@
 
     <div class="border rounded p-3 mx-4">
         <div class="d-flex align-items-center">
-            @switch (Model.Message.Importance)
-            {
-                case "High":
-                    <i class="bi bi-exclamation-circle me-2 fs-1_5rem text-danger"></i>
-                    <span class="fw-bold d-inline-block mw-50px">High Priority</span>
-                    break;
-                case "Low":
-                    <i class="bi bi-thermometer-low me-2 fs-1_5rem text-secondary"></i>
-                    <span class="fw-bold d-inline-block mw-50px">Low Priority</span>
-                    break;
-                default:
-                    break;
-            }
-        </div>
-        <div class="d-flex align-items-center">
             <div class="my-2">
                 <span class="fw-bold d-inline-block mw-50px">Date:</span>
                 @Model.Message.ReceivedOn.Date.ToLongDateString()
+                @switch (Model.Message.Importance)
+                {
+                    case "High":
+                        <i class="bi bi-exclamation-circle mx-2 fs-1_5rem text-danger"></i>
+                        <span class="fw-bold d-inline-block mw-50px">High Priority</span>
+                        break;
+                    case "Low":
+                        <i class="bi bi-thermometer-low mx-2 fs-1_5rem text-secondary"></i>
+                        <span class="fw-bold d-inline-block mw-50px">Low Priority</span>
+                        break;
+                    default:
+                        break;
+                }
             </div>
         </div>
         <div class="d-flex justify-content-between">
@@ -99,8 +102,8 @@
                 <span class="fw-bold d-inline-block mw-50px">Spam:</span>
 
                 <span
-                    class='text-decoration-none badge rounded-pill @(Model.Message.DkimFailed ? "text-bg-danger" : "text-bg-success") fs-6 me-2'>DKIM <i
-                        class='bi bi-hand-thumbs-@(Model.Message.DkimFailed ? "down" : "up")-fill'></i></span>
+                    class='text-decoration-none badge rounded-pill @(Model.Message.DkimFailed ? "text-bg-danger" : "text-bg-success") fs-6 me-2'>DKIM
+                    <i class='bi bi-hand-thumbs-@(Model.Message.DkimFailed ? "down" : "up")-fill'></i></span>
                 @switch (Model.Message.SpfStatus)
                 {
                     case SpfVerifyResult.Fail:
@@ -137,7 +140,7 @@
             <div class="mb-2 p-2">
                 @foreach (var att in Model.Message.Attachements)
                 {
-                    <a class="badge rounded-pill fs-6 text-bg-primary p-2"
+                    <a class="badge rounded-pill fs-6 text-bg-primary p-2 text-decoration-none"
                         href="/api/messages/@Model.Message.Id/attachements/@att.Filename">
                         <i class="bi bi-paperclip"></i>
                         @att.Filename

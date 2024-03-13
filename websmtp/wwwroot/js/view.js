@@ -25,10 +25,19 @@ document.getElementById('btn--delete')
     });
 
 document.getElementById('btn--undelete')
-?.addEventListener("click", () => {
-    undeleteMsg();
-});
+    ?.addEventListener("click", () => {
+        undeleteMsg();
+    });
 
+document.getElementById('btn--read')
+    ?.addEventListener("click", () => {
+        markAsRead();
+    });
+
+document.getElementById('btn--unread')
+    ?.addEventListener("click", () => {
+        markAsUnread();
+    });
 
 
 function showHtmlContent(el) {
@@ -46,11 +55,29 @@ function showSource(el) {
 function closeMsg() {
     window.parent.postMessage(`close-msg:_`, window.location.origin);
 }
-function deleteMsg() {
-    window.parent.postMessage(`delete-msg:${msgId}`, window.location.origin);
+async function deleteMsg() {
+    //window.parent.postMessage(`delete-msg:${msgId}`, window.location.origin);
+    await window.parent.deleteMessages([msgId]);
+    document.getElementById('btn--undelete').classList.remove('d-none');
+    document.getElementById('btn--delete').classList.add('d-none');
 }
-function undeleteMsg() {
-    window.parent.postMessage(`undelete-msg:${msgId}`, window.location.origin);
+async function undeleteMsg() {
+    //window.parent.postMessage(`undelete-msg:${msgId}`, window.location.origin);
+    await window.parent.undeleteMessages([msgId]);
+    document.getElementById('btn--undelete').classList.add('d-none');
+    document.getElementById('btn--delete').classList.remove('d-none');
+}
+async function markAsRead() {
+    //window.parent.postMessage(`read-msg:${msgId}`, window.location.origin);
+    await window.parent.markMessagesAsRead([msgId]);
+    document.getElementById('btn--unread').classList.remove('d-none');
+    document.getElementById('btn--read').classList.add('d-none');
+}
+async function markAsUnread() {
+    //window.parent.postMessage(`unread-msg:${msgId}`, window.location.origin);
+    await window.parent.markMessagesAsUnread([msgId]);
+    document.getElementById('btn--unread').classList.add('d-none');
+    document.getElementById('btn--read').classList.remove('d-none');
 }
 function previousMsg() {
     window.parent.postMessage(`previous-msg:${msgId}`, window.location.origin);

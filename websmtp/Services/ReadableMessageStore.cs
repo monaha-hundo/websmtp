@@ -145,29 +145,38 @@ public class ReadableMessageStore : IReadableMessageStore
         return query.Single(msg => msg.Id == msgId);
     }
 
-    public void MarkAsRead(Guid msgId)
+    public void MarkAsRead(List<Guid> msgIds)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
-        msg.Read = true;
-        _dataContext.SaveChanges();
+        _dataContext.Messages
+            .Where(m=> msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m=>m.Read, true));
+    }
+    public void MarkAsUnread(List<Guid> msgIds)
+    {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        _dataContext.Messages
+            .Where(m=> msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m=>m.Read, false));
     }
 
-    public void Delete(Guid msgId)
+    public void Delete(List<Guid> msgIds)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
-        msg.Deleted = true;
-        _dataContext.SaveChanges();
+        _dataContext.Messages
+            .Where(m=> msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m=>m.Deleted, true));
     }
-    public void Undelete(Guid msgId)
+    
+    public void Undelete(List<Guid> msgIds)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
-        msg.Deleted = false;
-        _dataContext.SaveChanges();
+        _dataContext.Messages
+            .Where(m=> msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m=>m.Deleted, false));
     }
 }

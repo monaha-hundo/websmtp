@@ -15,7 +15,7 @@ document.querySelectorAll('[delete-msg-id]')
     .forEach(btn => {
         btn.addEventListener("click", (event) => {
             let msgId = btn.getAttribute('delete-msg-id');
-            deleteMessage(msgId);
+            deleteMessages([msgId]);
         });
     });
 
@@ -23,15 +23,65 @@ document.querySelectorAll('[undelete-msg-id]')
     .forEach(btn => {
         btn.addEventListener("click", (event) => {
             let msgId = btn.getAttribute('undelete-msg-id');
-            undeleteMessage(msgId);
+            undeleteMessages([msgId]);
         });
     });
 
-//new--msg--btn
-let newMsgBtn = document.getElementById('new--msg--btn');
-newMsgBtn.addEventListener("click", () => {
-    newMessage();
-});
+
+
+
+document.querySelectorAll('[read-msg-id]')
+    .forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            let msgId = btn.getAttribute('read-msg-id');
+            markMessagesAsRead([msgId]);
+            btn.classList.add('d-none');
+            let inverseBtnEl = document.querySelector(`[unread-msg-id="${msgId}"]`);
+            inverseBtnEl.classList.remove('d-none');
+        });
+    });
+
+document.querySelectorAll('[unread-msg-id]')
+    .forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            let msgId = btn.getAttribute('unread-msg-id');
+            markMessagesAsUnread([msgId]);
+            btn.classList.add('d-none');
+            let inverseBtnEl = document.querySelector(`[read-msg-id="${msgId}"]`);
+            inverseBtnEl.classList.remove('d-none');
+        });
+    });
+
+
+
+document.getElementById('new--msg--btn')
+    ?.addEventListener("click", () => {
+        newMessage();
+    });
+
+document.getElementById('delete-selected')
+    ?.addEventListener("click", async () => {
+        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+            .filter(el => el.getAttribute('checked') === 'true')
+            .map(el => el.getAttribute('msg-id'));
+        await deleteMessages(selectedMsgIds);
+    });
+
+document.getElementById('mark-selected-as-read')
+    ?.addEventListener("click", async () => {
+        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+            .filter(el => el.getAttribute('checked') === 'true')
+            .map(el => el.getAttribute('msg-id'));
+        await markMessagesAsRead(selectedMsgIds);
+    });
+
+    document.getElementById('mark-selected-as-unread')
+        ?.addEventListener("click", async () => {
+            let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+                .filter(el => el.getAttribute('checked') === 'true')
+                .map(el => el.getAttribute('msg-id'));
+            await markMessagesAsUnread(selectedMsgIds);
+        });
 
 document.querySelectorAll('[id^=msg--list-checkbox_]')
     .forEach(el => {
@@ -49,6 +99,7 @@ document.querySelectorAll('[id^=msg--list-checkbox_]')
                 containerEl.querySelectorAll('.bi.bi-square')[0].classList.remove('d-none');
                 containerEl.querySelectorAll('.bi.bi-check-square')[0].classList.add('d-none');
             }
+            updateSelectedMessages();
         });
     });
 
@@ -70,6 +121,20 @@ document.querySelectorAll('[id^=msg--list-star_]')
             }
         });
     });
+
+function updateSelectedMessages() {
+    let multiSelectActionsEl = document.getElementById('multiple--selection');
+    let selectedMsgEls = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+        .filter(el => el.getAttribute('checked') === 'true');
+    if (selectedMsgEls.length > 0) {
+        multiSelectActionsEl.classList.remove('d-none');
+    } else {
+        multiSelectActionsEl.classList.add('d-none');
+    }
+    // let selectedMsgIds = selectedMsgEls
+    //     .filter(el => el.getAttribute('checked') === 'true')
+    //     .map(el => el.getAttribute('msg-id'));
+}
 
 function initNavbar() {
     let inbox = window.location.href.endsWith('/inbox');
@@ -111,7 +176,7 @@ var previousListingScrollPos = 0;
 async function openwMsgView(msgId, showRaw) {
     event.preventDefault();
 
-    markMessageAsRead(msgId);
+    markMessagesAsRead([msgId]);
     let listEl = document.querySelector('.list');
     let listingEl = document.querySelector('.listing');
 
@@ -142,6 +207,14 @@ async function openwMsgView(msgId, showRaw) {
     }
 }
 
+function updateTrashCount(count) {
+    if (count == null) count = 1;
+    const selector = 'sidebar--trash--count';
+    const trashCountEl = document.getElementById(selector);
+    const currentCount = parseInt(trashCountEl.innerText);
+    trashCountEl.innerText = currentCount + count;
+}
+
 function closeMsgView() {
     try {
         let msgViewEl = document.getElementById('msg-view');
@@ -159,41 +232,63 @@ function closeMsgView() {
     }
 }
 
-async function markMessageAsRead(msgId) {
-    const response = await fetch(`/api/messages/${msgId}/mark-as-read/`, {
-        method: 'post'
+async function markMessagesAsRead(msgsIds) {
+    const response = await fetch(`/api/messages/mark-as-read/`, {
+        method: 'post',
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(msgsIds)
     });
     const success = response.status == 200;
     if (success) {
-        const selector = `[msg-id='${msgId}']`;
-        const checkMarkEl = document.querySelector(selector);
-        checkMarkEl.classList.remove('unread');
+        for (let i = 0; i < msgsIds.length; i++) {
+            const msgId = msgsIds[i];
+            const selector = `[msg-id='${msgId}']`;
+            const checkMarkEl = document.querySelector(selector);
+            checkMarkEl.classList.remove('unread');
+        }
     }
 }
 
-function updateTrashCount(count) {
-    if (count == null) count = 1;
-    const selector = 'sidebar--trash--count';
-    const trashCountEl = document.getElementById(selector);
-    const currentCount = parseInt(trashCountEl.innerText);
-    trashCountEl.innerText = currentCount + 1;
+async function markMessagesAsUnread(msgsIds) {
+    const response = await fetch(`/api/messages/mark-as-unread/`, {
+        method: 'post',
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(msgsIds)
+    });
+    const success = response.status == 200;
+    if (success) {
+        for (let i = 0; i < msgsIds.length; i++) {
+            const msgId = msgsIds[i];
+            const selector = `[msg-id='${msgId}']`;
+            const checkMarkEl = document.querySelector(selector);
+            checkMarkEl.classList.add('unread');
+        }
+    }
 }
 
-async function undeleteMessage(msgId) {
+async function undeleteMessages(msgsIds) {
     const call = async () => {
-        const response = await fetch(`/api/messages/${msgId}/undelete/`, {
-            method: 'post'
+        const response = await fetch(`/api/messages/undelete/`, {
+            method: 'post',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(msgsIds)
         });
         const success = response.status == 200;
         if (success) {
-            const selector = `[msg-id='${msgId}']`;
-            const checkMarkEl = document.querySelector(selector);
-            checkMarkEl.parentElement.removeChild(checkMarkEl);
-            updateTrashCount(-1);
-            closeMsgView();
-            //let msgViewEl = document.getElementById('msg-view');
-            //let url = msgViewEl.getAttribute('src');
-            //msgViewEl.setAttribute('src', url);
+            for (let i = 0; i < msgsIds.length; i++) {
+                const msgId = msgsIds[i];
+                const selector = `[msg-id='${msgId}']`;
+                const checkMarkEl = document.querySelector(selector);
+                checkMarkEl.parentElement.removeChild(checkMarkEl);
+                updateTrashCount(-1);
+            }
+            //closeMsgView();
         } else {
             Swal.fire({
                 title: `Error`,
@@ -213,19 +308,25 @@ async function undeleteMessage(msgId) {
 
 }
 
-
-async function deleteMessage(msgId) {
+async function deleteMessages(msgsIds) {
     const call = async () => {
-        const response = await fetch(`/api/messages/${msgId}/delete/`, {
-            method: 'post'
+        const response = await fetch(`/api/messages/delete/`, {
+            method: 'post',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(msgsIds)
         });
         const success = response.status == 200;
         if (success) {
-            const selector = `[msg-id='${msgId}']`;
-            const checkMarkEl = document.querySelector(selector);
-            checkMarkEl.parentElement.removeChild(checkMarkEl);
-            updateTrashCount(1);
-            closeMsgView();
+            for (let i = 0; i < msgsIds.length; i++) {
+                const msgId = msgsIds[i];
+                const selector = `[msg-id='${msgId}']`;
+                const checkMarkEl = document.querySelector(selector);
+                checkMarkEl.parentElement.removeChild(checkMarkEl);
+                updateTrashCount(1);
+            }
+            //closeMsgView();
         } else {
             Swal.fire({
                 title: `Error`,
@@ -273,11 +374,17 @@ function handleMessage(event) {
             //closeMsgView();
             history.back();
             return;
+        case 'read-msg':
+            markMessagesAsRead([msgParam]);
+            return;
+        case 'unread-msg':
+            markMessagesAsUnread([msgParam]);
+            return;
         case 'undelete-msg':
-            undeleteMessage(msgParam);
+            undeleteMessages([msgParam]);
             return;
         case 'delete-msg':
-            deleteMessage(msgParam);
+            deleteMessages([msgParam]);
             return;
         case 'previous-msg':
             previousMessage(msgParam);

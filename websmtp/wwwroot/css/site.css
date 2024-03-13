@@ -45,12 +45,15 @@ table td {
     vertical-align: middle;
 }
 
+.list-group-item{
+    background-color: rgba(22, 20, 28, 0.5);
+}
 
 .unread {
     font-weight: bolder;
     color: azure;
     position: relative;
-    background-color: rgb(26, 25, 38);
+    background-color: rgba(26, 25, 38, 0.9);
 }
 
 .login-card {

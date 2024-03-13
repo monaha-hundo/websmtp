@@ -69,11 +69,11 @@ public static class Startup
 
         if (builder.Environment.IsProduction())
         {
+            builder.Services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = false;
+            });
         }
-        builder.Services.AddResponseCompression(options =>
-        {
-            options.EnableForHttps = true;
-        });
 
         builder.Services.AddAntiforgery();
         builder.Services.AddHttpContextAccessor();
@@ -130,8 +130,9 @@ public static class Startup
     {
         if (app.Environment.IsProduction())
         {
+            app.UseResponseCompression();
         }
-        app.UseResponseCompression();
+
         app.UseAntiforgery();
         app.UseAuthentication();
         app.UseAuthorization();
@@ -153,9 +154,10 @@ public static class Startup
 
     public static void MapEndpoints(WebApplication app)
     {
-        app.MapPost("/api/messages/{msgId}/mark-as-read/", MessagesEndpoints.MarkAsRead).RequireAuthorization();
-        app.MapPost("/api/messages/{msgId}/delete/", MessagesEndpoints.Delete).RequireAuthorization();
-        app.MapPost("/api/messages/{msgId}/undelete/", MessagesEndpoints.Undelete).RequireAuthorization();
+        app.MapPost("/api/messages/mark-as-read/", MessagesEndpoints.MarkAsRead).RequireAuthorization();
+        app.MapPost("/api/messages/mark-as-unread/", MessagesEndpoints.MarkAsUnread).RequireAuthorization();
+        app.MapPost("/api/messages/delete/", MessagesEndpoints.Delete).RequireAuthorization();
+        app.MapPost("/api/messages/undelete/", MessagesEndpoints.Undelete).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}/attachements/{filename}", MessagesEndpoints.GetMessageAttachement).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}.html", MessagesEndpoints.GetMessage).RequireAuthorization();
     }
