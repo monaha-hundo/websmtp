@@ -72,4 +72,21 @@ public static class MessagesEndpoints
         messages.Undelete(msgIds);
         return Results.Ok();
     }
+
+    public static IResult Star(
+        [FromBody] List<Guid> msgIds,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.Star(msgIds);
+        return Results.Ok();
+    }
+    public static IResult Unstar(
+        [FromBody] List<Guid> msgIds,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.Unstar(msgIds);
+        return Results.Ok();
+    }
 }

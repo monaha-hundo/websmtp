@@ -59,6 +59,16 @@ document.getElementById('new--msg--btn')
         newMessage();
     });
 
+document.getElementById('msg--list-checkbox_all')
+    ?.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.bubbles = false;
+        const clickEvent = new Event("click");
+        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+            .filter(el => el.id != 'msg--list-checkbox_all');
+        selectedMsgIds.forEach(el => el.dispatchEvent(clickEvent));
+    });
+
 document.getElementById('delete-selected')
     ?.addEventListener("click", async () => {
         let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
@@ -75,13 +85,13 @@ document.getElementById('mark-selected-as-read')
         await markMessagesAsRead(selectedMsgIds);
     });
 
-    document.getElementById('mark-selected-as-unread')
-        ?.addEventListener("click", async () => {
-            let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
-                .filter(el => el.getAttribute('checked') === 'true')
-                .map(el => el.getAttribute('msg-id'));
-            await markMessagesAsUnread(selectedMsgIds);
-        });
+document.getElementById('mark-selected-as-unread')
+    ?.addEventListener("click", async () => {
+        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+            .filter(el => el.getAttribute('checked') === 'true')
+            .map(el => el.getAttribute('msg-id'));
+        await markMessagesAsUnread(selectedMsgIds);
+    });
 
 document.querySelectorAll('[id^=msg--list-checkbox_]')
     .forEach(el => {
@@ -105,19 +115,24 @@ document.querySelectorAll('[id^=msg--list-checkbox_]')
 
 document.querySelectorAll('[id^=msg--list-star_]')
     .forEach(el => {
-        el.addEventListener("click", (event) => {
+        el.addEventListener("click", async (event) => {
             event.preventDefault();
             event.bubbles = false;
             let containerEl = event.currentTarget;
+            let msgId = containerEl.id.replace('msg--list-star_', '');
             let isStared = containerEl.getAttribute('checked') === "true";
             let newStatus = !isStared;
             containerEl.setAttribute('checked', newStatus);
             if (newStatus) {
-                containerEl.querySelectorAll('.bi.bi-star')[0].classList.add('d-none');
-                containerEl.querySelectorAll('.bi.bi-star-fill')[0].classList.remove('d-none');
+                if (await starMessages([msgId])) {
+                    containerEl.querySelectorAll('.bi.bi-star')[0].classList.add('d-none');
+                    containerEl.querySelectorAll('.bi.bi-star-fill')[0].classList.remove('d-none');
+                }
             } else {
-                containerEl.querySelectorAll('.bi.bi-star')[0].classList.remove('d-none');
-                containerEl.querySelectorAll('.bi.bi-star-fill')[0].classList.add('d-none');
+                if (await unstarMessages([msgId])) {
+                    containerEl.querySelectorAll('.bi.bi-star')[0].classList.remove('d-none');
+                    containerEl.querySelectorAll('.bi.bi-star-fill')[0].classList.add('d-none');
+                }
             }
         });
     });
@@ -139,6 +154,7 @@ function updateSelectedMessages() {
 function initNavbar() {
     let inbox = window.location.href.endsWith('/inbox');
     let all = window.location.href.endsWith('/all');
+    let favorites = window.location.href.endsWith('/favorites');
     let spam = window.location.href.endsWith('/spam');
     let trash = window.location.href.endsWith('/trash');
 
@@ -148,6 +164,13 @@ function initNavbar() {
         mailboxEl.classList.remove('btn-transparent-primary');
         mailboxEl.classList.add('btn-dark', 'active');
         return;
+    }
+
+    if (favorites) {
+        const selector = `#btn-mailbox-fav`;
+        const mailboxEl = document.querySelector(selector);
+        mailboxEl.classList.remove('btn-transparent-primary');
+        mailboxEl.classList.add('btn-dark', 'active');
     }
 
     if (inbox) {
@@ -269,6 +292,35 @@ async function markMessagesAsUnread(msgsIds) {
         }
     }
 }
+
+//
+
+
+async function starMessages(msgsIds) {
+    const response = await fetch(`/api/messages/star/`, {
+        method: 'post',
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(msgsIds)
+    });
+    const success = response.status == 200;
+    return success;
+}
+
+async function unstarMessages(msgsIds) {
+    const response = await fetch(`/api/messages/unstar/`, {
+        method: 'post',
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(msgsIds)
+    });
+    const success = response.status == 200;
+    return success;
+}
+
+//
 
 async function undeleteMessages(msgsIds) {
     const call = async () => {

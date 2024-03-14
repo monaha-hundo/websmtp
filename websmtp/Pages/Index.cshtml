@@ -25,32 +25,22 @@
                 <div class="row align-items-center  g-0 px-2">
                     <div class="col-auto d-flex align-items-center">
                         <span class="me-3" id="msg--list-checkbox_all" checked="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                class="bi bi-square" viewBox="0 0 16 16">
-                                <path
-                                    d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z" />
-                            </svg>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                class="bi bi-check-square d-none" viewBox="0 0 16 16">
-                                <path
-                                    d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z" />
-                                <path
-                                    d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z" />
-                            </svg>
+                            <i class="bi bi-square"></i>
+                            <i class="bi bi-check-square d-none"></i>
                         </span>
                     </div>
                     <div class="col-auto text-truncate d-flex align-items-center ">
                         <span class="text-capitalize fs-3 me-3">@Model.Mailbox</span>
                         <span class="d-none" id="multiple--selection">
                             <button class="btn btn-secondary me-3" id="delete-selected">
-                                    <i class="bi bi-trash"></i>
+                                <i class="bi bi-trash"></i>
                             </button>
                             <button class="btn btn-secondary me-3" id="mark-selected-as-read">
-                                
+
                                 <i class="bi bi-eye-fill"></i>
                             </button>
                             <button class="btn btn-secondary me-3" id="mark-selected-as-unread">
-                                <i class="bi bi-eye-slash-fill"></i> 
+                                <i class="bi bi-eye-slash-fill"></i>
                             </button>
                         </span>
                     </div>
@@ -86,17 +76,9 @@
                                 </svg>
                             </span>
                             <span id="msg--list-star_@message.Id" msg-id="@message.Id" class="me-3 position-relative"
-                                checked="false">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-star" viewBox="0 0 16 16">
-                                    <path
-                                        d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.56.56 0 0 0-.163-.505L1.71 6.745l4.052-.576a.53.53 0 0 0 .393-.288L8 2.223l1.847 3.658a.53.53 0 0 0 .393.288l4.052.575-2.906 2.77a.56.56 0 0 0-.163.506l.694 3.957-3.686-1.894a.5.5 0 0 0-.461 0z" />
-                                </svg>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-star-fill d-none" viewBox="0 0 16 16">
-                                    <path
-                                        d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
-                                </svg>
+                                checked='@(message.Stared ? "true":"false")'>
+                                <i class='bi bi-star @(message.Stared ? "d-none":"")'></i>
+                                <i class='bi bi-star-fill @(message.Stared ? "":"d-none")'></i>
                             </span>
 
                             @foreach (var singleOrigin in message.From.Split(',', StringSplitOptions.RemoveEmptyEntries))
@@ -104,50 +86,51 @@
                                 var result = regex.Matches(singleOrigin);
                                 if (result.Count == 0)
                                 {
-                                    @message.From
+                                    <span class="text-nowrap">@message.From</span>
                                 }
                                 else
                                 {
                                     var name = result[0].Groups[1];
                                     var email = result[0].Groups[2]; ;
-                                    <span title="@email" class="me-2">@name</span>
+                                    <span title="@email" class="me-2 text-nowrap">@name</span>
                                 }
                             }
                         </div>
-                        <div class="col-12 col-lg-8 flex-grow-1 text-truncate cursor-pointer " open-msg-view="@message.Id">
-                            <span class="">@message.Subject</span>
+                        <div class="col-12 col-lg-auto flex-shrink-1 text-truncate cursor-pointer text-no-wrap" open-msg-view="@message.Id">
+                            @message.Subject
                         </div>
-                        <div class="col-12 col-lg-auto d-flex justify-content-center align-items-center">
+                        <div class="col col-auto flex-grow-1"></div>
+                        <div class="col-12 col-lg-auto d-flex justify-content-start justify-lg-content-between align-items-center">
                             @if (message.AttachementsCount > 0)
                             {
-                                <span class="me-3"><i class="bi bi-paperclip"></i>@message.AttachementsCount</span>
+                                <span class="me-2"><i class="bi bi-paperclip"></i>@message.AttachementsCount</span>
                             }
-                        </div>
-                        <div class="col-12 col-lg-auto d-flex justify-content-center align-items-center">
+
                             @if (Model.Mailbox == "trash")
                             {
-                                <button type="button" class="btn btn-sm btn-outlined rounded-pill me-3"
+                                <button type="button" class="btn btn-sm btn-outlined rounded-pill"
                                     undelete-msg-id="@message.Id">
                                     <i class="bi bi-recycle"></i>
                                 </button>
                             }
                             else
                             {
-                                <button type="button" class="btn btn-sm btn-outlined rounded-pill me-3"
+                                <button type="button" class="btn btn-sm btn-outlined rounded-pill"
                                     delete-msg-id="@message.Id">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             }
-                            <button type="button" class='btn btn-sm btn-outlined rounded-pill me-3 @(message.Read?"d-none":"")'
+                            <button type="button"
+                                class='btn btn-sm btn-outlined rounded-pill me-2 @(message.Read?"d-none":"")'
                                 read-msg-id="@message.Id">
                                 <i class="bi bi-eye-fill"></i>
                             </button>
-                            <button type="button" class='btn btn-sm btn-outlined rounded-pill me-3 @(message.Read?"":"d-none")'
+                            <button type="button"
+                                class='btn btn-sm btn-outlined rounded-pill me-2@(message.Read?"":"d-none")'
                                 unread-msg-id="@message.Id">
                                 <i class="bi bi-eye-slash-fill"></i>
                             </button>
-                        </div>
-                        <div class="col-12 col-lg-auto d-flex justify-content-center align-items-center">
+                            
                             @if (DateTime.UtcNow - message.ReceivedOn < TimeSpan.FromHours(1))
                             {
                                 <span title="@message.ReceivedOn.ToLocalTime()">

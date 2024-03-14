@@ -9,6 +9,7 @@ public class ListResult
     public int Spam { get; set; }
     public int Deleted { get; set; }
     public int Total { get; set; }
+    public int Favs { get; set; }
     public bool AllHasNew { get; set; }
     public bool SpamHasNew { get; set; }
     public bool TrashHasNew { get; set; }

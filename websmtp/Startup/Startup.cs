@@ -154,6 +154,8 @@ public static class Startup
 
     public static void MapEndpoints(WebApplication app)
     {
+        app.MapPost("/api/messages/star/", MessagesEndpoints.Star).RequireAuthorization();
+        app.MapPost("/api/messages/unstar/", MessagesEndpoints.Unstar).RequireAuthorization();
         app.MapPost("/api/messages/mark-as-read/", MessagesEndpoints.MarkAsRead).RequireAuthorization();
         app.MapPost("/api/messages/mark-as-unread/", MessagesEndpoints.MarkAsUnread).RequireAuthorization();
         app.MapPost("/api/messages/delete/", MessagesEndpoints.Delete).RequireAuthorization();

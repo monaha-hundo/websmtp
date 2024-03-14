@@ -16,6 +16,7 @@ public interface IMessage
     public string Bcc { get; set; }
     public string Importance { get; set; }
     public int AttachementsCount { get; }
+    public bool Stared { get; set; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
     public bool DkimFailed { get; set; }
@@ -41,6 +42,7 @@ public class Message : IMessage
     public string? HtmlContent { get; set; }
     public List<MessageAttachement> Attachements { get; set; } = [];
     public int AttachementsCount { get; set; }
+    public bool Stared { get; set; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
     public bool DkimFailed { get; set; }
@@ -52,72 +54,6 @@ public class Message : IMessage
 
     }
 
-    /// <summary>
-    /// Create a new message instance from a byte buffer.
-    /// </summary>
-    /// <param name="id">An internally generate ID for the message.</param>
-    /// <param name="buffer">The raw bytes of the message</param>
-    /// <exception cref="Exception"></exception>
-    public Message(ReadOnlySequence<byte> buffer)
-    {
-        //Size = buffer.Length;
-        var raw = buffer.ToArray<byte>();
-        using var memory = new MemoryStream(raw);
-        using var _mimeMessage = MimeMessage.Load(memory) ?? throw new Exception("Could not parse message.");
-
-        ReceivedOn = DateTimeOffset.UtcNow;
-
-        Subject = _mimeMessage.Subject;
-
-        var allFrom = _mimeMessage.From?.Select(f => f.ToString())?.ToList() ?? [];
-
-        From = string.Join(',', allFrom);
-
-        var allTo = _mimeMessage.To?.Select(f => f.ToString())?.ToList() ?? [];
-
-        To = string.Join(',', allTo);
-
-        var allCc = _mimeMessage.Cc?.Select(f => f.ToString())?.ToList() ?? [];
-
-        Cc = string.Join(',', allCc);
-
-        var allBcc = _mimeMessage.Bcc?.Select(f => f.ToString())?.ToList() ?? [];
-
-        Bcc = string.Join(',', allBcc);
-
-        Importance = _mimeMessage.Importance switch
-        {
-            MessageImportance.Low => "Low",
-            MessageImportance.Normal => "Normal",
-            MessageImportance.High => "High",
-            _ => string.Empty,
-        };
-
-        var textContent = _mimeMessage.GetTextBody(MimeKit.Text.TextFormat.Text);
-        TextContent = textContent;
-
-        if (_mimeMessage.HtmlBody != null)
-        {
-            var htmlContent = _mimeMessage.HtmlBody
-                ?? throw new Exception("Could not read message HtmlBody");
-
-            var base64HtmlContent = htmlContent != null
-                ? Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(htmlContent))
-                : Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(string.Empty));
-
-            HtmlContent = base64HtmlContent;
-        }
-
-        if (_mimeMessage.Attachments.Any())
-        {
-            Attachements = _mimeMessage.Attachments
-                            .Where(a => a.IsAttachment)
-                            .Select(a => new MessageAttachement(a))
-                            .ToList();
-
-            AttachementsCount = Attachements.Count;
-        }
-    }
     public Message(MimeMessage _mimeMessage)
     {
         ReceivedOn = DateTimeOffset.UtcNow;
@@ -213,6 +149,7 @@ public class MessageInfo : IMessage
     public string Bcc { get; set; } = string.Empty;
     public string Importance { get; set; } = string.Empty;
     public int AttachementsCount { get; set; }
+    public bool Stared { get; set; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
     public bool DkimFailed { get; set; }
@@ -235,6 +172,7 @@ public class MessageInfo : IMessage
         DkimFailed = message.DkimFailed;
         SpfStatus = message.SpfStatus;
         DmarcFailed = message.DmarcFailed;
+        Stared = message.Stared;
     }
 }
 
