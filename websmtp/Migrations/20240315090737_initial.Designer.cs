@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using websmtp.Database;
@@ -11,16 +12,18 @@ using websmtp.Database;
 namespace websmtp.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240229185834_MessageSpamProperties")]
-    partial class MessageSpamProperties
+    [Migration("20240315090737_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.2")
+                .HasAnnotation("ProductVersion", "8.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("websmtp.Database.Models.Message", b =>
                 {
@@ -70,10 +73,13 @@ namespace websmtp.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("ReceivedOn")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("SpfStatus")
                         .HasColumnType("int");
+
+                    b.Property<bool>("Stared")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Subject")
                         .IsRequired()
@@ -150,6 +156,8 @@ namespace websmtp.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()

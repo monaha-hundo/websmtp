@@ -39,29 +39,54 @@ public static class MessagesEndpoints
     }
 
     public static IResult MarkAsRead(
-        [FromRoute] Guid msgId,
+        [FromBody] List<Guid> msgIds,
         [FromServices] IReadableMessageStore messages
     )
     {
-        messages.MarkAsRead(msgId);
+        messages.MarkAsRead(msgIds);
+        return Results.Ok();
+    }
+    public static IResult MarkAsUnread(
+        [FromBody] List<Guid> msgIds,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.MarkAsUnread(msgIds);
         return Results.Ok();
     }
 
     public static IResult Delete(
-        [FromRoute] Guid msgId,
-        [FromServices] IReadableMessageStore messages
+        [FromServices] IReadableMessageStore messages,
+        [FromBody] List<Guid> msgIds
     )
     {
-        messages.Delete(msgId);
+        messages.Delete(msgIds);
         return Results.Ok();
     }
 
     public static IResult Undelete(
-        [FromRoute] Guid msgId,
+        [FromServices] IReadableMessageStore messages,
+        [FromBody] List<Guid> msgIds
+    )
+    {
+        messages.Undelete(msgIds);
+        return Results.Ok();
+    }
+
+    public static IResult Star(
+        [FromBody] List<Guid> msgIds,
         [FromServices] IReadableMessageStore messages
     )
     {
-        messages.Undelete(msgId);
+        messages.Star(msgIds);
+        return Results.Ok();
+    }
+    public static IResult Unstar(
+        [FromBody] List<Guid> msgIds,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.Unstar(msgIds);
         return Results.Ok();
     }
 }

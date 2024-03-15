@@ -154,7 +154,7 @@ public class Basic
         var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
         Console.WriteLine("Generating test data...");
-        var testEmailCount = 2;
+        var testEmailCount = 100;
 
         var fromEmailAddrs = new Faker<MailAddress>()
             .CustomInstantiator(f =>
@@ -401,7 +401,7 @@ public class Basic
 
             mimeMessages.ForEach(sendMailService.SendMail);
 
-            var filterResult = msgStore.Latest(1, 1000, false, false, false, msgGuidToFind);
+            var filterResult = msgStore.Latest(1, 1000, false, false, false, false, msgGuidToFind);
 
             Assert.IsTrue(filterResult.Count == 1);
         }

@@ -20,3 +20,5 @@ websmtp/tests.db
 websmtp/tests.db-shm
 websmtp/tests.db-wal
 websmtp/appSettings.json
+*.key
+*.crt

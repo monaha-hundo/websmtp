@@ -14,7 +14,7 @@ public class ReadableMessageStore : IReadableMessageStore
         _services = services;
     }
 
-    public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, bool showSpam, string filter)
+    public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, bool showSpam, bool onlySared, string filter)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
@@ -22,16 +22,36 @@ public class ReadableMessageStore : IReadableMessageStore
         _dataContext.ChangeTracker.LazyLoadingEnabled = false;
         _dataContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
+        if (!_dataContext.Messages.Any())
+        {
+
+            return new ListResult
+            {
+                Count = 0,
+                New = 0,
+                Spam = 0,
+                Deleted = 0,
+                Total = 0,
+                Favs = 0,
+                AllHasNew = false,
+                SpamHasNew = false,
+                TrashHasNew = false,
+                Messages = []
+            };
+        }
+
         var newCount = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.Read && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
 
         var allMailCount = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
         var AllHasNew = newCount > 0;
-        
+
         var spamnCount = _dataContext.Messages.Count(msg => !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
         var spamHasNew = _dataContext.Messages.Any(msg => !msg.Read && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
 
         var trashCount = _dataContext.Messages.Count(msg => msg.Deleted && (!msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass));
         var trashHasNew = _dataContext.Messages.Any(msg => !msg.Read && msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+
+        var favsCount = _dataContext.Messages.Count(msg => msg.Stared && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
 
         var query = _dataContext.Messages
             .AsNoTracking()
@@ -58,6 +78,11 @@ public class ReadableMessageStore : IReadableMessageStore
             {
                 query = query.Where(msg => !msg.Read);
             }
+
+            if (onlySared)
+            {
+                query = query.Where(msg => msg.Stared);
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(filter))
@@ -78,6 +103,7 @@ public class ReadableMessageStore : IReadableMessageStore
                 Id = msg.Id,
                 AttachementsCount = msg.AttachementsCount,
                 From = msg.From,
+                Stared = msg.Stared,
                 Read = msg.Read,
                 Deleted = msg.Deleted,
                 ReceivedOn = msg.ReceivedOn,
@@ -99,6 +125,7 @@ public class ReadableMessageStore : IReadableMessageStore
             Spam = spamnCount,
             Deleted = trashCount,
             Total = allMailCount,
+            Favs = favsCount,
             AllHasNew = AllHasNew,
             SpamHasNew = spamHasNew,
             TrashHasNew = trashHasNew,
@@ -145,29 +172,58 @@ public class ReadableMessageStore : IReadableMessageStore
         return query.Single(msg => msg.Id == msgId);
     }
 
-    public void MarkAsRead(Guid msgId)
+    public void MarkAsRead(List<Guid> msgIds)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
-        msg.Read = true;
-        _dataContext.SaveChanges();
+        _dataContext.Messages
+            .Where(m => msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m => m.Read, true));
+    }
+    public void MarkAsUnread(List<Guid> msgIds)
+    {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        _dataContext.Messages
+            .Where(m => msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m => m.Read, false));
     }
 
-    public void Delete(Guid msgId)
+    public void Delete(List<Guid> msgIds)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
-        msg.Deleted = true;
-        _dataContext.SaveChanges();
+        _dataContext.Messages
+            .Where(m => msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m => m.Deleted, true));
     }
-    public void Undelete(Guid msgId)
+
+    public void Undelete(List<Guid> msgIds)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var msg = _dataContext.Messages.Single(msg => msg.Id == msgId);
-        msg.Deleted = false;
-        _dataContext.SaveChanges();
+        _dataContext.Messages
+            .Where(m => msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m => m.Deleted, false));
+    }
+
+    public void Star(List<Guid> msgIds)
+    {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        _dataContext.Messages
+            .Where(m => msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m => m.Stared, true));
+
+        var msg = _dataContext.Messages.Where(m => msgIds.Contains(m.Id)).ToList();
+    }
+
+    public void Unstar(List<Guid> msgIds)
+    {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        _dataContext.Messages
+            .Where(m => msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m => m.Stared, false));
     }
 }

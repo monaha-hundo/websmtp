@@ -6,15 +6,16 @@
         var result = regex.Matches(singleOrigin);
         if (result.Count == 0)
         {
-            @singleOrigin
+            <span class="text-decoration-none badge rounded-pill text-bg-light fs-6 me-2"
+                >@singleOrigin</span>
         }
         else
         {
 
             var name = result[0].Groups[1];
             var email = result[0].Groups[2];
-            <a class="text-decoration-none badge rounded-pill text-bg-light fs-6 me-2" href="/compose?to=@email" title="@email"
-                >@name</a>
+            <span class="text-decoration-none badge rounded-pill text-bg-light fs-6 me-2"  title="@email"
+                >@name &lt;@email&gt; </span>
         }
     }
 }
