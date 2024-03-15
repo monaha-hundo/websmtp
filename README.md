@@ -8,33 +8,34 @@ Use it to receive local email alerts from devices such as routers, ip cameras, p
 _In active development, partial features, missing features, etc._
 
 ## Login with one time passwords
-![Screenshot from 2024-02-26 09-47-51](https://github.com/monaha-hundo/websmtp/assets/139830086/5d7c567c-6136-4d50-8c31-3526101be3e3)
+![Screenshot from 2024-03-15 08-40-47](https://github.com/monaha-hundo/websmtp/assets/139830086/31cc34b3-8fbf-4d7e-b8ef-69c0274529b7)
 
-## Basic Inbox/All Mail/Trash view
-![Screenshot from 2024-02-26 09-48-18](https://github.com/monaha-hundo/websmtp/assets/139830086/b1dee015-1e6f-4eee-a8b9-916dbcdc5cf2)
+## Basic Inbox/All Mail/Favorites/Trash view
+![Screenshot from 2024-03-15 08-43-49](https://github.com/monaha-hundo/websmtp/assets/139830086/d64d1654-5321-4ace-91e7-8688c37ce7b2)
 
-## Clean email view
-![Screenshot from 2024-02-26 09-48-26](https://github.com/monaha-hundo/websmtp/assets/139830086/aba757c9-139b-4b52-8570-7b1d0a53ca1f)
+## Detailed email view
+![Screenshot from 2024-03-15 08-43-59](https://github.com/monaha-hundo/websmtp/assets/139830086/5cacbaf8-141d-4a14-8fb0-070a1dd843bd)
 
 ## Send Emails
-![Screenshot from 2024-03-02 13-32-52](https://github.com/monaha-hundo/websmtp/assets/139830086/8eb52502-d22c-4462-ad64-beb870d06b4b)
+![Screenshot from 2024-03-15 08-48-10](https://github.com/monaha-hundo/websmtp/assets/139830086/cfc7b55c-250f-4ec1-b79a-75c37fb2abc6)
 
 ## Supports raw message display
-![Screenshot from 2024-02-26 09-48-57](https://github.com/monaha-hundo/websmtp/assets/139830086/a21f1db8-3b4d-404a-8ae7-2d7edfad5af5)
+![Screenshot from 2024-03-15 08-44-24](https://github.com/monaha-hundo/websmtp/assets/139830086/a3d650cf-b5a3-4fe6-b531-721935a78378)
 
-## Supports HTML with media content
-![Screenshot from 2024-02-26 09-49-14](https://github.com/monaha-hundo/websmtp/assets/139830086/ffd58730-f8e1-453b-9d34-64df1cace315)
+## ~~HTML Email with media support~~
+No support for HTML Emails, they are insecure and rendering them securely is out of scope for this project. 
+Maybe add a feature to display them if we really mean to in the settings... It's a pretty important feature...
 
 ## Quick OTP setup with QR code
 ![image](https://github.com/monaha-hundo/websmtp/assets/139830086/07812766-a779-4c36-9975-0dd26a4a60cb)
 
-
-# Made with
+## Made with
 - Asp.Net / .Net 8 / EntityFramework Core
 - Bootstrap (no jquery/javascript)
 - SweetAlert2
 - MailKit / MimeKit
-- MariaDb / Oracle MySql Provider for efc
+- MariaDb / Pomelo's MySQL Provider for .net ~~Oracle MySql Provider for efc~~
 - Otp.Net
 - QRCoder
 - SmtpServer
+- ~~bogus~~
