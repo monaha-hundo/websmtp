@@ -22,6 +22,24 @@ public class ReadableMessageStore : IReadableMessageStore
         _dataContext.ChangeTracker.LazyLoadingEnabled = false;
         _dataContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
+        if (!_dataContext.Messages.Any())
+        {
+
+            return new ListResult
+            {
+                Count = 0,
+                New = 0,
+                Spam = 0,
+                Deleted = 0,
+                Total = 0,
+                Favs = 0,
+                AllHasNew = false,
+                SpamHasNew = false,
+                TrashHasNew = false,
+                Messages = []
+            };
+        }
+
         var newCount = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.Read && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
 
         var allMailCount = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
@@ -61,7 +79,8 @@ public class ReadableMessageStore : IReadableMessageStore
                 query = query.Where(msg => !msg.Read);
             }
 
-            if(onlySared){
+            if (onlySared)
+            {
                 query = query.Where(msg => msg.Stared);
             }
         }

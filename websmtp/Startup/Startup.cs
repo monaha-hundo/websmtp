@@ -64,8 +64,9 @@ public static class Startup
         var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
         var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
         var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
+        var srvVer = ServerVersion.AutoDetect(cs);
 
-        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySQL(cs), ServiceLifetime.Transient, ServiceLifetime.Transient);
+        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
 
         if (builder.Environment.IsProduction())
         {
