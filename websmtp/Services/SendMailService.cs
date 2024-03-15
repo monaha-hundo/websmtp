@@ -82,6 +82,7 @@ public class SendMailService
                 _logger.LogDebug($"Attempt #{attempts}: sent through {exchange}.");
                 _logger.LogTrace(result);
 
+                return;
             }
             catch (Exception ex)
             {
