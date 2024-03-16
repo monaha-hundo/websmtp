@@ -450,3 +450,35 @@ div:where(.swal2-container).swal2-noanimation {
     position: relative;
     top: -1px;
 }
+
+#new--message-form .ql-toolbar.ql-snow {
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom: none;
+}
+
+#new--message-form .ql-container.ql-snow{
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+#new--message-form  .ql-snow .ql-stroke{
+    stroke: white !important;
+}
+#new--message-form  .ql-snow .ql-fill{
+    fill: white;
+}
+
+#new--message-form  .ql-snow .ql-picker {
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-radius: 5px;
+}
+
+#new--message-form  .ql-snow .ql-picker .ql-picker-label{
+    color: white !important; 
+}
+#new--message-form .ql-toolbar.ql-snow .ql-formats{
+    margin-bottom: 8px;
+}

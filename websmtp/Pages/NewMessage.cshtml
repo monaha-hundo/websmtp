@@ -120,7 +120,7 @@ else
             </div>
         </div>
 
-        <div class="row align-items-center my-2">
+        <div id="subject-row" class="row align-items-center my-2 mb-3">
             <div class="col col-auto new--message-label-min-width">
                 Subject:
             </div>
@@ -130,12 +130,13 @@ else
         </div>
 
         <textarea id="body" name="body" class="form-control my-2 flex-1-1-100p" rows="6"></textarea>
+        @* <div id="body" name="body" class="text-white"></div> *@
 
         <div class="row align-items-center justify-content-between my-2">
             <div class="col">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="true" id="html" name="html" disabled>
-                    <label class="form-check-label" for="flexCheckChecked">
+                    <input class="form-check-input" type="checkbox" value="true" id="html" name="html">
+                    <label class="form-check-label" for="html">
                         HTML Message
                     </label>
                 </div>
@@ -151,5 +152,7 @@ else
 }
 @section Scripts {
     <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
+    <link href="~/lib/quill.snow.css" rel="stylesheet" />
+    <script src="~/lib/quill.js"> </script>
     <script src="~/js/newmessage.js"> </script>
 }

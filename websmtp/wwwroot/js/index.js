@@ -1,141 +1,4 @@
-
-window.addEventListener("popstate", (event) => {
-    closeMsgView();
-});
-
-document.querySelectorAll('[open-msg-view]')
-    .forEach(btn => {
-        btn.addEventListener("click", (event) => {
-            let msgId = btn.getAttribute('open-msg-view');
-            openwMsgView(msgId);
-        });
-    });
-
-document.querySelectorAll('[delete-msg-id]')
-    .forEach(btn => {
-        btn.addEventListener("click", (event) => {
-            let msgId = btn.getAttribute('delete-msg-id');
-            deleteMessages([msgId]);
-        });
-    });
-
-document.querySelectorAll('[undelete-msg-id]')
-    .forEach(btn => {
-        btn.addEventListener("click", (event) => {
-            let msgId = btn.getAttribute('undelete-msg-id');
-            undeleteMessages([msgId]);
-        });
-    });
-
-
-
-
-document.querySelectorAll('[read-msg-id]')
-    .forEach(btn => {
-        btn.addEventListener("click", (event) => {
-            let msgId = btn.getAttribute('read-msg-id');
-            markMessagesAsRead([msgId]);
-            btn.classList.add('d-none');
-            let inverseBtnEl = document.querySelector(`[unread-msg-id="${msgId}"]`);
-            inverseBtnEl.classList.remove('d-none');
-        });
-    });
-
-document.querySelectorAll('[unread-msg-id]')
-    .forEach(btn => {
-        btn.addEventListener("click", (event) => {
-            let msgId = btn.getAttribute('unread-msg-id');
-            markMessagesAsUnread([msgId]);
-            btn.classList.add('d-none');
-            let inverseBtnEl = document.querySelector(`[read-msg-id="${msgId}"]`);
-            inverseBtnEl.classList.remove('d-none');
-        });
-    });
-
-
-
-document.getElementById('new--msg--btn')
-    ?.addEventListener("click", () => {
-        newMessage();
-    });
-
-document.getElementById('msg--list-checkbox_all')
-    ?.addEventListener("click", async (event) => {
-        event.preventDefault();
-        event.bubbles = false;
-        const clickEvent = new Event("click");
-        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
-            .filter(el => el.id != 'msg--list-checkbox_all');
-        selectedMsgIds.forEach(el => el.dispatchEvent(clickEvent));
-    });
-
-document.getElementById('delete-selected')
-    ?.addEventListener("click", async () => {
-        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
-            .filter(el => el.getAttribute('checked') === 'true')
-            .map(el => el.getAttribute('msg-id'));
-        await deleteMessages(selectedMsgIds);
-    });
-
-document.getElementById('mark-selected-as-read')
-    ?.addEventListener("click", async () => {
-        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
-            .filter(el => el.getAttribute('checked') === 'true')
-            .map(el => el.getAttribute('msg-id'));
-        await markMessagesAsRead(selectedMsgIds);
-    });
-
-document.getElementById('mark-selected-as-unread')
-    ?.addEventListener("click", async () => {
-        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
-            .filter(el => el.getAttribute('checked') === 'true')
-            .map(el => el.getAttribute('msg-id'));
-        await markMessagesAsUnread(selectedMsgIds);
-    });
-
-document.querySelectorAll('[id^=msg--list-checkbox_]')
-    .forEach(el => {
-        el.addEventListener("click", (event) => {
-            event.preventDefault();
-            event.bubbles = false;
-            let containerEl = event.currentTarget;
-            let isStared = containerEl.getAttribute('checked') === "true";
-            let newStatus = !isStared;
-            containerEl.setAttribute('checked', newStatus);
-            if (newStatus) {
-                containerEl.querySelectorAll('.bi.bi-square')[0].classList.add('d-none');
-                containerEl.querySelectorAll('.bi.bi-check-square')[0].classList.remove('d-none');
-            } else {
-                containerEl.querySelectorAll('.bi.bi-square')[0].classList.remove('d-none');
-                containerEl.querySelectorAll('.bi.bi-check-square')[0].classList.add('d-none');
-            }
-            updateSelectedMessages();
-        });
-    });
-
-document.querySelectorAll('[id^=msg--list-star_]')
-    .forEach(el => {
-        el.addEventListener("click", async (event) => {
-            event.preventDefault();
-            event.bubbles = false;
-            let containerEl = event.currentTarget;
-            let msgId = containerEl.id.replace('msg--list-star_', '');
-            let isStared = containerEl.getAttribute('checked') === "true";
-            let newStatus = !isStared;
-            containerEl.setAttribute('checked', newStatus);
-            if (newStatus) {
-                if (await starMessages([msgId])) {
-                    containerEl.querySelectorAll('.bi.bi-star')[0].classList.add('d-none');
-                    containerEl.querySelectorAll('.bi.bi-star-fill')[0].classList.remove('d-none');
-                }
-            } else {
-                if (await unstarMessages([msgId])) {
-                    containerEl.querySelectorAll('.bi.bi-star')[0].classList.remove('d-none');
-                    containerEl.querySelectorAll('.bi.bi-star-fill')[0].classList.add('d-none');
-                }
-            }
-        });
-    });
+"using strict";
 
 function updateSelectedMessages() {
     let multiSelectActionsEl = document.getElementById('multiple--selection');
@@ -146,9 +9,6 @@ function updateSelectedMessages() {
     } else {
         multiSelectActionsEl.classList.add('d-none');
     }
-    // let selectedMsgIds = selectedMsgEls
-    //     .filter(el => el.getAttribute('checked') === 'true')
-    //     .map(el => el.getAttribute('msg-id'));
 }
 
 function initNavbar() {
@@ -197,7 +57,7 @@ function initNavbar() {
 
 var previousListingScrollPos = 0;
 async function openwMsgView(msgId, showRaw) {
-    event.preventDefault();
+    event?.preventDefault();
 
     markMessagesAsRead([msgId]);
     let listEl = document.querySelector('.list');
@@ -414,41 +274,9 @@ function nextMessage(msgId) {
     openwMsgView(prevMsgId);
 }
 
-function handleMessage(event) {
-    if (event.origin != window.location.origin) { return; }
-    let msgType = event.data.split(':')[0];
-    let msgParam = event.data.split(':')[1];
-    switch (msgType) {
-        case 'set-size':
-            document.querySelector('#msg-view').style.height = msgParam + 'px';
-            return;
-        case 'close-msg':
-            //closeMsgView();
-            history.back();
-            return;
-        case 'read-msg':
-            markMessagesAsRead([msgParam]);
-            return;
-        case 'unread-msg':
-            markMessagesAsUnread([msgParam]);
-            return;
-        case 'undelete-msg':
-            undeleteMessages([msgParam]);
-            return;
-        case 'delete-msg':
-            deleteMessages([msgParam]);
-            return;
-        case 'previous-msg':
-            previousMessage(msgParam);
-            return;
-        case 'next-msg':
-            nextMessage(msgParam);
-            return;
-        case 'raw-msg':
-            closeMsgView();
-            openwMsgView(msgParam, true);
-            return;
-    }
+function openRawMsg(msgId){
+    closeMsgView();
+    openwMsgView(msgId, true);
 }
 
 function newMessage(to) {
@@ -463,5 +291,158 @@ function newMessage(to) {
     sectionEl.classList.remove('d-none');
 }
 
-window.addEventListener('message', handleMessage, false);
+const handleMarkSelectedAsRead = async () => {
+    let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+        .filter(el => el.getAttribute('checked') === 'true')
+        .map(el => el.getAttribute('msg-id'));
+    await markMessagesAsRead(selectedMsgIds);
+};
+
+const handleStarClick = async (event) => {
+    if (event.type == 'keyup' &&
+        (event.key != 'Enter' || event.key == 'Space')) {
+        console.log('skipping keyup');
+        return;
+    };
+    event.preventDefault();
+    event.bubbles = false;
+    let containerEl = event.currentTarget;
+    let msgId = containerEl.id.replace('msg--list-star_', '');
+    let isStared = containerEl.getAttribute('checked') === "true";
+    let newStatus = !isStared;
+    containerEl.setAttribute('checked', newStatus);
+    if (newStatus) {
+        if (await starMessages([msgId])) {
+            containerEl.querySelectorAll('.bi.bi-star')[0].classList.add('d-none');
+            containerEl.querySelectorAll('.bi.bi-star-fill')[0].classList.remove('d-none');
+        }
+    } else {
+        if (await unstarMessages([msgId])) {
+            containerEl.querySelectorAll('.bi.bi-star')[0].classList.remove('d-none');
+            containerEl.querySelectorAll('.bi.bi-star-fill')[0].classList.add('d-none');
+        }
+    }
+};
+
+const handleCheckboxClick = (event) => {
+    if (event.type == 'keyup' &&
+        (event.key != 'Enter' || event.key == 'Space')) {
+        console.log('skipping keyup');
+        return;
+    };
+    event.preventDefault();
+    event.bubbles = false;
+    let containerEl = event.currentTarget;
+    let isStared = containerEl.getAttribute('checked') === "true";
+    let newStatus = !isStared;
+    containerEl.setAttribute('checked', newStatus);
+    if (newStatus) {
+        containerEl.querySelectorAll('.bi.bi-square')[0].classList.add('d-none');
+        containerEl.querySelectorAll('.bi.bi-check-square')[0].classList.remove('d-none');
+    } else {
+        containerEl.querySelectorAll('.bi.bi-square')[0].classList.remove('d-none');
+        containerEl.querySelectorAll('.bi.bi-check-square')[0].classList.add('d-none');
+    }
+    updateSelectedMessages();
+}
+
+const handleMarkSelectedAsUnread = async () => {
+    let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+        .filter(el => el.getAttribute('checked') === 'true')
+        .map(el => el.getAttribute('msg-id'));
+    await markMessagesAsUnread(selectedMsgIds);
+};
+window.addEventListener("popstate", (event) => {
+    closeMsgView();
+});
+
+document.querySelectorAll('[open-msg-view]')
+    .forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            let msgId = btn.getAttribute('open-msg-view');
+            openwMsgView(msgId);
+        });
+    });
+
+document.querySelectorAll('[delete-msg-id]')
+    .forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            let msgId = btn.getAttribute('delete-msg-id');
+            deleteMessages([msgId]);
+        });
+    });
+
+document.querySelectorAll('[undelete-msg-id]')
+    .forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            let msgId = btn.getAttribute('undelete-msg-id');
+            undeleteMessages([msgId]);
+        });
+    });
+
+document.querySelectorAll('[read-msg-id]')
+    .forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            let msgId = btn.getAttribute('read-msg-id');
+            markMessagesAsRead([msgId]);
+            btn.classList.add('d-none');
+            let inverseBtnEl = document.querySelector(`[unread-msg-id="${msgId}"]`);
+            inverseBtnEl.classList.remove('d-none');
+        });
+    });
+
+document.querySelectorAll('[unread-msg-id]')
+    .forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            let msgId = btn.getAttribute('unread-msg-id');
+            markMessagesAsUnread([msgId]);
+            btn.classList.add('d-none');
+            let inverseBtnEl = document.querySelector(`[read-msg-id="${msgId}"]`);
+            inverseBtnEl.classList.remove('d-none');
+        });
+    });
+
+document.getElementById('new--msg--btn')
+    ?.addEventListener("click", () => {
+        newMessage();
+    });
+
+document.getElementById('msg--list-checkbox_all')
+    ?.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.bubbles = false;
+        const clickEvent = new Event("click");
+        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+            .filter(el => el.id != 'msg--list-checkbox_all');
+        selectedMsgIds.forEach(el => el.dispatchEvent(clickEvent));
+    });
+
+document.getElementById('delete-selected')
+    ?.addEventListener("click", async () => {
+        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+            .filter(el => el.getAttribute('checked') === 'true')
+            .map(el => el.getAttribute('msg-id'));
+        await deleteMessages(selectedMsgIds);
+    });
+
+document.getElementById('mark-selected-as-read')
+    ?.addEventListener("click", handleMarkSelectedAsRead);
+
+
+document.getElementById('mark-selected-as-unread')
+    ?.addEventListener("click", handleMarkSelectedAsUnread);
+
+document.querySelectorAll('[id^=msg--list-checkbox_]')
+    .forEach(el => {
+        el.addEventListener("click", handleCheckboxClick);
+        el.addEventListener("keyup", handleCheckboxClick);
+    });
+
+
+document.querySelectorAll('[id^=msg--list-star_]')
+    .forEach(el => {
+        el.addEventListener("click", handleStarClick);
+        el.addEventListener("keyup", handleStarClick);
+    });
+
 initNavbar();

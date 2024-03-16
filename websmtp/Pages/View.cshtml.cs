@@ -10,7 +10,7 @@ public class MessageViewModel : PageModel
 {
     [FromQuery] public Guid MsgId { get; set; } = Guid.Empty;
     [FromQuery] public bool ShowRaw { get; set; } = false;
-    private readonly ILogger<IndexModel> _logger;
+    private readonly ILogger<IndexModel> _logger;   
     private readonly IReadableMessageStore _messageStore;
 
     public Message Message { get; set; }
