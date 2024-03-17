@@ -300,7 +300,7 @@ function newMessage(to) {
 }
 
 const handleMarkSelectedAsRead = async () => {
-    let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+    let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]:not(#msg--list-checkbox_all)')]
         .filter(el => el.getAttribute('checked') === 'true')
         .map(el => el.getAttribute('msg-id'));
     await markMessagesAsRead(selectedMsgIds);
@@ -355,7 +355,7 @@ const handleCheckboxClick = (event) => {
 }
 
 const handleMarkSelectedAsUnread = async () => {
-    let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+    let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]:not(#msg--list-checkbox_all)')]
         .filter(el => el.getAttribute('checked') === 'true')
         .map(el => el.getAttribute('msg-id'));
     await markMessagesAsUnread(selectedMsgIds);
@@ -427,7 +427,7 @@ document.getElementById('msg--list-checkbox_all')
 
 document.getElementById('delete-selected')
     ?.addEventListener("click", async () => {
-        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
+        let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]:not(#msg--list-checkbox_all)')]
             .filter(el => el.getAttribute('checked') === 'true')
             .map(el => el.getAttribute('msg-id'));
         await deleteMessages(selectedMsgIds);

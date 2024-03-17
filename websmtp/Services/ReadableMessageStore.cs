@@ -48,8 +48,8 @@ public class ReadableMessageStore : IReadableMessageStore
         var spamnCount = _dataContext.Messages.Count(msg => !msg.Sent && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
         var spamHasNew = _dataContext.Messages.Any(msg => !msg.Sent && !msg.Read && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
 
-        var trashCount = _dataContext.Messages.Count(msg => !msg.Sent && msg.Deleted && (!msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass));
-        var trashHasNew = _dataContext.Messages.Any(msg => !msg.Sent && !msg.Read && msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var trashCount = _dataContext.Messages.Count(msg => !msg.Sent && msg.Deleted );
+        var trashHasNew = _dataContext.Messages.Any(msg => !msg.Sent && msg.Deleted);
 
         var favsCount = _dataContext.Messages.Count(msg => !msg.Sent && msg.Stared && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
 

@@ -12,8 +12,8 @@
 <a class="logout--btn btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed" href="/logout" title="Log Out">
     <i class="bi bi-door-open fs-1_5rem"></i>
 </a>
-<btn class="hamburger--btn btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed d-xl-none" >
-<i class="bi bi-list fs-1_5rem"></i>
+<btn class="hamburger--btn btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed d-xl-none">
+    <i class="bi bi-list fs-1_5rem"></i>
 </btn>
 
 <partial name="Sidebar" model="Model.Listing" />
@@ -64,8 +64,8 @@
                 <div href="/View?msgId=@message.Id"
                     class='list-group-item list-group-item-action border-left-none px-1 py-2 @(message.Read ? "" : "unread")'
                     msg-id="@message.Id">
-                    <div class="row align-items-center  g-0 px-2">
-                        <div class="col-12 col-lg-3 d-flex align-items-center">
+                    <div class="row align-items-center  g-0 px-2 flex-lg-nowrap">
+                        <div class="col-12 col-lg-2 d-flex align-items-center">
                             <span class="me-3" id="msg--list-checkbox_@message.Id" msg-id="@message.Id" checked="false"
                                 tabindex="0">
                                 <i class="bi bi-square"></i>
@@ -82,13 +82,13 @@
                                 var result = regex.Matches(singleOrigin);
                                 if (result.Count == 0)
                                 {
-                                    <span class="text-nowrap">@message.From</span>
+                                    <span class="text-nowrap text-truncate">@message.From</span>
                                 }
                                 else
                                 {
                                     var name = result[0].Groups[1];
                                     var email = result[0].Groups[2]; ;
-                                    <span title="@email" class="me-2 text-nowrap">@name</span>
+                                    <span title="@email" class="me-2 text-nowrap text-truncate">@name</span>
                                 }
                             }
                         </div>
