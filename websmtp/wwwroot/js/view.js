@@ -39,13 +39,13 @@ document.getElementById('btn--unread')
         markAsUnread();
     });
 
-
 function showHtmlContent(el) {
     var el = document.getElementById("html-content");
     let isVisible = el.style.display == 'block';
     let visibility = isVisible ? 'none' : 'block';
     el.style.display = visibility;
 }
+
 function showSource(el) {
     var el = document.getElementById("source-content");
     let isVisible = el.style.display == 'block';
@@ -53,44 +53,43 @@ function showSource(el) {
     el.style.display = visibility;
 }
 function closeMsg() {
-    window.parent.postMessage(`close-msg:_`, window.location.origin);
+    history.back();
 }
 async function deleteMsg() {
-    //window.parent.postMessage(`delete-msg:${msgId}`, window.location.origin);
     await window.parent.deleteMessages([msgId]);
     document.getElementById('btn--undelete').classList.remove('d-none');
     document.getElementById('btn--delete').classList.add('d-none');
 }
 async function undeleteMsg() {
-    //window.parent.postMessage(`undelete-msg:${msgId}`, window.location.origin);
     await window.parent.undeleteMessages([msgId]);
     document.getElementById('btn--undelete').classList.add('d-none');
     document.getElementById('btn--delete').classList.remove('d-none');
 }
 async function markAsRead() {
-    //window.parent.postMessage(`read-msg:${msgId}`, window.location.origin);
     await window.parent.markMessagesAsRead([msgId]);
     document.getElementById('btn--unread').classList.remove('d-none');
     document.getElementById('btn--read').classList.add('d-none');
 }
 async function markAsUnread() {
-    //window.parent.postMessage(`unread-msg:${msgId}`, window.location.origin);
     await window.parent.markMessagesAsUnread([msgId]);
     document.getElementById('btn--unread').classList.add('d-none');
     document.getElementById('btn--read').classList.remove('d-none');
 }
 function previousMsg() {
-    window.parent.postMessage(`previous-msg:${msgId}`, window.location.origin);
+    window.parent.previousMessage(msgId);
 }
 function nextMsg() {
-    window.parent.postMessage(`next-msg:${msgId}`, window.location.origin);
+    window.parent.nextMessage(msgId);
 }
 function showRawMsg() {
-    window.parent.postMessage(`raw-msg:${msgId}`, window.location.origin);
-    //document.location.href = document.location.href + '&showRaw=true';
+    window.parent.openRawMsg(msgId);
 }
 
-var viewResizeInterval = setInterval(() => window.parent.postMessage(`set-size:${document.documentElement.scrollHeight}`, window.location.origin), 100);
+var viewResizeInterval = setInterval(() => {
+    let height = document.documentElement.scrollHeight;
+    if (height == 0) return;
+    window.parent.document.querySelector('#msg-view').style.height = height + 'px';
+}, 100);
 
 var innerViewResizeInterval = setInterval(() => {
     let iframeEl = document.getElementById('html-content');

@@ -4,13 +4,12 @@ using MimeKit;
 
 namespace websmtp.Database.Models;
 
-public class Message : IMessage
+public class SentMessage : IMessage
 {
     public Guid Id { get; set; } = Guid.Empty;
-    public Guid RawMessageId { get; set; } = Guid.Empty;
-    [ForeignKey("RawMessageId")] public RawMessage RawMessage { get; set; } = null!; // A message will always have an associated raw message.
+
     public DateTimeOffset ReceivedOn { get; set; } = DateTimeOffset.MinValue;
-    //public long Size { get; set; }
+    
     [StringLength(1000)] public string Subject { get; set; } = string.Empty;
     [StringLength(1000)] public string From { get; set; } = string.Empty;
     [StringLength(1000)] public string To { get; set; } = string.Empty;
@@ -19,7 +18,7 @@ public class Message : IMessage
     [StringLength(8)] public string Importance { get; set; } = string.Empty;
     public string? TextContent { get; set; }
     public string? HtmlContent { get; set; }
-    public List<MessageAttachement> Attachements { get; set; } = [];
+    public List<SentMessageAttachement> Attachements { get; set; } = [];
     public int AttachementsCount { get; set; }
     public bool Stared { get; set; }
     public bool Read { get; set; }
@@ -28,34 +27,34 @@ public class Message : IMessage
     public SpfVerifyResult SpfStatus { get; set; }
     public bool DmarcFailed { get; set; }
 
-    public Message()
+    public SentMessage()
     {
 
     }
 
-    public Message(MimeMessage _mimeMessage)
+    public SentMessage(MimeMessage mimeMessage)
     {
         ReceivedOn = DateTimeOffset.UtcNow;
 
-        Subject = _mimeMessage.Subject;
+        Subject = mimeMessage.Subject;
 
-        var allFrom = _mimeMessage.From?.Select(f => f.ToString())?.ToList() ?? [];
+        var allFrom = mimeMessage.From?.Select(f => f.ToString())?.ToList() ?? [];
 
         From = string.Join(',', allFrom);
 
-        var allTo = _mimeMessage.To?.Select(f => f.ToString())?.ToList() ?? [];
+        var allTo = mimeMessage.To?.Select(f => f.ToString())?.ToList() ?? [];
 
         To = string.Join(',', allTo);
 
-        var allCc = _mimeMessage.Cc?.Select(f => f.ToString())?.ToList() ?? [];
+        var allCc = mimeMessage.Cc?.Select(f => f.ToString())?.ToList() ?? [];
 
         Cc = string.Join(',', allCc);
 
-        var allBcc = _mimeMessage.Bcc?.Select(f => f.ToString())?.ToList() ?? [];
+        var allBcc = mimeMessage.Bcc?.Select(f => f.ToString())?.ToList() ?? [];
 
         Bcc = string.Join(',', allBcc);
 
-        Importance = _mimeMessage.Importance switch
+        Importance = mimeMessage.Importance switch
         {
             MessageImportance.Low => "Low",
             MessageImportance.Normal => "Normal",
@@ -63,20 +62,20 @@ public class Message : IMessage
             _ => string.Empty,
         };
 
-        var textContent = _mimeMessage.GetTextBody(MimeKit.Text.TextFormat.Text);
+        var textContent = mimeMessage.GetTextBody(MimeKit.Text.TextFormat.Text);
         TextContent = textContent;
 
-        if (_mimeMessage.HtmlBody != null)
+        if (mimeMessage.HtmlBody != null)
         {
-            var htmlContent = _mimeMessage.HtmlBody
+            var htmlContent = mimeMessage.HtmlBody
                 ?? throw new Exception("Could not read message HtmlBody");
 
-            var bodyParts = _mimeMessage.BodyParts
+            var bodyParts = mimeMessage.BodyParts
                 .Where(a => !string.IsNullOrEmpty(a.ContentId))
                 .Select(a => new MessageAttachement(a))
                 .ToList();
 
-            var realAttachments = _mimeMessage.Attachments
+            var realAttachments = mimeMessage.Attachments
                 .Where(a => a.IsAttachment)
                 .Select(a => new MessageAttachement(a))
                 .ToList();
@@ -102,11 +101,11 @@ public class Message : IMessage
             HtmlContent = base64HtmlContent;
         }
 
-        if (_mimeMessage.Attachments.Any())
+        if (mimeMessage.Attachments.Any())
         {
-            Attachements = _mimeMessage.Attachments
+            Attachements = mimeMessage.Attachments
                             .Where(a => a.IsAttachment)
-                            .Select(a => new MessageAttachement(a))
+                            .Select(a => new SentMessageAttachement(a))
                             .ToList();
 
             AttachementsCount = Attachements.Count;

@@ -210,15 +210,16 @@ public class Basic
         var dnsPort = config.GetValue<int>("DNS:Port");
 
         var masterFile = new MasterFile();
-        masterFile.AddIPAddressResourceRecord("websmtp.local", "127.0.0.1");
-        masterFile.AddMailExchangeResourceRecord("websmtp.local", 10, "localhost");
-        masterFile.AddTextResourceRecord("dkim._domainkey.websmtp.local", "dkim", "v=DKIM1; p=" + publicKey);
-        masterFile.AddTextResourceRecord("websmtp.local", "v", "spf1 +all");
+        // masterFile.AddIPAddressResourceRecord("websmtp.local", "127.0.0.1");
+        // masterFile.AddMailExchangeResourceRecord("websmtp.local", 10, "localhost");
+        // masterFile.AddTextResourceRecord("dkim._domainkey.websmtp.local", "dkim", "v=DKIM1; p=" + publicKey);
+        // masterFile.AddTextResourceRecord("websmtp.local", "v", "spf1 +all");
 
         domains.GroupBy(d => d).Select(dG => dG.FirstOrDefault()).ToList().ForEach(dmn =>
         {
             masterFile.AddIPAddressResourceRecord(dmn, "127.0.0.1");
             masterFile.AddMailExchangeResourceRecord(dmn, 10, "localhost");
+            masterFile.AddTextResourceRecord($"dkim._domainkey.{dmn}", "dkim", "v=DKIM1; p=" + publicKey);
             masterFile.AddTextResourceRecord(dmn, "v", "spf1 +all");
         });
         using var server = new DnsServer(masterFile);

@@ -6,15 +6,17 @@ public static class MessagesEndpoints
 {
     public static IResult GetMessage(
     [FromRoute] Guid msgId,
-    [FromServices] IReadableMessageStore messages
+    [FromServices] IReadableMessageStore messages,
+    [FromServices] IConfiguration config
 )
     {
         var message = messages.Single(msgId) ?? throw new Exception("Could not find message");
+        var displayHtml = config.GetValue<bool>("Security:EnableHtmlDisplay");
         if (!string.IsNullOrWhiteSpace(message.HtmlContent))
         {
             var contentBytes = Convert.FromBase64String(message.HtmlContent);
             var html = System.Text.Encoding.Default.GetString(contentBytes);
-            var mimeType = "text/plain";
+            var mimeType = displayHtml ? "text/html" : "text/plain";
             return Results.Content(html, mimeType);
         }
         if (!string.IsNullOrWhiteSpace(message.TextContent))

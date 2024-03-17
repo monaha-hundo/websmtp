@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using MimeKit;
 using websmtp;
+using websmtp.Database;
+using websmtp.Database.Models;
 
 namespace MyApp.Namespace
 {
@@ -12,11 +14,13 @@ namespace MyApp.Namespace
         private readonly Regex emailWithNameRegEx = EmailWithNameRegEx();
 
         private readonly ILogger<SendMailService> _logger;
+        private readonly DataContext _data;
 
-        public NewMessageModel(SendMailService sendMail, ILogger<SendMailService> logger)
+        public NewMessageModel(SendMailService sendMail, ILogger<SendMailService> logger, DataContext data)
         {
             _logger = logger;
             _sendMail = sendMail;
+            _data = data;
         }
 
         readonly SendMailService _sendMail;
@@ -118,8 +122,13 @@ namespace MyApp.Namespace
 
                 var mimeMessage = MimeMessage.CreateFromMailMessage(mailMessage);
 
+                // var sentMessage = new SentMessage(mimeMessage);
+                // _data.SentMessages.Add(sentMessage);
+                // _data.SaveChanges();
+                
                 _sendMail.SendMail(mimeMessage);
                 Sent = true;
+                
             }
             catch (Exception ex)
             {

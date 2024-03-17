@@ -104,16 +104,21 @@ public static class Startup
             app.UseHsts();
         }
 
+        var enableHtmlMedia = app.Configuration.GetValue<bool>("Security:EnableMediaInHtml");
+
         var cspHeaderName = "Content-Security-Policy";
         var csp = new Dictionary<string, List<string>>()
-    {
-        {"default-src", new List<string>{"self"}},
-        {"connect-src", new List<string>{"self"}},
-        {"script-src", new List<string>{"self"}},
-        {"img-src", new List<string>{"self"}},
-        {"style-src", new List<string>{"self"}},
-        {"frame-src", new List<string>{"self"}}
-    };
+        {
+            {"default-src", new List<string>{"self"}},
+            {"connect-src", new List<string>{"self"}},
+            {"script-src", new List<string>{"self"}},
+            {"img-src", new List<string>{"self"}},
+            {"style-src", new List<string>{"self"}},
+            {"frame-src", new List<string>{"self"}}
+        };
+
+        csp["img-src"].Add("data:");
+
         var cspHeaderValue = string.Join("; ", csp.Keys.Select(c => $"{c} {string.Join(' ', csp[c].Select(s => s == "data:" ? s : "'" + s + "'"))}"));
 
         app.Use(async (context, next) =>

@@ -62,7 +62,6 @@ public class SendMailService
         foreach (var exchangeRecord in response)
         {
             attempts++;
-
             try
             {
                 if (exchangeRecord == "localhost")
@@ -89,6 +88,8 @@ public class SendMailService
                 _logger.LogCritical($"Attempt #{attempts} failed: {ex.Message}.");
             }
         }
+
+        throw new Exception ("Could not deliver the mail. Maybe try later.");
 
     }
 
