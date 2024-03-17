@@ -1,21 +1,21 @@
 var msgId = document.getElementById('msg--id').value;
 
 document.getElementById('btn--close')
-    .addEventListener("click", () => {
+    ?.addEventListener("click", () => {
         closeMsg();
     });
 document.getElementById('btn--previous')
-    .addEventListener("click", () => {
+    ?.addEventListener("click", () => {
         previousMsg();
     });
 
 document.getElementById('btn--next')
-    .addEventListener("click", () => {
+    ?.addEventListener("click", () => {
         nextMsg();
     });
 
 document.getElementById('btn--raw')
-    .addEventListener("click", () => {
+    ?.addEventListener("click", () => {
         showRawMsg();
     });
 

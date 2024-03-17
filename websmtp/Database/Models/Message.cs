@@ -7,6 +7,7 @@ namespace websmtp.Database.Models;
 public class Message : IMessage
 {
     public Guid Id { get; set; } = Guid.Empty;
+    public bool Sent { get; set; }
     public Guid RawMessageId { get; set; } = Guid.Empty;
     [ForeignKey("RawMessageId")] public RawMessage RawMessage { get; set; } = null!; // A message will always have an associated raw message.
     public DateTimeOffset ReceivedOn { get; set; } = DateTimeOffset.MinValue;

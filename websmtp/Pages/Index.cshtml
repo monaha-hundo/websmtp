@@ -12,6 +12,9 @@
 <a class="logout--btn btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed" href="/logout" title="Log Out">
     <i class="bi bi-door-open fs-1_5rem"></i>
 </a>
+<btn class="hamburger--btn btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed d-xl-none">
+    <i class="bi bi-list fs-1_5rem"></i>
+</btn>
 
 <partial name="Sidebar" model="Model.Listing" />
 
@@ -20,8 +23,8 @@
 
         <partial name="SearchForm" model="Model" />
 
-        <div class="list list-group h-100 overflow-y-scroll position-relative">
-            <div class="list-group-item  border-left-none px-1 py-2 ">
+        <div id="messages--list" class="list list-group h-100 overflow-y-scroll position-relative max-height-100p">
+            <div id="messages--list--header" class="list-group-item  border-left-none px-1 position-sticky ">
                 <div class="row align-items-center  g-0 px-2">
                     <div class="col-auto d-flex align-items-center">
                         <span class="me-3" id="msg--list-checkbox_all" checked="false" tabindex="0">
@@ -32,11 +35,13 @@
                     <div class="col-auto text-truncate d-flex align-items-center ">
                         <span class="text-capitalize fs-3 me-3">@Model.Mailbox</span>
                         <span class="d-none" id="multiple--selection">
-                            <button class="btn btn-secondary me-3" id="delete-selected">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            @if (Model.Mailbox != "trash" && Model.Mailbox != "sent")
+                            {
+                                <button class="btn btn-secondary me-3" id="delete-selected">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            }
                             <button class="btn btn-secondary me-3" id="mark-selected-as-read">
-
                                 <i class="bi bi-eye-fill"></i>
                             </button>
                             <button class="btn btn-secondary me-3" id="mark-selected-as-unread">
@@ -59,9 +64,10 @@
                 <div href="/View?msgId=@message.Id"
                     class='list-group-item list-group-item-action border-left-none px-1 py-2 @(message.Read ? "" : "unread")'
                     msg-id="@message.Id">
-                    <div class="row align-items-center  g-0 px-2">
+                    <div class="row align-items-center  g-0 px-2 flex-lg-nowrap">
                         <div class="col-12 col-lg-2 d-flex align-items-center">
-                            <span class="me-3" id="msg--list-checkbox_@message.Id" msg-id="@message.Id" checked="false" tabindex="0">
+                            <span class="me-3" id="msg--list-checkbox_@message.Id" msg-id="@message.Id" checked="false"
+                                tabindex="0">
                                 <i class="bi bi-square"></i>
                                 <i class="bi bi-check-square d-none"></i>
                             </span>
@@ -76,21 +82,23 @@
                                 var result = regex.Matches(singleOrigin);
                                 if (result.Count == 0)
                                 {
-                                    <span class="text-nowrap">@message.From</span>
+                                    <span class="text-nowrap text-truncate">@message.From</span>
                                 }
                                 else
                                 {
                                     var name = result[0].Groups[1];
                                     var email = result[0].Groups[2]; ;
-                                    <span title="@email" class="me-2 text-nowrap">@name</span>
+                                    <span title="@email" class="me-2 text-nowrap text-truncate">@name</span>
                                 }
                             }
                         </div>
-                        <div class="col-12 col-lg-auto flex-shrink-1 text-truncate cursor-pointer text-no-wrap" open-msg-view="@message.Id" tabindex="0">
+                        <div class="col-12 col-lg-auto flex-shrink-1 text-truncate cursor-pointer text-no-wrap"
+                            open-msg-view="@message.Id" tabindex="0">
                             @message.Subject
                         </div>
                         <div class="col col-auto flex-grow-1"></div>
-                        <div class="col-12 col-lg-auto d-flex justify-content-start justify-lg-content-between align-items-center">
+                        <div
+                            class="col-12 col-lg-auto d-flex justify-content-start justify-lg-content-between align-items-center">
                             @if (message.AttachementsCount > 0)
                             {
                                 <span class="me-2"><i class="bi bi-paperclip"></i>@message.AttachementsCount</span>
@@ -103,10 +111,9 @@
                                     <i class="bi bi-recycle"></i>
                                 </button>
                             }
-                            else
+                            else if (Model.Mailbox != "sent")
                             {
-                                <button type="button" class="btn btn-sm btn-outlined rounded-pill"
-                                    delete-msg-id="@message.Id">
+                                <button type="button" class="btn btn-sm btn-outlined rounded-pill" delete-msg-id="@message.Id">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             }
@@ -116,11 +123,11 @@
                                 <i class="bi bi-eye-fill"></i>
                             </button>
                             <button type="button"
-                                class='btn btn-sm btn-outlined rounded-pill me-2@(message.Read?"":"d-none")'
+                                class='btn btn-sm btn-outlined rounded-pill me-2 @(message.Read?"":"d-none")'
                                 unread-msg-id="@message.Id">
                                 <i class="bi bi-eye-slash-fill"></i>
                             </button>
-                            
+
                             @if (DateTime.UtcNow - message.ReceivedOn < TimeSpan.FromHours(1))
                             {
                                 <span title="@message.ReceivedOn.ToLocalTime()">

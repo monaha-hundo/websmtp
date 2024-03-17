@@ -356,7 +356,7 @@ public class Basic
             mimeMessages.ForEach(sendMailService.SendMail);
 
             var savedMessageCount = db.Messages.Count(msg => msg.Subject.Contains(testRunId));
-            var filterResult = msgStore.Latest(1, 1000, false, false, true, false, msgGuidToFind);
+            var filterResult = msgStore.Latest(1, 1000, false, false, true, false, false, msgGuidToFind);
 
             Assert.IsTrue(filterResult.Count == 1);
         }
