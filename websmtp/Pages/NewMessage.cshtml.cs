@@ -122,13 +122,27 @@ namespace MyApp.Namespace
 
                 var mimeMessage = MimeMessage.CreateFromMailMessage(mailMessage);
 
-                // var sentMessage = new SentMessage(mimeMessage);
-                // _data.SentMessages.Add(sentMessage);
-                // _data.SaveChanges();
-                
+                using var transaction = _data.Database.BeginTransaction();
+                using var memory = new MemoryStream();
+                mimeMessage.WriteTo(FormatOptions.Default, memory);
+                var rawSentMessage = new RawMessage()
+                {
+                    Content = memory.ToArray()
+                };
+                _data.RawMessages.Add(rawSentMessage);
+                _data.SaveChanges();
+
+                var sentMessage = new Message(mimeMessage)
+                {
+                    RawMessageId = rawSentMessage.Id,
+                    Sent = true
+                };
+                _data.Messages.Add(sentMessage);
+                _data.SaveChanges();
+
                 _sendMail.SendMail(mimeMessage);
                 Sent = true;
-                
+                transaction.Commit();
             }
             catch (Exception ex)
             {

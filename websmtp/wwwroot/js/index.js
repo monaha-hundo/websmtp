@@ -15,6 +15,7 @@ function initNavbar() {
     let inbox = window.location.href.endsWith('/inbox');
     let all = window.location.href.endsWith('/all');
     let favorites = window.location.href.endsWith('/favorites');
+    let sent = window.location.href.endsWith('/sent');
     let spam = window.location.href.endsWith('/spam');
     let trash = window.location.href.endsWith('/trash');
 
@@ -28,6 +29,13 @@ function initNavbar() {
 
     if (favorites) {
         const selector = `#btn-mailbox-fav`;
+        const mailboxEl = document.querySelector(selector);
+        mailboxEl.classList.remove('btn-transparent-primary');
+        mailboxEl.classList.add('btn-dark', 'active');
+    }
+
+    if (sent) {
+        const selector = `#btn-mailbox-sent`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
         mailboxEl.classList.add('btn-dark', 'active');
@@ -274,7 +282,7 @@ function nextMessage(msgId) {
     openwMsgView(prevMsgId);
 }
 
-function openRawMsg(msgId){
+function openRawMsg(msgId) {
     closeMsgView();
     openwMsgView(msgId, true);
 }
@@ -444,5 +452,18 @@ document.querySelectorAll('[id^=msg--list-star_]')
         el.addEventListener("click", handleStarClick);
         el.addEventListener("keyup", handleStarClick);
     });
+
+document.querySelectorAll('.hamburger--btn')
+    .forEach(el => {
+        el.addEventListener("click", (event) => {
+            let invisible = document.querySelector('.sidebar').classList.contains('d-none');
+            if (invisible) {
+                document.querySelector('.sidebar').classList.remove('d-none');
+            } else {
+                document.querySelector('.sidebar').classList.add('d-none');
+            }
+        });
+    });
+
 
 initNavbar();

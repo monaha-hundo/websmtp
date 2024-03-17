@@ -30,23 +30,27 @@ public class IndexModel : PageModel
         {
             default:
             case "inbox":
-                Listing = _messageStore.Latest(page, perPage, true, false, false, false, Filter);
+                Listing = _messageStore.Latest(page, perPage, true, false, false, false, false, Filter);
                 break;
 
             case "all":
-                Listing = _messageStore.Latest(page, perPage, false, false, false, false, Filter);
+                Listing = _messageStore.Latest(page, perPage, false, false, false, false, false, Filter);
                 break;
 
             case "favorites":
-                Listing = _messageStore.Latest(page, perPage, false, false, false, true, Filter);
+                Listing = _messageStore.Latest(page, perPage, false, false, false, true, false, Filter);
                 break;
 
             case "spam":
-                Listing = _messageStore.Latest(page, perPage, false, false, true, false, Filter);
+                Listing = _messageStore.Latest(page, perPage, false, false, true, false, false, Filter);
+                break;
+
+            case "sent":
+                Listing = _messageStore.Latest(page, perPage, false, false, true, false, true, Filter);
                 break;
 
             case "trash":
-                Listing = _messageStore.Latest(page, perPage, false, true, true, false, Filter);
+                Listing = _messageStore.Latest(page, perPage, false, true, true, false, false, Filter);
                 break;
         }
         return Page();

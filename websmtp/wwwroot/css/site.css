@@ -21,13 +21,26 @@ body {
 
 .sidebar {
     padding: 0 0.75rem;
+    z-index: 3;
+    background-color: #16141c;
+    position: absolute;
+    border: var(--bs-border-width) solid var(--bs-border-color);
 }
 
 .content {
     flex: 1 1 100%;
     display: flex;
     flex-direction: column;
+    max-height: 100%;
 }
+
+.max-height-100p {
+    max-height: 100%;
+}
+
+/* #messages--list {
+    max-height: calc(100% - 410px - 70px);
+} */
 
 @media (min-width: 1150px) {
     html {}
@@ -38,14 +51,24 @@ body {
 
     .sidebar {
         flex: 0 0 220px;
+        background-color: unset;
+        position: static;
+        border: none;
+        border-right: var(--bs-border-width) solid var(--bs-border-color);
     }
+}
+
+#messages--list--header {
+    top: 0;
+    background-color: #16141c;
+    z-index: 2;
 }
 
 table td {
     vertical-align: middle;
 }
 
-.list-group-item{
+.list-group-item {
     background-color: rgba(22, 20, 28, 0.5);
 }
 
@@ -140,9 +163,9 @@ table td {
 
 :root {
     --bs-primary-rgb: 123, 29, 201;
-    --proton-pink:          rgb(123, 29, 201);
-    --proton-pink-hover:    hsl(273, 75%, 45%);
-    --proton-pink-active:   hsl(273, 98%, 26%);
+    --proton-pink: rgb(123, 29, 201);
+    --proton-pink-hover: hsl(273, 75%, 45%);
+    --proton-pink-active: hsl(273, 98%, 26%);
     --proton-pink-disabled: hsl(273, 30%, 50%);
     --bs-blue: #0d6efd;
     --bs-indigo: #6610f2;
@@ -270,6 +293,7 @@ table td {
 .text-proton-pink {
     color: var(--proton-pink);
 }
+
 .bg-proton-pink {
     background-color: var(--proton-pink);
 }
@@ -278,9 +302,9 @@ table td {
     color: orangered;
 }
 
-.logo-alpha{
+.logo-alpha {
     top: 5px !important;
-    transform: translate(-50%,-50%)  rotateZ(33deg) !important;
+    transform: translate(-50%, -50%) rotateZ(33deg) !important;
 }
 
 .form-card-shadow {
@@ -341,8 +365,9 @@ table td {
     min-width: 80px;
 }
 
-.new--message--dialog{
-    max-width: 300px; max-height: 200px;
+.new--message--dialog {
+    max-width: 300px;
+    max-height: 200px;
 }
 
 .icon-125::before {
@@ -354,6 +379,13 @@ table td {
     flex: 1 1 auto;
     top: 2px;
     right: 2px;
+    z-index: 1;
+}
+
+.hamburger--btn {
+    flex: 1 1 auto;
+    top: 2px;
+    right: 50px;
     z-index: 1;
 }
 
@@ -396,9 +428,11 @@ table td {
     border-radius: 5px;
 }
 
-.new-message-window-buttons{
+.new-message-window-buttons {
     position: absolute;
-    right: 14px; top: 50%; transform: translateY(-50%)
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%)
 }
 
 #body {
@@ -436,7 +470,7 @@ div:where(.swal2-container).swal2-noanimation {
     border-radius: 5px !important;
 }
 
-.z-55{
+.z-55 {
     z-index: 55;
 }
 
@@ -458,27 +492,29 @@ div:where(.swal2-container).swal2-noanimation {
     border-bottom: none;
 }
 
-#new--message-form .ql-container.ql-snow{
+#new--message-form .ql-container.ql-snow {
     border: var(--bs-border-width) solid var(--bs-border-color);
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
 }
 
-#new--message-form  .ql-snow .ql-stroke{
+#new--message-form .ql-snow .ql-stroke {
     stroke: white !important;
 }
-#new--message-form  .ql-snow .ql-fill{
+
+#new--message-form .ql-snow .ql-fill {
     fill: white;
 }
 
-#new--message-form  .ql-snow .ql-picker {
+#new--message-form .ql-snow .ql-picker {
     border: var(--bs-border-width) solid var(--bs-border-color);
     border-radius: 5px;
 }
 
-#new--message-form  .ql-snow .ql-picker .ql-picker-label{
-    color: white !important; 
+#new--message-form .ql-snow .ql-picker .ql-picker-label {
+    color: white !important;
 }
-#new--message-form .ql-toolbar.ql-snow .ql-formats{
+
+#new--message-form .ql-toolbar.ql-snow .ql-formats {
     margin-bottom: 8px;
 }

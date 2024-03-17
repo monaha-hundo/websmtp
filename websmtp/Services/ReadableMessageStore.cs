@@ -14,7 +14,7 @@ public class ReadableMessageStore : IReadableMessageStore
         _services = services;
     }
 
-    public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, bool showSpam, bool onlySared, string filter)
+    public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, bool showSpam, bool onlySared, bool showSent, string filter)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
@@ -40,22 +40,31 @@ public class ReadableMessageStore : IReadableMessageStore
             };
         }
 
-        var newCount = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.Read && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var newCount = _dataContext.Messages.Count(msg => !msg.Sent && !msg.Deleted && !msg.Read && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
 
-        var allMailCount = _dataContext.Messages.Count(msg => !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var allMailCount = _dataContext.Messages.Count(msg => !msg.Sent && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
         var AllHasNew = newCount > 0;
 
-        var spamnCount = _dataContext.Messages.Count(msg => !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
-        var spamHasNew = _dataContext.Messages.Any(msg => !msg.Read && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
+        var spamnCount = _dataContext.Messages.Count(msg => !msg.Sent && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
+        var spamHasNew = _dataContext.Messages.Any(msg => !msg.Sent && !msg.Read && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
 
-        var trashCount = _dataContext.Messages.Count(msg => msg.Deleted && (!msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass));
-        var trashHasNew = _dataContext.Messages.Any(msg => !msg.Read && msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var trashCount = _dataContext.Messages.Count(msg => !msg.Sent && msg.Deleted && (!msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass));
+        var trashHasNew = _dataContext.Messages.Any(msg => !msg.Sent && !msg.Read && msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
 
-        var favsCount = _dataContext.Messages.Count(msg => msg.Stared && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var favsCount = _dataContext.Messages.Count(msg => !msg.Sent && msg.Stared && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
 
         var query = _dataContext.Messages
             .AsNoTracking()
             .AsSplitQuery();
+
+        if (showSent)
+        {
+            query = query.Where(msg => msg.Sent);
+        }
+        else
+        {
+            query = query.Where(msg => !msg.Sent);
+        }
 
         if (showTrash)
         {
@@ -98,6 +107,9 @@ public class ReadableMessageStore : IReadableMessageStore
         }
 
         var messages = query
+            .OrderByDescending(msg => msg.ReceivedOn)
+            .Skip((page - 1) * perPage)
+            .Take(perPage)
             .Select(msg => new MessageInfo
             {
                 Id = msg.Id,
@@ -113,9 +125,6 @@ public class ReadableMessageStore : IReadableMessageStore
                 Bcc = msg.Bcc,
                 Importance = msg.Importance,
             })
-            .OrderByDescending(msg => msg.ReceivedOn)
-            .Skip((page - 1) * perPage)
-            .Take(perPage)
             .ToList();
 
         return new ListResult
