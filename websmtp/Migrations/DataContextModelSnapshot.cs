@@ -95,7 +95,7 @@ namespace websmtp.Migrations
 
                     b.HasIndex("RawMessageId");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("websmtp.Database.Models.MessageAttachement", b =>
@@ -130,7 +130,7 @@ namespace websmtp.Migrations
 
                     b.HasIndex("MessageId");
 
-                    b.ToTable("MessageAttachement");
+                    b.ToTable("MessageAttachement", (string)null);
                 });
 
             modelBuilder.Entity("websmtp.Database.Models.RawMessage", b =>
@@ -145,7 +145,7 @@ namespace websmtp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RawMessages");
+                    b.ToTable("RawMessages", (string)null);
                 });
 
             modelBuilder.Entity("websmtp.Database.Models.User", b =>
@@ -168,7 +168,7 @@ namespace websmtp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("websmtp.Database.Models.Message", b =>

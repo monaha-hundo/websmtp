@@ -18,7 +18,7 @@ public class SentMessage : IMessage
     [StringLength(8)] public string Importance { get; set; } = string.Empty;
     public string? TextContent { get; set; }
     public string? HtmlContent { get; set; }
-    public List<MessageAttachement> Attachements { get; set; } = [];
+    public List<SentMessageAttachement> Attachements { get; set; } = [];
     public int AttachementsCount { get; set; }
     public bool Stared { get; set; }
     public bool Read { get; set; }
@@ -105,7 +105,7 @@ public class SentMessage : IMessage
         {
             Attachements = mimeMessage.Attachments
                             .Where(a => a.IsAttachment)
-                            .Select(a => new MessageAttachement(a))
+                            .Select(a => new SentMessageAttachement(a))
                             .ToList();
 
             AttachementsCount = Attachements.Count;
