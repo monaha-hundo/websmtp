@@ -18,30 +18,13 @@ public class ReadableMessageStore : IReadableMessageStore
         _httpContextAccessor = httpContextAccessor;
     }
 
-    private int GetUserGuid()
-    {
-        try
-        {
-            var rawId = _httpContextAccessor?.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
-                ?? throw new Exception("Could not fund user id claim");
-            if (int.TryParse(rawId, out var userId))
-            {
-                return userId;
-            }
-            throw new Exception("Could not cast user id claim to int.");
-        }
-        catch (System.Exception ex)
-        {
-            throw new Exception("Could not get user guid: ", ex);
-        }
-    }
 
     public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, bool showSpam, bool onlySared, bool showSent, string filter)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
-        var userId = GetUserGuid();
+        var userId = _httpContextAccessor.GetUserId();
 
         _dataContext.ChangeTracker.LazyLoadingEnabled = false;
         _dataContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
@@ -173,7 +156,7 @@ public class ReadableMessageStore : IReadableMessageStore
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
-        var userId = GetUserGuid();
+        var userId = _httpContextAccessor.GetUserId();
 
         if (onlyNew)
         {
@@ -193,7 +176,7 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var userId = GetUserGuid();
+        var userId = _httpContextAccessor.GetUserId();
 
         var query = _dataContext.Messages
             .Where(msg => msg.UserId == userId)
@@ -218,7 +201,7 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var userId = GetUserGuid();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
             .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
@@ -228,7 +211,7 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var userId = GetUserGuid();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
             .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
@@ -239,7 +222,7 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var userId = GetUserGuid();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
             .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
@@ -250,7 +233,7 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var userId = GetUserGuid();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
             .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
@@ -261,7 +244,7 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var userId = GetUserGuid();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
             .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
@@ -274,7 +257,7 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var userId = GetUserGuid();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
             .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))

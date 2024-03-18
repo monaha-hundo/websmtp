@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using websmtp.Database.Models;
 
 namespace MyApp.Namespace
 {
+    [Authorize]
     public class SettingsModel : PageModel
     {
         private readonly IReadableMessageStore _messageStore;

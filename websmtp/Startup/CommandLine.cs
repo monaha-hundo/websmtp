@@ -1,22 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MimeKit;
 using Newtonsoft.Json;
 using OtpNet;
 using QRCoder;
 using System.Diagnostics;
 using websmtp.Database;
+using websmtp.Database.Models;
 
 namespace websmtp.Startup;
 
 public class CommandLine
 {
+    /// <summary>
+    /// These are executed before the APP is configured/launched.
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
     public static int? ParseStartupArgs(string[] args)
     {
-        var shouldHashPassword = args.Any(arg => arg.StartsWith("--generate-credentials-config"));
-        if (shouldHashPassword)
-        {
-            return CommandLine.GenerateCredentialConfig();
-        }
-
         var shouldGenerateDkimConfig = args.Any(arg => arg.StartsWith("--generate-dkim-config"));
         if (shouldGenerateDkimConfig)
         {
@@ -25,43 +26,30 @@ public class CommandLine
 
         return null;
     }
+
+    /// <summary>
+    /// These are executed after the APP configuration, but before it launches.
+    /// </summary>
+    /// <param name="args"></param>
+    /// <param name="app"></param>
     public static void ParseModifiersArgs(string[] args, WebApplication app)
     {
-        var setupSql = args.Any(arg => arg.StartsWith("--setup-sql"));
-        if (setupSql)
+        var shouldAddUser = args.Any(arg => arg.StartsWith("--add-user"));
+        if (shouldAddUser)
         {
-            SetupSql(app);
+            AddUser(app);
         }
 
-        var shouldEnsureCreated = args.Any(arg => arg.StartsWith("--ensure-created-database"));
-        if (shouldEnsureCreated)
+        var shouldListUsers = args.Any(arg => arg.StartsWith("--list-users"));
+        if (shouldListUsers)
         {
-            EnsureDatabaseCreated(app);
+            ListUsers(app);
         }
 
         var shouldMigrate = args.Any(arg => arg.StartsWith("--migrate-database"));
         if (shouldMigrate)
         {
             MigrateDatabase(app);
-        }
-    }
-
-    private static void EnsureDatabaseCreated(WebApplication app)
-    {
-        try
-        {
-            using (var scope = app.Services.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
-                logger.LogInformation("Database.EnsureCreated");
-                dbContext.Database.EnsureCreated();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed EnsureCreated: '{ex.Message}'.");
-            Environment.Exit(-1);
         }
     }
 
@@ -81,27 +69,6 @@ public class CommandLine
         {
             Console.WriteLine($"Failed migration(s): '{ex.Message}'.");
             Environment.Exit(-1);
-        }
-    }
-
-    public static void SetupSql(WebApplication app)
-    {
-        try
-        {
-            using (var scope = app.Services.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
-                logger.LogInformation("Running setup.sql");
-                var sql = File.ReadAllText("setup.sql");
-                dbContext.Database.ExecuteSqlRaw(sql);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Setup SQL Failed: '{ex.Message}'.");
-            Console.WriteLine($"Assuming the Database was already setup.");
-            //Environment.Exit(-1);
         }
     }
 
@@ -197,8 +164,12 @@ public class CommandLine
         return 0;
     }
 
-    public static int GenerateCredentialConfig()
+    public static int AddUser(WebApplication app)
     {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
+
         Console.Write("Enter username: ");
         var username = Console.ReadLine();
         if (string.IsNullOrWhiteSpace(username) || username.Length == 0)
@@ -218,36 +189,82 @@ public class CommandLine
         }
         var hasher = new PasswordHasher();
         var hash = hasher.HashPassword(passwordToHash);
-        Console.WriteLine($"Hashed password: '{hash}'.");
+        //Console.WriteLine($"Hashed password: '{hash}'.");
+
+        Console.Write("Enter roles, separated by comas: ");
+        var roles = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(passwordToHash) || passwordToHash.Length == 0)
+        {
+            Console.WriteLine("Invalid roles.");
+            Environment.Exit(-1);
+            return -1;
+        }
+
+        var input = "default";
+        var mailboxes = new List<UserMailbox>();
+        while (input != string.Empty)
+        {
+            Console.Write("Enter a name for the mailbox (empty to end): ");
+            var mbName = input = Console.ReadLine();
+            if (mbName == string.Empty) break;
+            Console.Write("Enter an email address (use '*' for wildcard): ");
+            input = Console.ReadLine();
+            var mbAddr = new MailboxAddress("default", input);
+            var identity = mbAddr.LocalPart;
+            var host = mbAddr.Domain;
+            if (string.IsNullOrWhiteSpace(identity) || identity.Length == 0
+                 || string.IsNullOrWhiteSpace(host) || host.Length == 0)
+            {
+                Console.WriteLine("Invalid mailbox.");
+                Environment.Exit(-1);
+                return -1;
+            }
+            mailboxes.Add(new UserMailbox
+            {
+                DisplayName = mbName,
+                Host = host,
+                Identity = identity
+            });
+        }
 
         byte[] raw = new byte[10];
         Random.Shared.NextBytes(raw);
         var otpSecret = Base32Encoding.ToString(raw);
 
-        var qrGenerator = new QRCodeGenerator();
-        var totpQrCodeString = new OtpUri(OtpType.Totp, otpSecret, username).ToString();
-        var qrCodeData = qrGenerator.CreateQrCode(totpQrCodeString, QRCodeGenerator.ECCLevel.Q);
-        var qrCode = new AsciiQRCode(qrCodeData);
-        var lines = qrCode.GetLineByLineGraphic(1, drawQuietZones: true);
-        Console.WriteLine($"Use the following QR code for your 2FA app:");
-        foreach (var line in lines)
+        var newUser = new User
         {
-            Console.WriteLine(line);
-        }
+            OtpSecret = otpSecret,
+            PasswordHash = hash,
+            Username = username,
+            Roles = roles,
+            Mailboxes = mailboxes
+        };
 
-        Console.WriteLine("Add a 'Security' section to the configuration file to set the login credentials, eg.:");
-        Console.WriteLine(JsonConvert.SerializeObject(new
-        {
-            Security = new
-            {
-                Username = username,
-                PasswordHash = hash,
-                MfaEnabled = true,
-                OTPSecret = otpSecret
-            }
-        }, Formatting.Indented));
+        dbContext.Users.Add(newUser);
+        dbContext.SaveChanges();
+
         Environment.Exit(0);
         return 0;
     }
+    
+    public static int ListUsers(WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
 
+        var users = dbContext.Users.Include(u => u.Mailboxes).ToList();
+
+        foreach (var user in users)
+        {
+            Console.WriteLine(JsonConvert.SerializeObject(user, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                Formatting = Formatting.Indented
+            }));
+        }
+
+        Environment.Exit(0);
+        return 0;
+    }
 }

@@ -11,6 +11,7 @@ using System.Net.Mail;
 //using System.Net.Mail;
 using websmtp;
 using websmtp.Database;
+using websmtp.Database.Models;
 
 namespace Tests;
 
@@ -36,11 +37,6 @@ public class Basic
     {
         _factory = new WebApplicationFactory<Program>();
 
-        //client = _factory.WithWebHostBuilder(builder =>
-        //{
-        //    builder.UseEnvironment("Test");
-        //}).CreateClient();
-
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "TEST");
 
         client = _factory.CreateClient();
@@ -49,14 +45,79 @@ public class Basic
     [TestMethod]
     public async Task LoginToInbox()
     {
-        var response = await client.GetAsync("https://localhost:1443/inbox");
+        try
+        {
+            await LoginAsTester();
 
-        response.EnsureSuccessStatusCode();
+            var testResponse = await client.GetAsync("https://localhost:1443/inbox");
 
-        var content = response.Content.ReadAsStringAsync().Result;
+            testResponse.EnsureSuccessStatusCode();
 
-        Assert.IsTrue(content.Contains("Inbox"));
-    }   
+            var content = await testResponse.Content.ReadAsStringAsync();
+
+            Assert.IsTrue(content.Contains("Inbox"));
+
+        }
+        finally
+        {
+            DeleteTesterUser();
+        }
+    }
+
+    private async Task LoginAsTester()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+
+        var rnd = new byte[40];
+        Random.Shared.NextBytes(rnd);
+        var passwordToHash = System.Text.Encoding.UTF8.GetString(rnd);
+        var hasher = new PasswordHasher();
+        var passwordHash = hasher.HashPassword(passwordToHash);
+
+        var testerUser = new User
+        {
+            Username = "tester",
+            PasswordHash = passwordHash,
+            OtpSecret = string.Empty,
+            Deleted = false,
+            Mailboxes = [new UserMailbox{
+                DisplayName = "Tester @ Localhost",
+                Host = "localhost",
+                Identity = "tester"
+            }]
+        };
+
+        db.Users.Add(testerUser);
+        db.SaveChanges();
+
+        var response = client.GetAsync("https://localhost:1443/login").Result;
+        var verificationToken = await response.Content.ReadAsStringAsync();
+        if (verificationToken != null && verificationToken.Length > 0)
+        {
+            verificationToken = verificationToken.Substring(verificationToken.IndexOf("__RequestVerificationToken"));
+            verificationToken = verificationToken.Substring(verificationToken.IndexOf("value=\"") + 7);
+            verificationToken = verificationToken.Substring(0, verificationToken.IndexOf("\""));
+        }
+        var contentToSend = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("username", "tester"),
+            new KeyValuePair<string, string>("password", passwordToHash),
+            new KeyValuePair<string, string>("__RequestVerificationToken", verificationToken),
+        });
+
+        await client.PostAsync("https://localhost:1443/login", contentToSend);
+    }
+
+    private void DeleteTesterUser()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var testerUser = db.Users.SingleOrDefault(u => u.Username == "tester");
+        if(testerUser == null) return;
+        db.Users.Remove(testerUser);
+        db.SaveChanges();
+    }
 
     [TestMethod]
     public void SignAndVerifyDKIM()

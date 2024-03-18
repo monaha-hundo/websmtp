@@ -1,5 +1,9 @@
-﻿using System.Security.Claims;
+﻿using System.Data.Common;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using OtpNet;
+using QRCoder;
+using websmtp.Database;
 
 namespace websmtp;
 
@@ -49,6 +53,7 @@ public static class MessagesEndpoints
         messages.MarkAsRead(msgIds);
         return Results.Ok();
     }
+
     public static IResult MarkAsUnread(
         [FromBody] List<Guid> msgIds,
         [FromServices] IReadableMessageStore messages
@@ -92,4 +97,60 @@ public static class MessagesEndpoints
         messages.Unstar(msgIds);
         return Results.Ok();
     }
+
+    public static IResult OtpInitiate(
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+
+        byte[] raw = new byte[10];
+        Random.Shared.NextBytes(raw);
+        var otpSecret = Base32Encoding.ToString(raw);
+
+        user.OtpSecret = otpSecret;
+        user.OtpEnabled = false; // prevent lock out
+
+        var qrGenerator = new QRCodeGenerator();
+        var totpQrCodeString = new OtpUri(OtpType.Totp, user.OtpSecret, user.Username).ToString();
+        var qrCodeData = qrGenerator.CreateQrCode(totpQrCodeString, QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new PngByteQRCode(qrCodeData);
+
+        var bytes = qrCode.GetGraphic(4, true);
+
+        data.SaveChanges();
+
+        return Results.Bytes(bytes, "image/png");
+    }
+
+    public class Test
+    {
+        public string otp { get; set; }
+    }
+
+    public static IResult OtpValidateAndEnable(
+        [FromBody] Test otpData,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+        var secretBytes = Base32Encoding.ToBytes(user.OtpSecret);
+        var totp = new Totp(secretBytes);
+        var result = totp.VerifyTotp(otpData.otp, out var timeSteps);
+
+        if (result)
+        {
+            user.OtpEnabled = true;
+            data.SaveChanges();
+        }
+
+        return result
+            ? Results.Ok()
+            : Results.BadRequest("invalid otp");
+    }
+
 }

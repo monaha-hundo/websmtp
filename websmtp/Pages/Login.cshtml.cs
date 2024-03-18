@@ -84,9 +84,10 @@ public class LoginModel : PageModel
 
     private bool CheckMfa()
     {
-        if (MfaEnabled)
+        var user = _data.Users.SingleOrDefault(u => !u.Deleted && u.Username == Username);
+
+        if (user.OtpEnabled)
         {
-            var user = _data.Users.Single(u => u.Username == Username);
             var secretBytes = Base32Encoding.ToBytes(user.OtpSecret);
             var totp = new Totp(secretBytes);
             var result = totp.VerifyTotp(OTP, out var timeSteps);
@@ -102,7 +103,7 @@ public class LoginModel : PageModel
         var configuredUsername = _conf["Security:Username"] ?? throw new Exception("Please configure the Security:Username settings key.");
         var configuredPasswordHash = _conf["Security:PasswordHash"] ?? throw new Exception("Please configure the Security:PasswordHash settings key.");
 
-        var user = _data.Users.SingleOrDefault(u => u.Username == Username);
+        var user = _data.Users.SingleOrDefault(u => !u.Deleted && u.Username == Username);
 
         var isAuth = user != null
             && passwordHasher.VerifyHashedPassword(user.PasswordHash, Password);
