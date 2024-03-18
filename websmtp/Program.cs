@@ -1,3 +1,7 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using websmtp.Startup;
 
 CommandLine.ParseStartupArgs(args);
@@ -19,6 +23,24 @@ CommandLine.ParseModifiersArgs(args, app);
 if (app.Environment.IsEnvironment("Test"))
 {
     CommandLine.MigrateDatabase(app);
+
+    app.MapGet("/test-login", ([FromServices] IHttpContextAccessor httpContextAccessor) =>
+    {
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, Guid.Empty.ToString().Replace('0','1')),
+            new Claim(ClaimTypes.Name, "tester"),
+            new Claim(ClaimTypes.Role, "user"),
+        };
+
+        var claimsIdentity = new ClaimsIdentity(
+            claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        var principal = new ClaimsPrincipal(claimsIdentity);
+
+        httpContextAccessor.HttpContext.SignInAsync(principal);
+    });
 }
 
 app.Run();

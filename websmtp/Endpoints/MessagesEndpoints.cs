@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 
 namespace websmtp;
 
@@ -8,7 +9,7 @@ public static class MessagesEndpoints
     [FromRoute] Guid msgId,
     [FromServices] IReadableMessageStore messages,
     [FromServices] IConfiguration config
-)
+    )
     {
         var message = messages.Single(msgId) ?? throw new Exception("Could not find message");
         var displayHtml = config.GetValue<bool>("Security:EnableHtmlDisplay");

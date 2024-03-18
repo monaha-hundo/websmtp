@@ -47,6 +47,18 @@ public class Basic
     }
 
     [TestMethod]
+    public async Task LoginToInbox()
+    {
+        var response = await client.GetAsync("https://localhost:1443/inbox");
+
+        response.EnsureSuccessStatusCode();
+
+        var content = response.Content.ReadAsStringAsync().Result;
+
+        Assert.IsTrue(content.Contains("Inbox"));
+    }   
+
+    [TestMethod]
     public void SignAndVerifyDKIM()
     {
         using var scope = _factory.Services.CreateScope();
