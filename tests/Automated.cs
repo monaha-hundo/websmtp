@@ -1,6 +1,7 @@
 using DNS.Server;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MimeKit;
@@ -83,7 +84,7 @@ public class Basic
             Deleted = false,
             Mailboxes = [new UserMailbox{
                 DisplayName = "Tester @ Localhost",
-                Host = "localhost",
+                Host = "websmtp.local",
                 Identity = "tester"
             }]
         };
@@ -113,8 +114,19 @@ public class Basic
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var testerUser = db.Users.SingleOrDefault(u => u.Username == "tester");
-        if(testerUser == null) return;
+        var testerUser = db.Users.Include(u => u.Mailboxes).Single(u => u.Username == "tester");
+        var testerMsg = db.Messages.Include(m => m.RawMessage).Include(m => m.Attachements).Where(m => m.UserId == testerUser.Id).ToList();
+        var rawMessage = testerMsg.Select(m => m.RawMessage).ToList();
+        var attachements = testerMsg.SelectMany(m => m.Attachements).ToList();
+
+        db.MessageAttachements.RemoveRange(attachements);
+        db.SaveChanges();
+        db.Messages.RemoveRange(testerMsg);
+        db.SaveChanges();
+        db.RawMessages.RemoveRange(rawMessage);
+        db.SaveChanges();
+        db.Mailboxes.RemoveRange(testerUser.Mailboxes);
+        db.SaveChanges();
         db.Users.Remove(testerUser);
         db.SaveChanges();
     }
@@ -349,10 +361,12 @@ public class Basic
 
         var emailAddrs = new List<MailAddress>();
 
-        for (int e = 0; e < 15; e++)
-        {
-            emailAddrs.Add(new MailAddress($"user.{e}@websmtp.local", $"User {e}"));
-        }
+        emailAddrs.Add(new MailAddress("tester@websmtp.local", "Tester"));
+
+        // for (int e = 0; e < 15; e++)
+        // {
+        //     emailAddrs.Add(new MailAddress($"user.{e}@websmtp.local", $"User {e}"));
+        // }
 
         var files = new List<FakeFile>(10);
 
@@ -424,6 +438,7 @@ public class Basic
             await server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
         }, ct);
 
+        DeleteTesterUser();
         LoginAsTester().Wait();
 
         try
