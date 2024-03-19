@@ -48,6 +48,7 @@ public class Basic
     {
         try
         {
+            DeleteTesterUser();
             await LoginAsTester();
 
             var testResponse = await client.GetAsync("https://localhost:1443/inbox");
@@ -114,21 +115,29 @@ public class Basic
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var testerUser = db.Users.Include(u => u.Mailboxes).Single(u => u.Username == "tester");
-        var testerMsg = db.Messages.Include(m => m.RawMessage).Include(m => m.Attachements).Where(m => m.UserId == testerUser.Id).ToList();
-        var rawMessage = testerMsg.Select(m => m.RawMessage).ToList();
-        var attachements = testerMsg.SelectMany(m => m.Attachements).ToList();
+        var testerUsers = db.Users
+            .Include(u => u.Mailboxes)
+            .Where(u => u.Username == "tester")
+            .ToList();
 
-        db.MessageAttachements.RemoveRange(attachements);
-        db.SaveChanges();
-        db.Messages.RemoveRange(testerMsg);
-        db.SaveChanges();
-        db.RawMessages.RemoveRange(rawMessage);
-        db.SaveChanges();
-        db.Mailboxes.RemoveRange(testerUser.Mailboxes);
-        db.SaveChanges();
-        db.Users.Remove(testerUser);
-        db.SaveChanges();
+        foreach (var testerUser in testerUsers)
+        {
+            var testerMsg = db.Messages.Include(m => m.RawMessage).Include(m => m.Attachements).Where(m => m.UserId == testerUser.Id).ToList();
+            var rawMessage = testerMsg.Select(m => m.RawMessage).ToList();
+            var attachements = testerMsg.SelectMany(m => m.Attachements).ToList();
+
+            db.MessageAttachements.RemoveRange(attachements);
+            db.SaveChanges();
+            db.Messages.RemoveRange(testerMsg);
+            db.SaveChanges();
+            db.RawMessages.RemoveRange(rawMessage);
+            db.SaveChanges();
+            db.Mailboxes.RemoveRange(testerUser.Mailboxes);
+            db.SaveChanges();
+            db.Users.Remove(testerUser);
+            db.SaveChanges();
+        }
+
     }
 
     [TestMethod]
