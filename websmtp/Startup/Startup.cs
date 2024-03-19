@@ -112,12 +112,14 @@ public static class Startup
             {"default-src", new List<string>{"self"}},
             {"connect-src", new List<string>{"self"}},
             {"script-src", new List<string>{"self"}},
-            {"img-src", new List<string>{"self", "data:", "blob:"}},
+            {"img-src", new List<string>{"self", "blob:"}},
             {"style-src", new List<string>{"self"}},
             {"frame-src", new List<string>{"self"}}
         };
 
-        //csp["img-src"].Add("data:");
+        if(enableHtmlMedia){
+            csp["img-src"].Add("data:");
+        }
 
         var cspHeaderValue = string.Join("; ", csp.Keys.Select(c => $"{c} {string.Join(' ', csp[c].Select(s => s.Contains(':')  ? s : "'" + s + "'"))}"));
 
@@ -175,5 +177,8 @@ public static class Startup
         // OTP
         app.MapGet("/api/settings/otp/initiate", MessagesEndpoints.OtpInitiate).RequireAuthorization();
         app.MapPost("/api/settings/otp/validate", MessagesEndpoints.OtpValidateAndEnable).RequireAuthorization();
+
+        // Password change
+        app.MapPost("/api/settings/pwd/change", MessagesEndpoints.ChangePassword).RequireAuthorization();
     }
 }

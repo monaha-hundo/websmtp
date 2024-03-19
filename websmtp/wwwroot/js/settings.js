@@ -14,7 +14,6 @@ document.getElementById('otp--form')
 document.getElementById('otp--qrcode')
     ?.addEventListener('submit', async (event) => {
         event.preventDefault();
-        debugger;
         let otpEl = document.getElementById('otpValidation');
         let otp = otpEl.value;
 
@@ -35,4 +34,41 @@ document.getElementById('otp--qrcode')
             alert('OTP validation failed, try again.');
         }
 
+    });
+
+document.getElementById('btn--change--pwd')
+    ?.addEventListener('click', async (event) => {
+        event.preventDefault();
+        let currentPassword = document.getElementById('currentPassword').value;
+        let newPassword = document.getElementById('newPassword').value;
+        let confirmPassword = document.getElementById('confirmPassword').value;
+        let reqData = JSON.stringify({
+            currentPassword, newPassword, confirmPassword
+        });
+
+        Swal.fire({
+            title: "Changing password",
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+        const response = await fetch(`/api/settings/pwd/change`, {
+            method: 'post',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: reqData
+        });
+
+        Swal.close();
+
+        let success = response.status == 200;
+
+        if (success) {
+            document.getElementById('pwd--change--form').classList.add('d-none');
+            document.getElementById('pwd--change--success').classList.remove('d-none');
+        } else {
+            alert('OTP validation failed, try again.');
+        }
     });

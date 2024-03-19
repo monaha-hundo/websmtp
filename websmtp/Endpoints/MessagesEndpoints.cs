@@ -125,13 +125,13 @@ public static class MessagesEndpoints
         return Results.Bytes(bytes, "image/png");
     }
 
-    public class Test
+    public class OtpValidateViewModel
     {
-        public string otp { get; set; }
+        public string Otp { get; set; } = string.Empty;
     }
 
     public static IResult OtpValidateAndEnable(
-        [FromBody] Test otpData,
+        [FromBody] OtpValidateViewModel otpData,
         [FromServices] DataContext data,
         [FromServices] IHttpContextAccessor httpContextAccessor
     )
@@ -140,7 +140,7 @@ public static class MessagesEndpoints
         var user = data.Users.Single(u => u.Id == userId);
         var secretBytes = Base32Encoding.ToBytes(user.OtpSecret);
         var totp = new Totp(secretBytes);
-        var result = totp.VerifyTotp(otpData.otp, out var timeSteps);
+        var result = totp.VerifyTotp(otpData.Otp, out var timeSteps);
 
         if (result)
         {
@@ -151,6 +151,37 @@ public static class MessagesEndpoints
         return result
             ? Results.Ok()
             : Results.BadRequest("invalid otp");
+    }
+
+    public class ChangePasswordViewModel
+    {
+        public string CurrentPassword { get; set; }
+        public string NewPassword { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+
+    public static IResult ChangePassword(
+        [FromBody] ChangePasswordViewModel pwdData,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+
+        var passwordHasher = new PasswordHasher();
+        var canChange = pwdData.NewPassword == pwdData.ConfirmPassword
+            && passwordHasher.VerifyHashedPassword(user.PasswordHash, pwdData.CurrentPassword);
+
+        if (!canChange)
+        {
+            return Results.BadRequest();
+        }
+
+        user.PasswordHash = passwordHasher.HashPassword(pwdData.NewPassword);
+        data.SaveChanges();
+
+        return Results.Ok();
     }
 
 }

@@ -16,7 +16,7 @@ namespace MyApp.Namespace
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly DataContext _data;
 
-        public User User { get; set; }
+        public User Profile { get; set; } = null!;
 
         private int GetUserGuid()
         {
@@ -46,7 +46,7 @@ namespace MyApp.Namespace
         public void OnGet()
         {
             var userId = GetUserGuid();
-            User = _data.Users.Include(u=>u.Mailboxes).Single(u => u.Id == userId);
+            Profile = _data.Users.Include(u=>u.Mailboxes).Single(u => u.Id == userId);
             Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
         }
     }

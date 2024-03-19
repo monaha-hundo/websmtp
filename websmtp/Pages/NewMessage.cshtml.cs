@@ -48,9 +48,19 @@ namespace MyApp.Namespace
         {
             try
             {
-                return int.Parse(_httpContextAccessor?.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var user = _httpContextAccessor?.HttpContext?.User
+                    ?? throw new NullReferenceException("could not find user in HttpContext");
+
+                var nameId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrWhiteSpace(nameId))
+                {
+                    throw new Exception("NameIdentifier claim not found in user.");
+                }
+
+                return int.Parse(nameId);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception("Could not get user guid: ", ex);
             }

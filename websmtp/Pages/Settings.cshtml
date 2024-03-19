@@ -42,7 +42,7 @@
                     </div>
                 </div>
             </div>
-            @foreach (var mailbox in Model.User.Mailboxes)
+            @foreach (var mailbox in Model.Profile.Mailboxes)
             {
                 <form class="list-group-item  border-left-none px-1 position-sticky ">
                     <div class="row align-items-center px-2">
@@ -57,11 +57,6 @@
                             <!--<input id="subject" name="subject" value="@mailbox.Host" class="form-control ms-2" />-->
                             <span class="badge fs-6">@mailbox.Host</span>
                         </div>
-                        @* <div class="col flex-grow-1"></div>
-                    <div class="col col-auto">
-                    <button class="btn btn-primary ">Save</button>
-                    <button class="btn btn-danger ">Delete</button>
-                    </div> *@
                     </div>
                 </form>
             }
@@ -72,24 +67,24 @@
                     </div>
                 </div>
             </div>
-            <form class="list-group-item  border-left-none px-1 position-sticky ">
+            <form id="pwd--change--form" class="list-group-item  border-left-none px-1 position-sticky ">
                 <div class="row align-items-center px-2">
                     <div class="col-auto text-truncate d-flex align-items-center fs-5">
-                        <input id="currentPassword" name="currentPassword" placeholder="Current password"
+                        <input type="password" id="currentPassword" name="currentPassword" placeholder="Current password"
                             class="form-control me-2" />
-                        <input id="newPassword" name="newPassword" placeholder="New password"
+                        <input type="password" id="newPassword" name="newPassword" placeholder="New password"
                             class="form-control me-2" />
-                        <input id="confirmPassword" name="confirmPassword" placeholder="Confirm new password"
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password"
                             class="form-control me-2" />
-                        <button class="btn btn-primary">Change</button>
+                        <button id="btn--change--pwd" class="btn btn-primary">Change</button>
                     </div>
-                    @* <div class="col flex-grow-1"></div>
-                    <div class="col col-auto">
-                    <button class="btn btn-primary ">Save</button>
-                    <button class="btn btn-danger ">Delete</button>
-                    </div> *@
                 </div>
             </form>
+            <div id="pwd--change--success" class="list-group-item  border-left-none px-1 position-sticky d-none">
+                <div class="row align-items-center px-2">
+                    <span class="text-success">Password changed.</span>
+                </div>
+            </div>
             <div class="list-group-item  border-left-none px-1 position-sticky unread ">
                 <div class="row align-items-center  g-0 px-2">
                     <div class="col-offset-2 col-auto text-truncate d-flex align-items-center ">
@@ -100,7 +95,7 @@
             <form id="otp--form" class="list-group-item  border-left-none px-1 position-sticky ">
                 <div class="row align-items-center px-2">
                     <div class="col-auto text-truncate d-flex align-items-center fs-5">
-                        @if (Model.User.OtpEnabled)
+                        @if (Model.Profile.OtpEnabled)
                         {
                             <button class="btn btn-danger me-2">Disable</button>
                         }

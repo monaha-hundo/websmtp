@@ -84,7 +84,7 @@ public class LoginModel : PageModel
 
     private bool CheckMfa()
     {
-        var user = _data.Users.SingleOrDefault(u => !u.Deleted && u.Username == Username);
+        var user = _data.Users.Single(u => !u.Deleted && u.Username == Username);
 
         if (user.OtpEnabled)
         {

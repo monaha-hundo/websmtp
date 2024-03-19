@@ -193,7 +193,7 @@ public class CommandLine
 
         Console.Write("Enter roles, separated by comas: ");
         var roles = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(passwordToHash) || passwordToHash.Length == 0)
+        if (string.IsNullOrWhiteSpace(roles) || roles.Length == 0)
         {
             Console.WriteLine("Invalid roles.");
             Environment.Exit(-1);
@@ -206,7 +206,7 @@ public class CommandLine
         {
             Console.Write("Enter a name for the mailbox (empty to end): ");
             var mbName = input = Console.ReadLine();
-            if (mbName == string.Empty) break;
+            if (string.IsNullOrWhiteSpace(mbName)) break;
             Console.Write("Enter an email address (use '*' for wildcard): ");
             input = Console.ReadLine();
             var mbAddr = new MailboxAddress("default", input);
@@ -246,7 +246,7 @@ public class CommandLine
         Environment.Exit(0);
         return 0;
     }
-    
+
     public static int ListUsers(WebApplication app)
     {
         using var scope = app.Services.CreateScope();
