@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using websmtp.Database;
 
@@ -11,9 +12,11 @@ using websmtp.Database;
 namespace websmtp.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240318093554_MultiUsers1")]
+    partial class MultiUsers1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -164,12 +167,6 @@ namespace websmtp.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("Deleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("OtpEnabled")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("OtpSecret")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -192,19 +189,14 @@ namespace websmtp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Username")
-                        .IsUnique();
-
                     b.ToTable("Users");
                 });
 
             modelBuilder.Entity("websmtp.UserMailbox", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -260,7 +252,7 @@ namespace websmtp.Migrations
             modelBuilder.Entity("websmtp.UserMailbox", b =>
                 {
                     b.HasOne("websmtp.Database.Models.User", "User")
-                        .WithMany("Mailboxes")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -271,11 +263,6 @@ namespace websmtp.Migrations
             modelBuilder.Entity("websmtp.Database.Models.Message", b =>
                 {
                     b.Navigation("Attachements");
-                });
-
-            modelBuilder.Entity("websmtp.Database.Models.User", b =>
-                {
-                    b.Navigation("Mailboxes");
                 });
 #pragma warning restore 612, 618
         }

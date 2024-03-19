@@ -18,9 +18,18 @@ function initNavbar() {
     let sent = window.location.href.endsWith('/sent');
     let spam = window.location.href.endsWith('/spam');
     let trash = window.location.href.endsWith('/trash');
+    let settings = window.location.href.endsWith('/settings');
 
     if (trash) {
         const selector = `#btn-mailbox-trash`;
+        const mailboxEl = document.querySelector(selector);
+        mailboxEl.classList.remove('btn-transparent-primary');
+        mailboxEl.classList.add('btn-dark', 'active');
+        return;
+    }
+
+    if (settings) {
+        const selector = `#btn-mailbox-settings`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
         mailboxEl.classList.add('btn-dark', 'active');

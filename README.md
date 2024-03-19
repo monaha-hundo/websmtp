@@ -17,17 +17,18 @@ _In active development, partial features, missing features, etc._
 ![Screenshot from 2024-03-15 08-43-59](https://github.com/monaha-hundo/websmtp/assets/139830086/5cacbaf8-141d-4a14-8fb0-070a1dd843bd)
 
 ## Send Emails
-![Screenshot from 2024-03-15 08-48-10](https://github.com/monaha-hundo/websmtp/assets/139830086/cfc7b55c-250f-4ec1-b79a-75c37fb2abc6)
+![Screenshot from 2024-03-19 14-20-08](https://github.com/monaha-hundo/websmtp/assets/139830086/fee58ee6-8396-4cdc-a2b0-4f267455609a)
 
 ## Supports raw message display
 ![Screenshot from 2024-03-15 08-44-24](https://github.com/monaha-hundo/websmtp/assets/139830086/a3d650cf-b5a3-4fe6-b531-721935a78378)
 
-## ~~HTML Email with media support~~
-No support for HTML Emails, they are insecure and rendering them securely is out of scope for this project. 
-Maybe add a feature to display them if we really mean to in the settings... It's a pretty important feature...
+## HTML Email with media support
+![Screenshot from 2024-03-19 14-17-21](https://github.com/monaha-hundo/websmtp/assets/139830086/accaea14-974a-4603-b1b9-d2043b79fd22)
 
 ## Quick OTP setup with QR code
-![image](https://github.com/monaha-hundo/websmtp/assets/139830086/07812766-a779-4c36-9975-0dd26a4a60cb)
+![Screenshot from 2024-03-19 14-14-38](https://github.com/monaha-hundo/websmtp/assets/139830086/dc78ddbd-3628-4a52-9170-91dd9af9bbb5)
+![Screenshot from 2024-03-19 14-14-48](https://github.com/monaha-hundo/websmtp/assets/139830086/2b5fd93b-e09f-4262-9789-70dd077b7f7e)
+
 
 ## Made with
 - Asp.Net / .Net 8 / EntityFramework Core

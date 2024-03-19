@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Data.Common;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using OtpNet;
+using QRCoder;
+using websmtp.Database;
 
 namespace websmtp;
 
@@ -8,7 +13,7 @@ public static class MessagesEndpoints
     [FromRoute] Guid msgId,
     [FromServices] IReadableMessageStore messages,
     [FromServices] IConfiguration config
-)
+    )
     {
         var message = messages.Single(msgId) ?? throw new Exception("Could not find message");
         var displayHtml = config.GetValue<bool>("Security:EnableHtmlDisplay");
@@ -48,6 +53,7 @@ public static class MessagesEndpoints
         messages.MarkAsRead(msgIds);
         return Results.Ok();
     }
+
     public static IResult MarkAsUnread(
         [FromBody] List<Guid> msgIds,
         [FromServices] IReadableMessageStore messages
@@ -91,4 +97,91 @@ public static class MessagesEndpoints
         messages.Unstar(msgIds);
         return Results.Ok();
     }
+
+    public static IResult OtpInitiate(
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+
+        byte[] raw = new byte[10];
+        Random.Shared.NextBytes(raw);
+        var otpSecret = Base32Encoding.ToString(raw);
+
+        user.OtpSecret = otpSecret;
+        user.OtpEnabled = false; // prevent lock out
+
+        var qrGenerator = new QRCodeGenerator();
+        var totpQrCodeString = new OtpUri(OtpType.Totp, user.OtpSecret, user.Username).ToString();
+        var qrCodeData = qrGenerator.CreateQrCode(totpQrCodeString, QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new PngByteQRCode(qrCodeData);
+
+        var bytes = qrCode.GetGraphic(4, true);
+
+        data.SaveChanges();
+
+        return Results.Bytes(bytes, "image/png");
+    }
+
+    public class OtpValidateViewModel
+    {
+        public string Otp { get; set; } = string.Empty;
+    }
+
+    public static IResult OtpValidateAndEnable(
+        [FromBody] OtpValidateViewModel otpData,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+        var secretBytes = Base32Encoding.ToBytes(user.OtpSecret);
+        var totp = new Totp(secretBytes);
+        var result = totp.VerifyTotp(otpData.Otp, out var timeSteps);
+
+        if (result)
+        {
+            user.OtpEnabled = true;
+            data.SaveChanges();
+        }
+
+        return result
+            ? Results.Ok()
+            : Results.BadRequest("invalid otp");
+    }
+
+    public class ChangePasswordViewModel
+    {
+        public string CurrentPassword { get; set; }
+        public string NewPassword { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+
+    public static IResult ChangePassword(
+        [FromBody] ChangePasswordViewModel pwdData,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+
+        var passwordHasher = new PasswordHasher();
+        var canChange = pwdData.NewPassword == pwdData.ConfirmPassword
+            && passwordHasher.VerifyHashedPassword(user.PasswordHash, pwdData.CurrentPassword);
+
+        if (!canChange)
+        {
+            return Results.BadRequest();
+        }
+
+        user.PasswordHash = passwordHasher.HashPassword(pwdData.NewPassword);
+        data.SaveChanges();
+
+        return Results.Ok();
+    }
+
 }

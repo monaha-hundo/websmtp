@@ -34,13 +34,10 @@
                         <label class="form-label visually-hidden" for="password">Password</label>
                     </div>
 
-                    @if (Model.MfaEnabled)
-                    {
-                        <div class="form-outline mb-4">
-                            <input type="text" id="otp" name="otp" class="form-control text-center" placeholder="OTP" />
-                            <label class="form-label visually-hidden" for="password">OTP</label>
-                        </div>
-                    }
+                    <div class="form-outline mb-4">
+                        <input type="text" id="otp" name="otp" class="form-control text-center" placeholder="OTP" />
+                        <label class="form-label visually-hidden" for="password">OTP</label>
+                    </div>
 
                     <div class="text-center pt-1 pb-1">
                         <button class="btn btn-primary btn-block fa-lg" type="submit">
@@ -55,7 +52,7 @@
     </div>
 </div>
 
-@section Scripts{
-    
+@section Scripts {
+
     <script src="/js/login.js"></script>
 }
