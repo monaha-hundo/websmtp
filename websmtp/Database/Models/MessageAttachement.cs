@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using MimeKit;
 
 namespace websmtp.Database.Models;
 
+[Table("MessageAttachement")]
 public class MessageAttachement
 {
     public Guid Id { get; set; }

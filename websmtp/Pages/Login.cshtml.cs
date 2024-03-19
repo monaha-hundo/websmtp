@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using OtpNet;
 using System.Security.Claims;
 using websmtp;
+using websmtp.Database;
 
 namespace MyApp.Namespace;
 
@@ -16,6 +17,7 @@ public class LoginModel : PageModel
 
     public IHttpContextAccessor _http { get; set; }
     public IConfiguration _conf { get; set; }
+    private readonly DataContext _data;
     [FromForm] public string Username { get; set; } = string.Empty;
     [FromForm] public string Password { get; set; } = string.Empty;
     [FromForm] public string OTP { get; set; } = string.Empty;
@@ -23,10 +25,11 @@ public class LoginModel : PageModel
     public bool Error { get; set; }
     public bool MfaEnabled => _conf.GetValue<bool>("Security:MfaEnabled");
 
-    public LoginModel(IHttpContextAccessor http, IConfiguration conf)
+    public LoginModel(IHttpContextAccessor http, IConfiguration conf, DataContext data)
     {
         _http = http;
         _conf = conf;
+        _data = data;
     }
 
     public async Task<IActionResult> OnPost()
@@ -52,16 +55,24 @@ public class LoginModel : PageModel
 
     private async Task SignIn()
     {
-        if (_http == null || _http.HttpContext == null)
+        var user = _data.Users.Single(u => u.Username == Username);
+
+        if (_http == null || _http.HttpContext == null || user == null)
         {
-            throw new Exception("Cannot sign in, http context is not found.");
+            throw new Exception("Cannot sign in, http context is not found or user was null.");
         }
 
         var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, Username),
-                new Claim(ClaimTypes.Role, "Administrator"),
-            };
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Username)
+        };
+
+        var roles = user.Roles
+            .Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
+        roles.ForEach(r => claims.Add(new Claim(ClaimTypes.Role, r)));
 
         var claimsIdentity = new ClaimsIdentity(
             claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -73,10 +84,11 @@ public class LoginModel : PageModel
 
     private bool CheckMfa()
     {
-        if (MfaEnabled)
+        var user = _data.Users.Single(u => !u.Deleted && u.Username == Username);
+
+        if (user.OtpEnabled)
         {
-            var secret = _conf.GetValue<string>("Security:OTPSecret");
-            var secretBytes = Base32Encoding.ToBytes(secret);
+            var secretBytes = Base32Encoding.ToBytes(user.OtpSecret);
             var totp = new Totp(secretBytes);
             var result = totp.VerifyTotp(OTP, out var timeSteps);
             return result;
@@ -91,8 +103,11 @@ public class LoginModel : PageModel
         var configuredUsername = _conf["Security:Username"] ?? throw new Exception("Please configure the Security:Username settings key.");
         var configuredPasswordHash = _conf["Security:PasswordHash"] ?? throw new Exception("Please configure the Security:PasswordHash settings key.");
 
-        var isAuth = Username == configuredUsername
-            && passwordHasher.VerifyHashedPassword(configuredPasswordHash, Password);
+        var user = _data.Users.SingleOrDefault(u => !u.Deleted && u.Username == Username);
+
+        var isAuth = user != null
+            && passwordHasher.VerifyHashedPassword(user.PasswordHash, Password);
+
         return isAuth;
     }
 

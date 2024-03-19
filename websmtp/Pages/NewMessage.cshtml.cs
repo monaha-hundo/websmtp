@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -16,14 +17,16 @@ namespace MyApp.Namespace
         private readonly ILogger<SendMailService> _logger;
         private readonly DataContext _data;
 
-        public NewMessageModel(SendMailService sendMail, ILogger<SendMailService> logger, DataContext data)
+        public NewMessageModel(SendMailService sendMail, ILogger<SendMailService> logger, DataContext data, IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
             _sendMail = sendMail;
             _data = data;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         readonly SendMailService _sendMail;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         [FromQuery] public string? InitialTo { get; set; }
         [BindProperty] public string FromEmail { get; set; } = string.Empty;
@@ -41,6 +44,28 @@ namespace MyApp.Namespace
         [FromQuery] public bool? DebugSent { get; set; }
         [FromQuery] public bool? DebugSentError { get; set; }
 
+        private int GetUserGuid()
+        {
+            try
+            {
+                var user = _httpContextAccessor?.HttpContext?.User
+                    ?? throw new NullReferenceException("could not find user in HttpContext");
+
+                var nameId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrWhiteSpace(nameId))
+                {
+                    throw new Exception("NameIdentifier claim not found in user.");
+                }
+
+                return int.Parse(nameId);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Could not get user guid: ", ex);
+            }
+        }
+
         public void OnGet()
         {
             if (DebugSent == true)
@@ -54,6 +79,8 @@ namespace MyApp.Namespace
 
             try
             {
+                var userId = GetUserGuid();
+
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(FromEmail, FromName)
@@ -135,6 +162,7 @@ namespace MyApp.Namespace
                 var sentMessage = new Message(mimeMessage)
                 {
                     RawMessageId = rawSentMessage.Id,
+                    UserId = userId,
                     Sent = true
                 };
                 _data.Messages.Add(sentMessage);

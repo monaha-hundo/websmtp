@@ -1,4 +1,5 @@
 using MimeKit;
+using Org.BouncyCastle.Crypto.Modes;
 using SmtpServer;
 using SmtpServer.Mail;
 using SmtpServer.Net;
@@ -52,18 +53,17 @@ public class MessageStore : IMessageStore
             _logger.LogInformation("Parsing message & saving data...");
             using var memory = new MemoryStream(raw);
             using var mimeMessage = MimeMessage.Load(memory, cancellationToken) ?? throw new Exception("Could not parse message.");
+            var from = transaction.From.AsAddress();
 
-            var newMessage = new Message(mimeMessage)
-            {
-                RawMessageId = newRawMsg.Id
-            };
+            var DkimFailed = true;
+            var spfStatus = SpfVerifyResult.Fail;
 
             try
             {
                 var isDkimCheckEnabled = _config.GetValue<bool>("DKIM:Enabled") == true;
                 if (isDkimCheckEnabled)
                 {
-                    newMessage.DkimFailed = !_incomingValidator.VerifyDkim(mimeMessage);
+                    DkimFailed = !_incomingValidator.VerifyDkim(mimeMessage); //newMessage.DkimFailed 
                 }
             }
             catch (Exception ex)
@@ -78,13 +78,12 @@ public class MessageStore : IMessageStore
                 {
                     var endpoint = (IPEndPoint)context.Properties[EndpointListener.RemoteEndPointKey];
                     var ip = endpoint.Address.ToString();
-                    var from = transaction.From.AsAddress();
                     var domain = transaction.From.Host;
-                    newMessage.SpfStatus = _incomingValidator.VerifySpf(ip, domain, from);
+                    spfStatus = _incomingValidator.VerifySpf(ip, domain, from);
                 }
                 else
                 {
-                    newMessage.SpfStatus = SpfVerifyResult.None;
+                    spfStatus = SpfVerifyResult.None;
                 }
             }
             catch (Exception ex)
@@ -92,11 +91,54 @@ public class MessageStore : IMessageStore
                 _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
             }
 
+            var alreadyCatchedAll = false;
 
-            _dataContext.Messages.Add(newMessage);
-            _dataContext.SaveChanges();
+            foreach (var to in transaction.To)
+            {
+                if (alreadyCatchedAll) break;
 
-            _logger.LogDebug($"Saved message id #{newMessage.Id}.");
+                var toHost = to.Host;
+                var toUser = to.User;
+
+                // specific mailbox
+                var userMailbox = _dataContext.Mailboxes.SingleOrDefault(mb => mb.Identity == toUser && mb.Host == toHost);
+
+                if (userMailbox == null)
+                {
+                    // catch-all@domain mailbox
+                    userMailbox = _dataContext.Mailboxes.SingleOrDefault(mb => mb.Identity == "*" && mb.Host == toHost);
+                    alreadyCatchedAll = true;
+                }
+
+                if (userMailbox == null)
+                {
+                    // CATCH-ALL from ALL domains
+                    userMailbox = _dataContext.Mailboxes.SingleOrDefault(mb => mb.Identity == "*" && mb.Host == "*");
+                    alreadyCatchedAll = true;
+                }
+
+                if (userMailbox == null)
+                {
+                    // no mailbox configured for recipient,
+                    // domain catch-all was unconfigured,
+                    // catch-all mailbox was unconfigured
+                    // reject transaction
+                    return Task.FromResult(SmtpResponse.NoValidRecipientsGiven);
+                }
+
+                var newMessage = new Message(mimeMessage)
+                {
+                    RawMessageId = newRawMsg.Id,
+                    UserId = userMailbox.UserId,
+                    DkimFailed = DkimFailed,
+                    SpfStatus = spfStatus
+                };
+
+                _dataContext.Messages.Add(newMessage);
+                _dataContext.SaveChanges();
+
+                _logger.LogDebug($"Saved message id #{newMessage.Id}.");
+            }
 
             return Task.FromResult(SmtpResponse.Ok);
         }

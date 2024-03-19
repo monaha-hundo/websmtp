@@ -1,0 +1,144 @@
+﻿@page
+@model MyApp.Namespace.SettingsModel
+
+@section Head {
+    <link rel="stylesheet" href="~/lib/sweetalert2/sweetalert2.min.css" />
+}
+
+<a class="logout--btn btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed" href="/logout" title="Log Out">
+    <i class="bi bi-door-open fs-1_5rem"></i>
+</a>
+<btn class="hamburger--btn btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed d-xl-none">
+    <i class="bi bi-list fs-1_5rem"></i>
+</btn>
+
+<partial name="Sidebar" model="Model.Listing" />
+
+<div class="content">
+    <section class="listing d-flex flex-column h-100 flex-align-start">
+        <form id="search--form" class="d-inline-flex align-items-center ps-2" action="/all" method="get">
+            <div class="input-group my-2">
+                <span class="input-group-text" id="basic-addon1">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input name="filter" id="filter" type="text" class="form-control from-control-sm"
+                    placeholder="Search messages" value="" aria-label="Any text value"
+                    aria-describedby="basic-addon1" />
+            </div>
+            <div class="flex-1-1-100p"></div>
+        </form>
+        <div id="messages--list" class="list list-group ">
+            <div id="messages--list--header" class="list-group-item  border-left-none px-1 position-sticky ">
+                <div class="row align-items-center  g-0 px-2">
+                    <div class="col-offset-2 col-auto text-truncate d-flex align-items-center ">
+                        <span class="text-capitalize fs-3 me-3">Settings</span>
+                    </div>
+                </div>
+            </div>
+            <div class="list-group-item  border-left-none px-1 position-sticky unread ">
+                <div class="row align-items-center  g-0 px-2">
+                    <div class="col-offset-2 col-auto text-truncate d-flex align-items-center ">
+                        <span class="text-capitalize fs-5 me-3">Mailboxes</span>
+                    </div>
+                </div>
+            </div>
+            @foreach (var mailbox in Model.Profile.Mailboxes)
+            {
+                <form class="list-group-item  border-left-none px-1 position-sticky ">
+                    <div class="row align-items-center px-2">
+                        <div class="col-auto text-truncate d-flex align-items-center fs-5">
+                            <!--<input id="subject" name="subject" value="@mailbox.DisplayName" class="form-control me-3" />-->
+                            <span class="badge fs-6">@mailbox.DisplayName</span>
+                        </div>
+                        <div class="col-auto text-truncate d-flex align-items-center fs-5">
+                            <!--<input id="subject" name="subject" value="@mailbox.Identity" class="form-control me-2" />-->
+                            <span class="badge fs-6">@mailbox.Identity</span>
+                            <span class="">@@</span>
+                            <!--<input id="subject" name="subject" value="@mailbox.Host" class="form-control ms-2" />-->
+                            <span class="badge fs-6">@mailbox.Host</span>
+                        </div>
+                    </div>
+                </form>
+            }
+            <div class="list-group-item  border-left-none px-1 position-sticky unread ">
+                <div class="row align-items-center  g-0 px-2">
+                    <div class="col-offset-2 col-auto text-truncate d-flex align-items-center ">
+                        <span class="text-capitalize fs-5 me-3">Password</span>
+                    </div>
+                </div>
+            </div>
+            <form id="pwd--change--form" class="list-group-item  border-left-none px-1 position-sticky ">
+                <div class="row align-items-center px-2">
+                    <div class="col-auto text-truncate d-flex align-items-center fs-5">
+                        <input type="password" id="currentPassword" name="currentPassword" placeholder="Current password"
+                            class="form-control me-2" />
+                        <input type="password" id="newPassword" name="newPassword" placeholder="New password"
+                            class="form-control me-2" />
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password"
+                            class="form-control me-2" />
+                        <button id="btn--change--pwd" class="btn btn-primary">Change</button>
+                    </div>
+                </div>
+            </form>
+            <div id="pwd--change--success" class="list-group-item  border-left-none px-1 position-sticky d-none">
+                <div class="row align-items-center px-2">
+                    <span class="text-success">Password changed.</span>
+                </div>
+            </div>
+            <div class="list-group-item  border-left-none px-1 position-sticky unread ">
+                <div class="row align-items-center  g-0 px-2">
+                    <div class="col-offset-2 col-auto text-truncate d-flex align-items-center ">
+                        <span class="text-capitalize fs-5 me-3">Multifactor Authentication</span>
+                    </div>
+                </div>
+            </div>
+            <form id="otp--form" class="list-group-item  border-left-none px-1 position-sticky ">
+                <div class="row align-items-center px-2">
+                    <div class="col-auto text-truncate d-flex align-items-center fs-5">
+                        @if (Model.Profile.OtpEnabled)
+                        {
+                            <button class="btn btn-danger me-2">Disable</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-danger me-2">Enable</button>
+                        }
+                    </div>
+                </div>
+            </form>
+            <form id="otp--qrcode" class="list-group-item  border-left-none px-1 position-sticky d-none">
+                <div class="row align-items-center px-2">
+                    <p>Use an authenticator app to scan this QR code.</p>
+                    <div id="qrcode--holder" class="col-auto text-truncate d-flex align-items-center">
+
+                    </div>
+                    <div class=" mt-3">Then enter one of the generated OTP here:</div>
+                    <div class="my-2">
+                        <input id="otpValidation" name="otpValidation" placeholder="OTP" class="form-control me-2" />
+                    </div>
+                    <div class="">
+                        <div class="col"><button class="btn btn-danger me-2">Activate</button></div>
+                    </div>
+                </div>
+            </form>
+            <form id="otp--qrcode--success" class="list-group-item  border-left-none px-1 position-sticky d-none">
+                <div class="row align-items-center px-2">
+                    <p class="text-white">OTP was activated</p>
+                </div>
+            </form>
+        </div>
+
+
+    </section>
+
+
+    <section id="new--message" class="d-none">
+        <iframe id="new--message-frame" src="about:blank"></iframe>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
+    <script src="~/js/index.js"></script>
+    <script src="~/js/settings.js"></script>
+}

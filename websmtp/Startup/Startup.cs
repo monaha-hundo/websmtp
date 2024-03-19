@@ -112,14 +112,16 @@ public static class Startup
             {"default-src", new List<string>{"self"}},
             {"connect-src", new List<string>{"self"}},
             {"script-src", new List<string>{"self"}},
-            {"img-src", new List<string>{"self"}},
+            {"img-src", new List<string>{"self", "blob:"}},
             {"style-src", new List<string>{"self"}},
             {"frame-src", new List<string>{"self"}}
         };
 
-        csp["img-src"].Add("data:");
+        if(enableHtmlMedia){
+            csp["img-src"].Add("data:");
+        }
 
-        var cspHeaderValue = string.Join("; ", csp.Keys.Select(c => $"{c} {string.Join(' ', csp[c].Select(s => s == "data:" ? s : "'" + s + "'"))}"));
+        var cspHeaderValue = string.Join("; ", csp.Keys.Select(c => $"{c} {string.Join(' ', csp[c].Select(s => s.Contains(':')  ? s : "'" + s + "'"))}"));
 
         app.Use(async (context, next) =>
         {
@@ -160,13 +162,23 @@ public static class Startup
 
     public static void MapEndpoints(WebApplication app)
     {
+        // Messages actions
         app.MapPost("/api/messages/star/", MessagesEndpoints.Star).RequireAuthorization();
         app.MapPost("/api/messages/unstar/", MessagesEndpoints.Unstar).RequireAuthorization();
         app.MapPost("/api/messages/mark-as-read/", MessagesEndpoints.MarkAsRead).RequireAuthorization();
         app.MapPost("/api/messages/mark-as-unread/", MessagesEndpoints.MarkAsUnread).RequireAuthorization();
         app.MapPost("/api/messages/delete/", MessagesEndpoints.Delete).RequireAuthorization();
         app.MapPost("/api/messages/undelete/", MessagesEndpoints.Undelete).RequireAuthorization();
+
+        // Messages attachements and raw download
         app.MapGet("/api/messages/{msgId}/attachements/{filename}", MessagesEndpoints.GetMessageAttachement).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}.html", MessagesEndpoints.GetMessage).RequireAuthorization();
+
+        // OTP
+        app.MapGet("/api/settings/otp/initiate", MessagesEndpoints.OtpInitiate).RequireAuthorization();
+        app.MapPost("/api/settings/otp/validate", MessagesEndpoints.OtpValidateAndEnable).RequireAuthorization();
+
+        // Password change
+        app.MapPost("/api/settings/pwd/change", MessagesEndpoints.ChangePassword).RequireAuthorization();
     }
 }

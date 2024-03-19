@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using websmtp;
 using websmtp.Database;
@@ -7,17 +8,23 @@ public class ReadableMessageStore : IReadableMessageStore
 {
     private readonly ILogger<MessageStore> _logger;
     private readonly IServiceProvider _services;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public ReadableMessageStore(ILogger<MessageStore> logger, IServiceProvider services)
+
+    public ReadableMessageStore(ILogger<MessageStore> logger, IServiceProvider services, IHttpContextAccessor httpContextAccessor)
     {
         _logger = logger;
         _services = services;
+        _httpContextAccessor = httpContextAccessor;
     }
+
 
     public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, bool showSpam, bool onlySared, bool showSent, string filter)
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+
+        var userId = _httpContextAccessor.GetUserId();
 
         _dataContext.ChangeTracker.LazyLoadingEnabled = false;
         _dataContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
@@ -40,20 +47,22 @@ public class ReadableMessageStore : IReadableMessageStore
             };
         }
 
-        var newCount = _dataContext.Messages.Count(msg => !msg.Sent && !msg.Deleted && !msg.Read && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var basicMsgQuery = _dataContext.Messages.Where(msg => msg.UserId == userId);
 
-        var allMailCount = _dataContext.Messages.Count(msg => !msg.Sent && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var newCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && !msg.Read && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+
+        var allMailCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
         var AllHasNew = newCount > 0;
 
-        var spamnCount = _dataContext.Messages.Count(msg => !msg.Sent && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
-        var spamHasNew = _dataContext.Messages.Any(msg => !msg.Sent && !msg.Read && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
+        var spamnCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
+        var spamHasNew = basicMsgQuery.Any(msg => !msg.Sent && !msg.Read && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
 
-        var trashCount = _dataContext.Messages.Count(msg => !msg.Sent && msg.Deleted );
-        var trashHasNew = _dataContext.Messages.Any(msg => !msg.Sent && msg.Deleted);
+        var trashCount = basicMsgQuery.Count(msg => !msg.Sent && msg.Deleted);
+        var trashHasNew = basicMsgQuery.Any(msg => !msg.Sent && msg.Deleted);
 
-        var favsCount = _dataContext.Messages.Count(msg => !msg.Sent && msg.Stared && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var favsCount = basicMsgQuery.Count(msg => !msg.Sent && msg.Stared && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
 
-        var query = _dataContext.Messages
+        var query = basicMsgQuery
             .AsNoTracking()
             .AsSplitQuery();
 
@@ -147,14 +156,18 @@ public class ReadableMessageStore : IReadableMessageStore
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
+        var userId = _httpContextAccessor.GetUserId();
+
         if (onlyNew)
         {
             return _dataContext.Messages
+                .Where(msg => msg.UserId == userId)
                 .Where(msg => !msg.Deleted)
                 .Count(msg => !msg.Read);
         }
 
         return _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
             .Where(msg => !msg.Deleted)
             .Count();
     }
@@ -163,7 +176,10 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var userId = _httpContextAccessor.GetUserId();
+
         var query = _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
             .AsNoTracking();
 
         if (includeRaw)
@@ -185,7 +201,9 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
             .ExecuteUpdate(s => s.SetProperty(m => m.Read, true));
     }
@@ -193,7 +211,9 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
             .ExecuteUpdate(s => s.SetProperty(m => m.Read, false));
     }
@@ -202,7 +222,9 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
             .ExecuteUpdate(s => s.SetProperty(m => m.Deleted, true));
     }
@@ -211,7 +233,9 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
             .ExecuteUpdate(s => s.SetProperty(m => m.Deleted, false));
     }
@@ -220,7 +244,9 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
             .ExecuteUpdate(s => s.SetProperty(m => m.Stared, true));
 
@@ -231,7 +257,9 @@ public class ReadableMessageStore : IReadableMessageStore
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var userId = _httpContextAccessor.GetUserId();
         _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
             .ExecuteUpdate(s => s.SetProperty(m => m.Stared, false));
     }
