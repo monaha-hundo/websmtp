@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace websmtp.Database.Models;
 
+[Index("Username", IsUnique = true)]
 public class User
 {
     public int Id { get; set; }

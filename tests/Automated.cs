@@ -403,15 +403,17 @@ public class Basic
         var dnsPort = config.GetValue<int>("DNS:Port");
 
         var masterFile = new MasterFile();
-        masterFile.AddIPAddressResourceRecord("websmtp.local", "127.0.0.1");
-        masterFile.AddMailExchangeResourceRecord("websmtp.local", 10, "localhost");
-        masterFile.AddTextResourceRecord("dkim._domainkey.websmtp.local", "dkim", "v=DKIM1; p=" + publicKey);
-        masterFile.AddTextResourceRecord("websmtp.local", "v", "spf1 +all");
+
+        // masterFile.AddIPAddressResourceRecord("websmtp.local", "127.0.0.1");
+        // masterFile.AddMailExchangeResourceRecord("websmtp.local", 10, "localhost");
+        // masterFile.AddTextResourceRecord("dkim._domainkey.websmtp.local", "dkim", "v=DKIM1; p=" + publicKey);
+        // masterFile.AddTextResourceRecord("websmtp.local", "v", "spf1 +all");
 
         domains.GroupBy(d => d).Select(dG => dG.FirstOrDefault()).ToList().ForEach(dmn =>
         {
             masterFile.AddIPAddressResourceRecord(dmn, "127.0.0.1");
             masterFile.AddMailExchangeResourceRecord(dmn, 10, "localhost");
+            masterFile.AddTextResourceRecord($"dkim._domainkey.{dmn}", "dkim", "v=DKIM1; p=" + publicKey);
             masterFile.AddTextResourceRecord(dmn, "v", "spf1 +all");
         });
         using var server = new DnsServer(masterFile);
@@ -422,6 +424,8 @@ public class Basic
             await server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
         }, ct);
 
+        LoginAsTester().Wait();
+
         try
         {
             Console.WriteLine($"Sending {testEmailCount} emails...");
@@ -429,9 +433,15 @@ public class Basic
             mimeMessages.ForEach(sendMailService.SendMail);
 
             var savedMessageCount = db.Messages.Count(msg => msg.Subject.Contains(testRunId));
-            var filterResult = msgStore.Latest(1, 1000, false, false, true, false, false, msgGuidToFind);
+            //var filterResult = msgStore.Latest(1, 1000, false, false, true, false, false, msgGuidToFind);
 
-            Assert.IsTrue(filterResult.Count == 1);
+            var testResponse = client.GetAsync($"https://localhost:1443/inbox?filter={msgGuidToFind}").Result;
+
+            testResponse.EnsureSuccessStatusCode();
+
+            var content = testResponse.Content.ReadAsStringAsync().Result;
+
+            Assert.IsTrue(content.Contains(msgGuidToFind));
         }
         catch (Exception ex)
         {
@@ -442,6 +452,7 @@ public class Basic
         }
         finally
         {
+            DeleteTesterUser();
             files?.ForEach(f => f.Content?.Dispose());
             mimeMessages?.ForEach(m => m?.Dispose());
             messages?.ForEach(m => m?.Dispose());
