@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using SmtpServer.Storage;
 using websmtp.Database;
+using websmtp.services;
 
 namespace websmtp.Startup;
 
@@ -90,7 +91,7 @@ public static class Startup
         builder.Services.AddTransient<BasicPublicKeyLocator>();
         builder.Services.AddTransient<IncomingEmailValidator>();
         builder.Services.AddTransient<SendMailService>();
-        builder.Services.AddSingleton<IMessageStore, MessageStore>();
+        builder.Services.AddSingleton<IMessageStore, websmtp.services.MessageStore>();
         builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
         builder.Services.AddHostedService<SmtpServerService>();
     }

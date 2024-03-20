@@ -3,6 +3,8 @@ using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
 
+namespace websmtp.services;
+
 public class ReadableMessageStore : IReadableMessageStore
 {
     private readonly ILogger<MessageStore> _logger;
