@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Net;
-using System.Net.Mail;
+﻿using System.Net;
 using System.Text.RegularExpressions;
 using DnsClient;
 using DnsClient.Protocol;

@@ -1,1 +1,4 @@
-document.getElementById('username').focus()
+"use strict";
+
+document.getElementById('username')?.focus();
+document.getElementById('otp')?.focus();

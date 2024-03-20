@@ -1,3 +1,5 @@
+"use strict";
+
 document.getElementById('otp--form')
     ?.addEventListener('submit', async (event) => {
         event.preventDefault();

@@ -3,7 +3,6 @@ using DnsClient.Protocol;
 using MimeKit.Cryptography;
 using Org.BouncyCastle.Crypto;
 using System.Net;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace websmtp;
 
