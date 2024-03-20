@@ -4,7 +4,7 @@ using MimeKit.Cryptography;
 using Org.BouncyCastle.Crypto;
 using System.Net;
 
-namespace websmtp;
+namespace websmtp.services;
 
 public class BasicPublicKeyLocator : DkimPublicKeyLocatorBase
 {

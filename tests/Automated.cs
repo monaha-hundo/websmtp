@@ -13,6 +13,7 @@ using System.Net.Mail;
 using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
+using websmtp.services;
 
 namespace Tests;
 

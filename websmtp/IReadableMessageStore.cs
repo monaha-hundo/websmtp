@@ -1,5 +1,5 @@
-using websmtp;
 using websmtp.Database.Models;
+using websmtp.services;
 
 public interface IReadableMessageStore
 {

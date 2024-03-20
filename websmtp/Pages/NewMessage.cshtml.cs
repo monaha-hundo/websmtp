@@ -7,6 +7,7 @@ using MimeKit;
 using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
+using websmtp.services;
 
 namespace MyApp.Namespace
 {

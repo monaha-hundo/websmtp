@@ -9,7 +9,7 @@ using System.Net;
 using websmtp.Database;
 using websmtp.Database.Models;
 
-namespace websmtp;
+namespace websmtp.services;
 
 public class MessageStore : IMessageStore
 {

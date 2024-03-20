@@ -111,10 +111,10 @@
                         <i class='bi bi-hand-thumbs-@(Model.Message.DkimFailed ? "down" : "up")-fill'></i></span>
                     @switch (Model.Message.SpfStatus)
                     {
-                        case SpfVerifyResult.Fail:
-                        case SpfVerifyResult.Softfail:
-                        case SpfVerifyResult.Temperror:
-                        case SpfVerifyResult.Permerror:
+                        case services.SpfVerifyResult.Fail:
+                        case services.SpfVerifyResult.Softfail:
+                        case services.SpfVerifyResult.Temperror:
+                        case services.SpfVerifyResult.Permerror:
                             <span class="text-decoration-none badge rounded-pill text-bg-danger fs-6 me-2">
                                 SPF
                                 <i class="bi bi-emoji-frown"></i>
@@ -122,15 +122,15 @@
                             break;
 
                         default:
-                        case SpfVerifyResult.Neutral:
-                        case SpfVerifyResult.None:
+                        case services.SpfVerifyResult.Neutral:
+                        case services.SpfVerifyResult.None:
                             <span class="text-decoration-none badge rounded-pill text-bg-warning fs-6 me-2">
                                 SPF
                                 <i class="bi bi-emoji-neutral"></i>
                             </span>
                             break;
 
-                        case SpfVerifyResult.Pass:
+                        case services.SpfVerifyResult.Pass:
                             <span class="text-decoration-none badge rounded-pill text-bg-success fs-6 me-2">
                                 SPF
                                 <i class="bi bi-emoji-smile"></i>

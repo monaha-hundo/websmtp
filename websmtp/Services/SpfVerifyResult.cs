@@ -1,4 +1,4 @@
-namespace websmtp;
+namespace websmtp.services;
 
 public enum SpfVerifyResult
 {

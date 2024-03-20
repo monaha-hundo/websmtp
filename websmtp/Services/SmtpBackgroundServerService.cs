@@ -1,5 +1,7 @@
 using SmtpServer;
 
+namespace websmtp.services;
+
 public class SmtpServerService : IHostedService, IDisposable
 {
     private readonly ILogger<SmtpServerService> _logger;
