@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MimeKit;
+using websmtp.services;
 
 namespace websmtp.Database.Models;
 

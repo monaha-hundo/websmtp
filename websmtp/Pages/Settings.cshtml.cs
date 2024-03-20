@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
+using websmtp.services;
 
 namespace MyApp.Namespace
 {
@@ -15,6 +16,8 @@ namespace MyApp.Namespace
         private readonly IReadableMessageStore _messageStore;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly DataContext _data;
+
+        public ListResult Listing { get; set; } = new ListResult();
 
         public User Profile { get; set; } = null!;
 
@@ -35,6 +38,7 @@ namespace MyApp.Namespace
                 throw new Exception("Could not get user guid: ", ex);
             }
         }
+
         public SettingsModel(IReadableMessageStore messageStore, IHttpContextAccessor httpContextAccessor, DataContext data)
         {
             _messageStore = messageStore;
@@ -42,11 +46,10 @@ namespace MyApp.Namespace
             _data = data;
         }
 
-        public ListResult Listing { get; set; } = new ListResult();
         public void OnGet()
         {
             var userId = GetUserGuid();
-            Profile = _data.Users.Include(u=>u.Mailboxes).Single(u => u.Id == userId);
+            Profile = _data.Users.Include(u => u.Mailboxes).Single(u => u.Id == userId);
             Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
         }
     }

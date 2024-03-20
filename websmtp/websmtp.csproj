@@ -6,7 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<InternalsVisibleTo>test</InternalsVisibleTo>
 		<!-- <PublishAot>true</PublishAot> -->
-		<!-- <PublishSingleFile>true</PublishSingleFile> -->
+		<PublishSingleFile>true</PublishSingleFile>
 		<SelfContained>true</SelfContained>
 	</PropertyGroup>
 

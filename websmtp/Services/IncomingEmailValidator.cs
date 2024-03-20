@@ -5,7 +5,7 @@ using DnsClient.Protocol;
 using MimeKit;
 using MimeKit.Cryptography;
 
-namespace websmtp;
+namespace websmtp.services;
 
 public partial class IncomingEmailValidator
 {

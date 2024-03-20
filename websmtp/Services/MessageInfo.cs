@@ -1,6 +1,6 @@
 using websmtp.Database.Models;
 
-namespace websmtp;
+namespace websmtp.services;
 
 public class MessageInfo : IMessage
 {

@@ -6,7 +6,7 @@ using MailKit.Security;
 using MimeKit;
 using MimeKit.Cryptography;
 
-namespace websmtp;
+namespace websmtp.services;
 
 public class SendMailService
 {
