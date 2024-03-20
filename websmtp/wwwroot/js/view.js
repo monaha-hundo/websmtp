@@ -1,3 +1,5 @@
+"use strict";
+
 var msgId = document.getElementById('msg--id').value;
 
 document.getElementById('btn--close')

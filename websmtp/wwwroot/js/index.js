@@ -1,4 +1,4 @@
-"using strict";
+"use strict";
 
 function updateSelectedMessages() {
     let multiSelectActionsEl = document.getElementById('multiple--selection');
@@ -9,7 +9,7 @@ function updateSelectedMessages() {
     } else {
         multiSelectActionsEl.classList.add('d-none');
     }
-}
+}adasd
 
 function initNavbar() {
     let inbox = window.location.href.endsWith('/inbox');
