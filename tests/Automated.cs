@@ -82,6 +82,7 @@ public class Basic
             Username = "tester",
             PasswordHash = passwordHash,
             OtpSecret = string.Empty,
+            OtpEnabled = false,
             Deleted = false,
             Mailboxes = [new UserMailbox{
                 DisplayName = "Tester @ Localhost",
