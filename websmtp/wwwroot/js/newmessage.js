@@ -1,3 +1,5 @@
+"use strict";
+
 document.getElementById('new--message-expand-btn')
     ?.addEventListener("click", () => {
         expandWindow();

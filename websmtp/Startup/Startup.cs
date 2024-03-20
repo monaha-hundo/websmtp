@@ -39,6 +39,8 @@ public static class Startup
         var useSsl = builder.Configuration.GetValue<bool>("SSL:Enabled");
         if (useSsl)
         {
+            builder.WebHost.UseKestrelHttpsConfiguration();
+
             var sslPort = builder.Configuration.GetValue<int>("SSL:Port");
             var privKeyFilename = builder.Configuration.GetValue<string>("SSL:PrivateKey") ?? throw new Exception("Missing SSL:PrivateKey configuration.");
             var pubKeyFilename = builder.Configuration.GetValue<string>("SSL:PublicKey") ?? throw new Exception("Missing SSL:PublicKey configuration.");
@@ -54,6 +56,9 @@ public static class Startup
                     listenOptions.UseHttps(x509);
                 });
             });
+        }else
+        {
+            builder.WebHost.UseKestrel();
         }
     }
 
@@ -76,6 +81,7 @@ public static class Startup
             });
         }
 
+        //builder.Services.AddSession();
         builder.Services.AddAntiforgery();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
@@ -141,6 +147,7 @@ public static class Startup
             app.UseResponseCompression();
         }
 
+        //app.UseSession();
         app.UseAntiforgery();
         app.UseAuthentication();
         app.UseAuthorization();

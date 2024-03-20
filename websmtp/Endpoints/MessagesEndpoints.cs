@@ -1,13 +1,11 @@
-﻿using System.Data.Common;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OtpNet;
 using QRCoder;
 using websmtp.Database;
 
 namespace websmtp;
 
-public static class MessagesEndpoints
+public static partial class MessagesEndpoints
 {
     public static IResult GetMessage(
     [FromRoute] Guid msgId,
@@ -125,11 +123,6 @@ public static class MessagesEndpoints
         return Results.Bytes(bytes, "image/png");
     }
 
-    public class OtpValidateViewModel
-    {
-        public string Otp { get; set; } = string.Empty;
-    }
-
     public static IResult OtpValidateAndEnable(
         [FromBody] OtpValidateViewModel otpData,
         [FromServices] DataContext data,
@@ -151,13 +144,6 @@ public static class MessagesEndpoints
         return result
             ? Results.Ok()
             : Results.BadRequest("invalid otp");
-    }
-
-    public class ChangePasswordViewModel
-    {
-        public string CurrentPassword { get; set; }
-        public string NewPassword { get; set; }
-        public string ConfirmPassword { get; set; }
     }
 
     public static IResult ChangePassword(

@@ -1,5 +1,4 @@
 using MimeKit;
-using Org.BouncyCastle.Crypto.Modes;
 using SmtpServer;
 using SmtpServer.Mail;
 using SmtpServer.Net;

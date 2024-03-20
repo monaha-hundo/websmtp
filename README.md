@@ -8,7 +8,8 @@ E.g. being a mock SMTP server for testing, home emails for LAN devices such as p
 _In active development, partial features, missing features, security issues, etc._
 
 ## Login with one time passwords
-![Screenshot from 2024-03-15 08-40-47](https://github.com/monaha-hundo/websmtp/assets/139830086/31cc34b3-8fbf-4d7e-b8ef-69c0274529b7)
+![Screenshot from 2024-03-20 06-36-55](https://github.com/monaha-hundo/websmtp/assets/139830086/07f97399-9856-4b7f-809a-3846e1424176)
+![Screenshot from 2024-03-20 06-37-36](https://github.com/monaha-hundo/websmtp/assets/139830086/4bb75fb9-9352-45fb-9718-1da200e3e52d)
 
 ## Basic Inbox/All Mail/Favorites/Trash view
 ![Screenshot from 2024-03-15 08-43-49](https://github.com/monaha-hundo/websmtp/assets/139830086/d64d1654-5321-4ace-91e7-8688c37ce7b2)

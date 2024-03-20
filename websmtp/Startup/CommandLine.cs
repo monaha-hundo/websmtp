@@ -2,7 +2,6 @@
 using MimeKit;
 using Newtonsoft.Json;
 using OtpNet;
-using QRCoder;
 using System.Diagnostics;
 using websmtp.Database;
 using websmtp.Database.Models;
