@@ -81,6 +81,7 @@ public static class Startup
             });
         }
 
+        //builder.Services.AddSession();
         builder.Services.AddAntiforgery();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
@@ -145,7 +146,8 @@ public static class Startup
         {
             app.UseResponseCompression();
         }
-    
+
+        //app.UseSession();
         app.UseAntiforgery();
         app.UseAuthentication();
         app.UseAuthorization();
