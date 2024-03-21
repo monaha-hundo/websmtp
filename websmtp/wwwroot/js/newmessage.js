@@ -30,6 +30,15 @@ document.getElementById('new--msg--back')
     ?.addEventListener("click", () => {
         history.back()
     });
+document.querySelectorAll('.identity--dropdown--value')
+    .forEach(el => {
+        el.addEventListener("click", (event) => {
+            let idId = event.currentTarget.getAttribute('identity-id'),
+                idString = event.currentTarget.innerHTML;
+            document.getElementById('identityId').value = idId;
+            document.getElementById('btn--identity--dropdown').innerHTML = idString;
+        });
+    });
 
 
 const toolbarOptions = [
@@ -39,7 +48,6 @@ const toolbarOptions = [
 
     ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
     ['code-block', 'link', 'image'],
-    [{ 'align': [] }],
 
     [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
     //[{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript

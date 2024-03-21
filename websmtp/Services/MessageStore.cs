@@ -50,52 +50,17 @@ public class MessageStore : IMessageStore
             _logger.LogDebug("Saved raw message id #{}.", newRawMsg.Id);
 
             _logger.LogInformation("Parsing message & saving data...");
-            using var memory = new MemoryStream(raw);
+            using var memory = new MemoryStream(newRawMsg.Content);
             using var mimeMessage = MimeMessage.Load(memory, cancellationToken) ?? throw new Exception("Could not parse message.");
-            var from = transaction.From.AsAddress();
 
-            var DkimFailed = true;
-            var spfStatus = SpfVerifyResult.Fail;
+            var DkimFailed = CheckDKIM(newRawMsg, mimeMessage);
+            var spfStatus = CheckSpf(context, transaction, newRawMsg);
+            var isSpam = DkimFailed || spfStatus != SpfVerifyResult.Pass;
 
-            try
-            {
-                var isDkimCheckEnabled = _config.GetValue<bool>("DKIM:Enabled") == true;
-                if (isDkimCheckEnabled)
-                {
-                    DkimFailed = !_incomingValidator.VerifyDkim(mimeMessage); //newMessage.DkimFailed 
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
-            }
-
-            try
-            {
-                var isSpfCheckEnable = _config.GetValue<bool>("SPF:Enabled") == true;
-                if (isSpfCheckEnable)
-                {
-                    var endpoint = (IPEndPoint)context.Properties[EndpointListener.RemoteEndPointKey];
-                    var ip = endpoint.Address.ToString();
-                    var domain = transaction.From.Host;
-                    spfStatus = _incomingValidator.VerifySpf(ip, domain, from);
-                }
-                else
-                {
-                    spfStatus = SpfVerifyResult.None;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
-            }
-
-            var alreadyCatchedAll = false;
+            var usersMailboxes = new Dictionary<int, UserMailbox>();
 
             foreach (var to in transaction.To)
             {
-                if (alreadyCatchedAll) break;
-
                 var toHost = to.Host;
                 var toUser = to.User;
 
@@ -106,14 +71,12 @@ public class MessageStore : IMessageStore
                 {
                     // catch-all@domain mailbox
                     userMailbox = _dataContext.Mailboxes.SingleOrDefault(mb => mb.Identity == "*" && mb.Host == toHost);
-                    alreadyCatchedAll = true;
                 }
 
                 if (userMailbox == null)
                 {
                     // CATCH-ALL from ALL domains
                     userMailbox = _dataContext.Mailboxes.SingleOrDefault(mb => mb.Identity == "*" && mb.Host == "*");
-                    alreadyCatchedAll = true;
                 }
 
                 if (userMailbox == null)
@@ -122,15 +85,29 @@ public class MessageStore : IMessageStore
                     // domain catch-all was unconfigured,
                     // catch-all mailbox was unconfigured
                     // reject transaction
-                    return Task.FromResult(SmtpResponse.NoValidRecipientsGiven);
+                    //return Task.FromResult(SmtpResponse.NoValidRecipientsGiven); // should we?
+                    continue;
                 }
 
+                if (usersMailboxes.ContainsKey(userMailbox.Id)) continue;
+
+                usersMailboxes.Add(userMailbox.Id, userMailbox);
+            }
+
+            if (usersMailboxes.Count == 0)
+            {
+                return Task.FromResult(SmtpResponse.NoValidRecipientsGiven);
+            }
+
+            foreach (var userMailbox in usersMailboxes.Values)
+            {
                 var newMessage = new Message(mimeMessage)
                 {
                     RawMessageId = newRawMsg.Id,
                     UserId = userMailbox.UserId,
                     DkimFailed = DkimFailed,
-                    SpfStatus = spfStatus
+                    SpfStatus = spfStatus,
+                    IsSpam = isSpam
                 };
 
                 _dataContext.Messages.Add(newMessage);
@@ -146,6 +123,50 @@ public class MessageStore : IMessageStore
             _logger.LogCritical("Could not save incoming message: {0}", ex.Message);
             return Task.FromResult(SmtpResponse.TransactionFailed);
         }
+    }
+
+    private SpfVerifyResult CheckSpf(ISessionContext context, IMessageTransaction transaction, RawMessage newRawMsg)
+    {
+        try
+        {
+            var from = transaction.From.AsAddress();
+            var isSpfCheckEnable = _config.GetValue<bool>("SPF:Enabled") == true;
+            if (isSpfCheckEnable)
+            {
+                var endpoint = (IPEndPoint)context.Properties[EndpointListener.RemoteEndPointKey];
+                var ip = endpoint.Address.ToString();
+                var domain = transaction.From.Host;
+                return _incomingValidator.VerifySpf(ip, domain, from);
+            }
+            else
+            {
+                return SpfVerifyResult.None;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
+        }
+
+        return SpfVerifyResult.Fail;
+    }
+
+    private bool CheckDKIM(RawMessage newRawMsg, MimeMessage mimeMessage)
+    {
+        try
+        {
+            var isDkimCheckEnabled = _config.GetValue<bool>("DKIM:Enabled") == true;
+            if (isDkimCheckEnabled)
+            {
+                return !_incomingValidator.VerifyDkim(mimeMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
+        }
+
+        return false;
     }
 }
 

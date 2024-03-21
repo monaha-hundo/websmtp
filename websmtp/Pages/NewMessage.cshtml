@@ -71,91 +71,108 @@ else
                 From:
             </div>
             <div class="col">
-
-                <div class="input-group">
-                    <input id="fromEmail" name="fromEmail" type="text" class="form-control" placeholder="Address"
-                        aria-label="Text input with dropdown button">
-                    <input id="fromName" name="fromName" type="text" class="form-control" placeholder="Display Name"
-                        aria-label="Text input with dropdown button">
-                </div>
-            </div>
-        </div>
-
-        <div class="row align-items-center mb-2 mt-3 gx-0">
-            <div class="col col-auto new--message-label-min-width">
-                To:
-            </div>
-            <div class="col">
-                <input id="to" name="to" type="text" class="form-control" placeholder="Destination(s)"
-                    aria-label="Text input with dropdown button">
-            </div>
-            <div class="col col-auto">
-
-                <button id="show--cc" class="btn btn-outline-neutral ms-2" type="button">
-                    CC
+                <input type="hidden" id="identityId" name="identityId" value="@Model.Identities[0].Id">
+                <button id="btn--identity--dropdown"
+                    class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    @Model.Identities[0].DisplayName &lt;@Model.Identities[0].Email&gt;
                 </button>
-                <button id="show--bcc" class="btn btn-outline-neutral ms-2" type="button">
-                    BCC
-                </button>
-            </div>
-        </div>
+                <ul class="dropdown-menu">
+                    @foreach (var identity in Model.Identities)
+                        {
+                            <li>
+                                <span class="dropdown-item identity--dropdown--value" identity-id="@identity.Id">
+                                    @identity.DisplayName  &lt;@identity.Email&gt;
+                                </span>
+                            </li>
+                        }
+                    </ul>
 
-        <div id="cc-row" class="row align-items-center mb-2 mt-3 gx-0 d-none">
-            <div class="col col-auto new--message-label-min-width">
-                Cc:
-            </div>
-            <div class="col">
-                <input id="cc" name="cc" type="text" class="form-control" placeholder="Carbon Copies)"
-                    aria-label="Text input with dropdown button">
-            </div>
-        </div>
-
-        <div id="bcc-row" class="row align-items-center mb-2 mt-3 gx-0 d-none">
-            <div class="col col-auto new--message-label-min-width">
-                Bcc:
-            </div>
-            <div class="col">
-                <input id="bcc" name="bcc" type="text" class="form-control" placeholder="Blind carbon Copies)"
-                    aria-label="Text input with dropdown button">
-            </div>
-        </div>
-
-        <div id="subject-row" class="row align-items-center my-2 mb-3">
-            <div class="col col-auto new--message-label-min-width">
-                Subject:
-            </div>
-            <div class="col">
-                <input id="subject" name="subject" class="form-control" />
-            </div>
-        </div>
-
-        <textarea id="body" name="body" class="form-control my-2 flex-1-1-100p" rows="6"></textarea>
-        @* <div id="body" name="body" class="text-white"></div> *@
-
-        <div class="row align-items-center justify-content-between my-2 ">
-            <div class="col">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="true" id="html" name="html">
-                    <label class="form-check-label" for="html">
-                        HTML Message
-                    </label>
+                    @* <div class="input-group">
+                <input id="fromEmail" name="fromEmail" type="text" class="form-control" placeholder="Address"
+                aria-label="Text input with dropdown button">
+                <input id="fromName" name="fromName" type="text" class="form-control" placeholder="Display Name"
+                aria-label="Text input with dropdown button">
+                </div> *@
                 </div>
             </div>
 
-            <div class="col col-auto d-flex align-items-center">
-                <button type="submit" class="btn btn-primary ">Send</button>
+            <div class="row align-items-center mb-2 mt-3 gx-0">
+                <div class="col col-auto new--message-label-min-width">
+                    To:
+                </div>
+                <div class="col">
+                    <input id="to" name="to" type="text" class="form-control" placeholder="Destination(s)"
+                        aria-label="Text input with dropdown button">
+                </div>
+                <div class="col col-auto">
+
+                    <button id="show--cc" class="btn btn-outline-neutral ms-2" type="button">
+                        CC
+                    </button>
+                    <button id="show--bcc" class="btn btn-outline-neutral ms-2" type="button">
+                        BCC
+                    </button>
+                </div>
+            </div>
+
+            <div id="cc-row" class="row align-items-center mb-2 mt-3 gx-0 d-none">
+                <div class="col col-auto new--message-label-min-width">
+                    Cc:
+                </div>
+                <div class="col">
+                    <input id="cc" name="cc" type="text" class="form-control" placeholder="Carbon Copies)"
+                        aria-label="Text input with dropdown button">
+                </div>
+            </div>
+
+            <div id="bcc-row" class="row align-items-center mb-2 mt-3 gx-0 d-none">
+                <div class="col col-auto new--message-label-min-width">
+                    Bcc:
+                </div>
+                <div class="col">
+                    <input id="bcc" name="bcc" type="text" class="form-control" placeholder="Blind carbon Copies)"
+                        aria-label="Text input with dropdown button">
+                </div>
+            </div>
+
+            <div id="subject-row" class="row align-items-center my-2 mb-3">
+                <div class="col col-auto new--message-label-min-width">
+                    Subject:
+                </div>
+                <div class="col">
+                    <input id="subject" name="subject" class="form-control" />
+                </div>
+            </div>
+
+            <textarea id="body" name="body" class="form-control my-2 flex-1-1-100p" rows="6"></textarea>
+            @* <div id="body" name="body" class="text-white"></div> *@
+
+            <div class="row align-items-center justify-content-between my-2 ">
+                <div class="col">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="true" id="html" name="html">
+                        <label class="form-check-label" for="html">
+                            HTML Message
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col col-auto d-flex align-items-center">
+                    <button type="submit" class="btn btn-primary ">Send</button>
+                </div>
+            </div>
+            <div>
+                &nbsp;
             </div>
         </div>
-        <div>
-            &nbsp;
-        </div>
-    </div>
 
-</form>
+    </form>
 }
 @section Scripts {
     <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
     <link href="~/lib/quill.snow.css" rel="stylesheet" />
     <script src="~/lib/quill.js"> </script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"> </script>
     <script src="~/js/newmessage.js"> </script>
 }

@@ -9,7 +9,7 @@ function updateSelectedMessages() {
     } else {
         multiSelectActionsEl.classList.add('d-none');
     }
-}adasd
+}
 
 function initNavbar() {
     let inbox = window.location.href.endsWith('/inbox');
@@ -197,7 +197,30 @@ async function unstarMessages(msgsIds) {
     return success;
 }
 
-//
+
+async function markAsSpam(msgsIds) {
+    const response = await fetch(`/api/messages/spam/`, {
+        method: 'post',
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(msgsIds)
+    });
+    const success = response.status == 200;
+    return success;
+}
+
+async function markAsNotSpam(msgsIds) {
+    const response = await fetch(`/api/messages/notspam/`, {
+        method: 'post',
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(msgsIds)
+    });
+    const success = response.status == 200;
+    return success;
+}
 
 async function undeleteMessages(msgsIds) {
     const call = async () => {
@@ -322,7 +345,6 @@ const handleStarClick = async (event) => {
         return;
     };
     event.preventDefault();
-    event.bubbles = false;
     let containerEl = event.currentTarget;
     let msgId = containerEl.id.replace('msg--list-star_', '');
     let isStared = containerEl.getAttribute('checked') === "true";
@@ -348,7 +370,6 @@ const handleCheckboxClick = (event) => {
         return;
     };
     event.preventDefault();
-    event.bubbles = false;
     let containerEl = event.currentTarget;
     let isStared = containerEl.getAttribute('checked') === "true";
     let newStatus = !isStared;
@@ -427,7 +448,6 @@ document.getElementById('new--msg--btn')
 document.getElementById('msg--list-checkbox_all')
     ?.addEventListener("click", async (event) => {
         event.preventDefault();
-        event.bubbles = false;
         const clickEvent = new Event("click");
         let selectedMsgIds = [...document.querySelectorAll('[id^=msg--list-checkbox_]')]
             .filter(el => el.id != 'msg--list-checkbox_all');

@@ -47,7 +47,7 @@ public class IndexModel : PageModel
                 break;
 
             case "sent":
-                Listing = _messageStore.Latest(page, perPage, false, false, true, false, true, Filter);
+                Listing = _messageStore.Latest(page, perPage, false, false, false, false, true, Filter);
                 break;
 
             case "trash":

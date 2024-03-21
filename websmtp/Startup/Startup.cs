@@ -171,6 +171,8 @@ public static class Startup
     public static void MapEndpoints(WebApplication app)
     {
         // Messages actions
+        app.MapPost("/api/messages/spam/", MessagesEndpoints.Spam).RequireAuthorization();
+        app.MapPost("/api/messages/notspam/", MessagesEndpoints.NotSpam).RequireAuthorization();
         app.MapPost("/api/messages/star/", MessagesEndpoints.Star).RequireAuthorization();
         app.MapPost("/api/messages/unstar/", MessagesEndpoints.Unstar).RequireAuthorization();
         app.MapPost("/api/messages/mark-as-read/", MessagesEndpoints.MarkAsRead).RequireAuthorization();
