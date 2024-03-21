@@ -11,5 +11,7 @@ public interface IReadableMessageStore
     public void Undelete(List<Guid> messagesIds);
     public void Star(List<Guid> messagesIds);
     public void Unstar(List<Guid> messagesIds);
+    public void Spam(List<Guid> messagesIds);
+    public void NotSpam(List<Guid> messagesIds);
     public long Count(bool onlyNew);
 }

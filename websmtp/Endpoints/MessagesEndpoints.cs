@@ -96,6 +96,23 @@ public static partial class MessagesEndpoints
         return Results.Ok();
     }
 
+    public static IResult Spam(
+        [FromBody] List<Guid> msgIds,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.Spam(msgIds);
+        return Results.Ok();
+    }
+    public static IResult NotSpam(
+        [FromBody] List<Guid> msgIds,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        messages.NotSpam(msgIds);
+        return Results.Ok();
+    }
+
     public static IResult OtpInitiate(
         [FromServices] DataContext data,
         [FromServices] IHttpContextAccessor httpContextAccessor

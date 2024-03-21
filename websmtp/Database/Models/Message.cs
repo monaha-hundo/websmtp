@@ -31,6 +31,7 @@ public class Message : IMessage
     public bool DkimFailed { get; set; }
     public SpfVerifyResult SpfStatus { get; set; }
     public bool DmarcFailed { get; set; }
+    public bool IsSpam { get; set; }
 
     public Message()
     {

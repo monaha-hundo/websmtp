@@ -49,7 +49,7 @@ namespace MyApp.Namespace
         public void OnGet()
         {
             var userId = GetUserGuid();
-            Profile = _data.Users.Include(u => u.Mailboxes).Single(u => u.Id == userId);
+            Profile = _data.Users.Include(u => u.Identities).Include(u => u.Mailboxes).Single(u => u.Id == userId);
             Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
         }
     }
