@@ -17,9 +17,8 @@ public class MessageInfo : IMessage
     public bool Stared { get; set; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
-    public bool DkimFailed { get; set; }
-    public SpfVerifyResult SpfStatus { get; set; }
-    public bool DmarcFailed { get; set; }
+    public bool IsSpam { get; set; }
+    public string? Headers { get; set; }
     public MessageInfo() { }
     public MessageInfo(Message message)
     {
@@ -34,9 +33,8 @@ public class MessageInfo : IMessage
         AttachementsCount = message.AttachementsCount;
         Read = message.Read;
         Deleted = message.Deleted;
-        DkimFailed = message.DkimFailed;
-        SpfStatus = message.SpfStatus;
-        DmarcFailed = message.DmarcFailed;
         Stared = message.Stared;
+        IsSpam = message.IsSpam;
+        Headers = message.Headers;
     }
 }

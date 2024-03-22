@@ -19,14 +19,6 @@ namespace MyApp.Namespace
         private readonly ILogger<SendMailService> _logger;
         private readonly DataContext _data;
 
-        public NewMessageModel(SendMailService sendMail, ILogger<SendMailService> logger, DataContext data, IHttpContextAccessor httpContextAccessor)
-        {
-            _logger = logger;
-            _sendMail = sendMail;
-            _data = data;
-            _httpContextAccessor = httpContextAccessor;
-        }
-
         readonly SendMailService _sendMail;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -45,8 +37,16 @@ namespace MyApp.Namespace
         [FromQuery] public bool? DebugSent { get; set; }
         [FromQuery] public bool? DebugSentError { get; set; }
 
-        public List<UserIdentity> Identities { get; set; }
+        public List<UserIdentity> Identities { get; set; } = [];
 
+
+        public NewMessageModel(SendMailService sendMail, ILogger<SendMailService> logger, DataContext data, IHttpContextAccessor httpContextAccessor)
+        {
+            _logger = logger;
+            _sendMail = sendMail;
+            _data = data;
+            _httpContextAccessor = httpContextAccessor;
+        }
         private int GetUserGuid()
         {
             try

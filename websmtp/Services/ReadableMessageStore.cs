@@ -128,6 +128,8 @@ public class ReadableMessageStore : IReadableMessageStore
                 Stared = msg.Stared,
                 Read = msg.Read,
                 Deleted = msg.Deleted,
+                IsSpam = msg.IsSpam,
+                //Headers = msg.Headers,
                 ReceivedOn = msg.ReceivedOn,
                 Subject = msg.Subject,
                 To = msg.To,
