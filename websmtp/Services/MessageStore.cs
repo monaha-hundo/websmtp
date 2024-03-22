@@ -1,3 +1,4 @@
+using MailKit.Security;
 using MimeKit;
 using SmtpServer;
 using SmtpServer.Mail;
@@ -6,6 +7,7 @@ using SmtpServer.Protocol;
 using SmtpServer.Storage;
 using System.Buffers;
 using System.Net;
+using System.Text.RegularExpressions;
 using websmtp.Database;
 using websmtp.Database.Models;
 
@@ -16,17 +18,17 @@ public class MessageStore : IMessageStore
     private readonly ILogger<MessageStore> _logger;
     private readonly IServiceProvider _services;
     private readonly IConfiguration _config;
-    private readonly IncomingEmailValidator _incomingValidator;
+    private readonly SpamAssassin _assassin;
 
-    public MessageStore(ILogger<MessageStore> logger, IServiceProvider services, IConfiguration config, IncomingEmailValidator incomingValidator)
+    public MessageStore(ILogger<MessageStore> logger, IServiceProvider services, IConfiguration config, SpamAssassin assassin)
     {
         _logger = logger;
         _services = services;
         _config = config;
-        _incomingValidator = incomingValidator;
+        _assassin = assassin;
     }
 
-    public Task<SmtpResponse> SaveAsync(
+    public async Task<SmtpResponse> SaveAsync(
         ISessionContext context,
         IMessageTransaction transaction,
         ReadOnlySequence<byte> buffer,
@@ -34,6 +36,7 @@ public class MessageStore : IMessageStore
     {
         try
         {
+            var checkSpam = _config.GetValue<bool>("SpamAssassin:Enabled");
             using var scope = _services.CreateScope();
             using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
@@ -49,53 +52,41 @@ public class MessageStore : IMessageStore
             _dataContext.SaveChanges();
             _logger.LogDebug("Saved raw message id #{}.", newRawMsg.Id);
 
+            byte[] msgBytes;
+
+            if (checkSpam)
+            {
+                var rawMsg = System.Text.Encoding.UTF8.GetString(raw);
+                var processedMsg = await _assassin.Run(rawMsg);
+                msgBytes = System.Text.Encoding.UTF8.GetBytes(processedMsg);
+            }
+            else
+            {
+                msgBytes = raw;
+            };
+
             _logger.LogInformation("Parsing message & saving data...");
-            using var memory = new MemoryStream(raw);
+            using var memory = new MemoryStream(msgBytes);
             using var mimeMessage = MimeMessage.Load(memory, cancellationToken) ?? throw new Exception("Could not parse message.");
-            var from = transaction.From.AsAddress();
 
-            var DkimFailed = true;
-            var spfStatus = SpfVerifyResult.Fail;
+            // var saStatus = mimeMessage.Headers["X-Spam-Status"];
+            // var saRegEx = new Regex("(score=[0-9.]+) (required=[0-9.]+)");
+            // var saRegExResult = saRegEx.Matches(saStatus);
+            // var score = double.Parse(saRegExResult[0].Groups[1].Value.Split('=')[1]);
+            // var required = double.Parse(saRegExResult[0].Groups[2].Value.Split('=')[1]);
+            // var isSpam = score >= required;
 
-            try
-            {
-                var isDkimCheckEnabled = _config.GetValue<bool>("DKIM:Enabled") == true;
-                if (isDkimCheckEnabled)
-                {
-                    DkimFailed = !_incomingValidator.VerifyDkim(mimeMessage); //newMessage.DkimFailed 
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
-            }
+            var headers = mimeMessage.Headers.Select(h => $"{h.Field}: {h.Value}").Aggregate((a, b) => $"{a}\r\n{b}");
+            headers = headers.Replace("	", " ");
 
-            try
-            {
-                var isSpfCheckEnable = _config.GetValue<bool>("SPF:Enabled") == true;
-                if (isSpfCheckEnable)
-                {
-                    var endpoint = (IPEndPoint)context.Properties[EndpointListener.RemoteEndPointKey];
-                    var ip = endpoint.Address.ToString();
-                    var domain = transaction.From.Host;
-                    spfStatus = _incomingValidator.VerifySpf(ip, domain, from);
-                }
-                else
-                {
-                    spfStatus = SpfVerifyResult.None;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical("Could not validate DKIM signature on incoming message raw_id# {0}: {1}", newRawMsg.Id, ex.Message);
-            }
+            var isSpam = checkSpam && mimeMessage.Headers.Contains("X-Spam-Flag")
+                ? mimeMessage.Headers["X-Spam-Flag"] == "YES"
+                : false;
 
-            var alreadyCatchedAll = false;
+            var usersMailboxes = new Dictionary<int, UserMailbox>();
 
             foreach (var to in transaction.To)
             {
-                if (alreadyCatchedAll) break;
-
                 var toHost = to.Host;
                 var toUser = to.User;
 
@@ -106,14 +97,12 @@ public class MessageStore : IMessageStore
                 {
                     // catch-all@domain mailbox
                     userMailbox = _dataContext.Mailboxes.SingleOrDefault(mb => mb.Identity == "*" && mb.Host == toHost);
-                    alreadyCatchedAll = true;
                 }
 
                 if (userMailbox == null)
                 {
                     // CATCH-ALL from ALL domains
                     userMailbox = _dataContext.Mailboxes.SingleOrDefault(mb => mb.Identity == "*" && mb.Host == "*");
-                    alreadyCatchedAll = true;
                 }
 
                 if (userMailbox == null)
@@ -122,15 +111,28 @@ public class MessageStore : IMessageStore
                     // domain catch-all was unconfigured,
                     // catch-all mailbox was unconfigured
                     // reject transaction
-                    return Task.FromResult(SmtpResponse.NoValidRecipientsGiven);
+                    //return Task.FromResult(SmtpResponse.NoValidRecipientsGiven); // should we?
+                    continue;
                 }
 
+                if (usersMailboxes.ContainsKey(userMailbox.Id)) continue;
+
+                usersMailboxes.Add(userMailbox.Id, userMailbox);
+            }
+
+            if (usersMailboxes.Count == 0)
+            {
+                return SmtpResponse.NoValidRecipientsGiven;
+            }
+
+            foreach (var userMailbox in usersMailboxes.Values)
+            {
                 var newMessage = new Message(mimeMessage)
                 {
                     RawMessageId = newRawMsg.Id,
                     UserId = userMailbox.UserId,
-                    DkimFailed = DkimFailed,
-                    SpfStatus = spfStatus
+                    IsSpam = isSpam,
+                    Headers = headers
                 };
 
                 _dataContext.Messages.Add(newMessage);
@@ -139,12 +141,12 @@ public class MessageStore : IMessageStore
                 _logger.LogDebug($"Saved message id #{newMessage.Id}.");
             }
 
-            return Task.FromResult(SmtpResponse.Ok);
+            return SmtpResponse.Ok;
         }
         catch (Exception ex)
         {
             _logger.LogCritical("Could not save incoming message: {0}", ex.Message);
-            return Task.FromResult(SmtpResponse.TransactionFailed);
+            return SmtpResponse.TransactionFailed;
         }
     }
 }

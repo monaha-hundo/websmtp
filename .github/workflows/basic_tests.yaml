@@ -7,7 +7,7 @@ on:
     branches: [ "master", "dev" ]
 
 jobs:
-  build:
+  Test:
     runs-on: ubuntu-latest
     services:
       mariadb:
@@ -20,6 +20,8 @@ jobs:
           ports:
               - 3306:3306
     steps:
+    - name: Install Spam Assassin
+      run: sudo apt-get install spamassassin
     - uses: actions/checkout@v3
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
@@ -29,5 +31,7 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+    - name: Migrate Database
+      run: dotnet run --project websmtp --migrate-database
     - name: Test
       run: dotnet test --no-build --verbosity normal

@@ -28,9 +28,8 @@ public class Message : IMessage
     public bool Stared { get; set; }
     public bool Read { get; set; }
     public bool Deleted { get; set; }
-    public bool DkimFailed { get; set; }
-    public SpfVerifyResult SpfStatus { get; set; }
-    public bool DmarcFailed { get; set; }
+    public bool IsSpam { get; set; }
+    public string? Headers { get; set; }
 
     public Message()
     {

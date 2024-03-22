@@ -41,6 +41,15 @@ document.getElementById('btn--unread')
         markAsUnread();
     });
 
+document.getElementById('btn--mark--spam')
+    ?.addEventListener("click", () => {
+        markAsSpam();
+    });
+document.getElementById('btn--mark--notspam')
+    ?.addEventListener("click", () => {
+        markAsNotSpam();
+    });
+
 function showHtmlContent(el) {
     var el = document.getElementById("html-content");
     let isVisible = el.style.display == 'block';
@@ -76,6 +85,22 @@ async function markAsUnread() {
     await window.parent.markMessagesAsUnread([msgId]);
     document.getElementById('btn--unread').classList.add('d-none');
     document.getElementById('btn--read').classList.remove('d-none');
+}
+async function markAsSpam() {
+    await window.parent.markAsSpam([msgId]);
+    document.getElementById('btn--mark--spam').classList.add('d-none');
+    document.getElementById('btn--mark--notspam').classList.remove('d-none');
+
+
+    document.getElementById('label--is--spam').classList.remove('d-none');
+    document.getElementById('label--not--spam').classList.add('d-none');
+}
+async function markAsNotSpam() {
+    await window.parent.markAsNotSpam([msgId]);
+    document.getElementById('btn--mark--spam').classList.remove('d-none');
+    document.getElementById('btn--mark--notspam').classList.add('d-none');
+    document.getElementById('label--is--spam').classList.add('d-none');
+    document.getElementById('label--not--spam').classList.remove('d-none');
 }
 function previousMsg() {
     window.parent.previousMessage(msgId);

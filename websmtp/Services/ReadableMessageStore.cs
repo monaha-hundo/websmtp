@@ -50,18 +50,18 @@ public class ReadableMessageStore : IReadableMessageStore
 
         var basicMsgQuery = _dataContext.Messages.Where(msg => msg.UserId == userId);
 
-        var newCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && !msg.Read && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var newCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && !msg.Read && !msg.IsSpam);
 
-        var allMailCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var allMailCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && !msg.IsSpam);
         var AllHasNew = newCount > 0;
 
-        var spamnCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
-        var spamHasNew = basicMsgQuery.Any(msg => !msg.Sent && !msg.Read && !msg.Deleted && (msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass));
+        var spamnCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && msg.IsSpam);
+        var spamHasNew = basicMsgQuery.Any(msg => !msg.Sent && !msg.Read && !msg.Deleted && msg.IsSpam);
 
         var trashCount = basicMsgQuery.Count(msg => !msg.Sent && msg.Deleted);
         var trashHasNew = basicMsgQuery.Any(msg => !msg.Sent && msg.Deleted);
 
-        var favsCount = basicMsgQuery.Count(msg => !msg.Sent && msg.Stared && !msg.Deleted && !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+        var favsCount = basicMsgQuery.Count(msg => !msg.Sent && msg.Stared && !msg.Deleted && !msg.IsSpam);
 
         var query = basicMsgQuery
             .AsNoTracking()
@@ -86,11 +86,11 @@ public class ReadableMessageStore : IReadableMessageStore
 
             if (!showSpam)
             {
-                query = query.Where(msg => !msg.DkimFailed && msg.SpfStatus == SpfVerifyResult.Pass);
+                query = query.Where(msg => !msg.IsSpam);
             }
             else
             {
-                query = query.Where(msg => msg.DkimFailed || msg.SpfStatus != SpfVerifyResult.Pass);
+                query = query.Where(msg => msg.IsSpam);
             }
 
             if (onlyNew)
@@ -128,6 +128,8 @@ public class ReadableMessageStore : IReadableMessageStore
                 Stared = msg.Stared,
                 Read = msg.Read,
                 Deleted = msg.Deleted,
+                IsSpam = msg.IsSpam,
+                //Headers = msg.Headers,
                 ReceivedOn = msg.ReceivedOn,
                 Subject = msg.Subject,
                 To = msg.To,
@@ -263,5 +265,29 @@ public class ReadableMessageStore : IReadableMessageStore
             .Where(msg => msg.UserId == userId)
             .Where(m => msgIds.Contains(m.Id))
             .ExecuteUpdate(s => s.SetProperty(m => m.Stared, false));
+    }
+
+    public void Spam(List<Guid> msgIds)
+    {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var userId = _httpContextAccessor.GetUserId();
+        _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
+            .Where(m => msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m => m.IsSpam, true));
+
+        var msg = _dataContext.Messages.Where(m => msgIds.Contains(m.Id)).ToList();
+    }
+
+    public void NotSpam(List<Guid> msgIds)
+    {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var userId = _httpContextAccessor.GetUserId();
+        _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
+            .Where(m => msgIds.Contains(m.Id))
+            .ExecuteUpdate(s => s.SetProperty(m => m.IsSpam, false));
     }
 }

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using MimeKit;
 using websmtp;
 using websmtp.Database;
@@ -18,20 +19,11 @@ namespace MyApp.Namespace
         private readonly ILogger<SendMailService> _logger;
         private readonly DataContext _data;
 
-        public NewMessageModel(SendMailService sendMail, ILogger<SendMailService> logger, DataContext data, IHttpContextAccessor httpContextAccessor)
-        {
-            _logger = logger;
-            _sendMail = sendMail;
-            _data = data;
-            _httpContextAccessor = httpContextAccessor;
-        }
-
         readonly SendMailService _sendMail;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         [FromQuery] public string? InitialTo { get; set; }
-        [BindProperty] public string FromEmail { get; set; } = string.Empty;
-        [BindProperty] public string FromName { get; set; } = string.Empty;
+        [BindProperty] public int IdentityId { get; set; }
         [BindProperty] public string To { get; set; } = string.Empty;
         [BindProperty] public string Cc { get; set; } = string.Empty;
         [BindProperty] public string Bcc { get; set; } = string.Empty;
@@ -45,6 +37,16 @@ namespace MyApp.Namespace
         [FromQuery] public bool? DebugSent { get; set; }
         [FromQuery] public bool? DebugSentError { get; set; }
 
+        public List<UserIdentity> Identities { get; set; } = [];
+
+
+        public NewMessageModel(SendMailService sendMail, ILogger<SendMailService> logger, DataContext data, IHttpContextAccessor httpContextAccessor)
+        {
+            _logger = logger;
+            _sendMail = sendMail;
+            _data = data;
+            _httpContextAccessor = httpContextAccessor;
+        }
         private int GetUserGuid()
         {
             try
@@ -73,6 +75,10 @@ namespace MyApp.Namespace
             {
                 Sent = !DebugSentError ?? true;
             }
+
+            var userId = GetUserGuid();
+            var user = _data.Users.Include(u => u.Identities).Single(u => u.Id == userId);
+            Identities = [.. user.Identities];
         }
         public void OnPost()
         {
@@ -81,10 +87,12 @@ namespace MyApp.Namespace
             try
             {
                 var userId = GetUserGuid();
+                var user = _data.Users.Include(u => u.Identities).Single(u => u.Id == userId);
+                var identity = user.Identities.Single(i=>i.Id == IdentityId);
 
                 var mailMessage = new MailMessage
                 {
-                    From = new MailAddress(FromEmail, FromName)
+                    From = new MailAddress(identity.Email, identity.DisplayName)
                 };
 
                 if (!string.IsNullOrEmpty(To))

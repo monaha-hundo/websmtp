@@ -39,6 +39,7 @@
                 <div class="row align-items-center  g-0 px-2">
                     <div class="col-offset-2 col-auto text-truncate d-flex align-items-center ">
                         <span class="text-capitalize fs-5 me-3">Mailboxes</span>
+                        <span class="text-secondary">Who you can receive emails as</span>
                     </div>
                 </div>
             </div>
@@ -46,20 +47,40 @@
             {
                 <form class="list-group-item  border-left-none px-1 position-sticky ">
                     <div class="row align-items-center px-2">
-                        <div class="col-auto text-truncate d-flex align-items-center fs-5">
+                        <div class="col-2 text-truncate d-flex align-items-center fs-5">
                             <!--<input id="subject" name="subject" value="@mailbox.DisplayName" class="form-control me-3" />-->
                             <span class="badge fs-6">@mailbox.DisplayName</span>
                         </div>
                         <div class="col-auto text-truncate d-flex align-items-center fs-5">
-                            <!--<input id="subject" name="subject" value="@mailbox.Identity" class="form-control me-2" />-->
-                            <span class="badge fs-6">@mailbox.Identity</span>
-                            <span class="">@@</span>
-                            <!--<input id="subject" name="subject" value="@mailbox.Host" class="form-control ms-2" />-->
-                            <span class="badge fs-6">@mailbox.Host</span>
+                            <!--<input id="subject" name="subject" value="@mailbox.Identity" class="form-control me-0" />-->
+                            <span class="badge fs-6">@mailbox.Identity@@@mailbox.Host</span>
                         </div>
                     </div>
                 </form>
             }
+
+            <div class="list-group-item  border-left-none px-1 position-sticky unread ">
+                <div class="row align-items-center  g-0 px-2">
+                    <div class="col-offset-2 col-auto text-truncate d-flex align-items-center ">
+                        <span class="text-capitalize fs-5 me-3">Identities</span>
+                        <span class="text-secondary">Who you can send emails as</span>
+                    </div>
+                </div>
+            </div>
+            @foreach (var identity in Model.Profile.Identities)
+            {
+                <div class="list-group-item  border-left-none px-1 position-sticky ">
+                    <div class="row align-items-center px-2">
+                        <div class="col-2 text-truncate d-flex align-items-center fs-5">
+                            <span class="badge fs-6">@identity.DisplayName</span>
+                        </div>
+                        <div class="col-auto text-truncate d-flex align-items-center fs-5">
+                            <span class="badge fs-6">@identity.Email</span>
+                        </div>
+                    </div>
+                </div>
+            }
+
             <div class="list-group-item  border-left-none px-1 position-sticky unread ">
                 <div class="row align-items-center  g-0 px-2">
                     <div class="col-offset-2 col-auto text-truncate d-flex align-items-center ">

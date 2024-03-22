@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using websmtp.Database;
 
@@ -11,9 +12,11 @@ using websmtp.Database;
 namespace websmtp.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240322111826_SpamRefactor4")]
+    partial class SpamRefactor4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,6 +53,7 @@ namespace websmtp.Migrations
                         .HasColumnType("varchar(1000)");
 
                     b.Property<string>("Headers")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("HtmlContent")

@@ -14,6 +14,7 @@ public class User
     [StringLength(100)] public string Roles { get; set; } = string.Empty;
 
     public ICollection<UserMailbox> Mailboxes { get; set; } = [];
+    public ICollection<UserIdentity> Identities { get; set; } = [];
 
     public bool Deleted { get; set; }
 }

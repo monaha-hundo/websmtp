@@ -49,6 +49,7 @@ public class CommandLine
         if (shouldMigrate)
         {
             MigrateDatabase(app);
+            Environment.Exit(0);
         }
     }
 
@@ -169,6 +170,15 @@ public class CommandLine
         var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
 
+        Console.Write("Enter display name: ");
+        var displayName = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(displayName) || displayName.Length == 0)
+        {
+            Console.WriteLine("Invalid display name.");
+            Environment.Exit(-1);
+            return -1;
+        }
+
         Console.Write("Enter username: ");
         var username = Console.ReadLine();
         if (string.IsNullOrWhiteSpace(username) || username.Length == 0)
@@ -188,7 +198,6 @@ public class CommandLine
         }
         var hasher = new PasswordHasher();
         var hash = hasher.HashPassword(passwordToHash);
-        //Console.WriteLine($"Hashed password: '{hash}'.");
 
         Console.Write("Enter roles, separated by comas: ");
         var roles = Console.ReadLine();
@@ -199,44 +208,40 @@ public class CommandLine
             return -1;
         }
 
-        var input = "default";
-        var mailboxes = new List<UserMailbox>();
-        while (input != string.Empty)
+        Console.Write("Enter email: ");
+        var email = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(email) || email.Length == 0)
         {
-            Console.Write("Enter a name for the mailbox (empty to end): ");
-            var mbName = input = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(mbName)) break;
-            Console.Write("Enter an email address (use '*' for wildcard): ");
-            input = Console.ReadLine();
-            var mbAddr = new MailboxAddress("default", input);
-            var identity = mbAddr.LocalPart;
-            var host = mbAddr.Domain;
-            if (string.IsNullOrWhiteSpace(identity) || identity.Length == 0
-                 || string.IsNullOrWhiteSpace(host) || host.Length == 0)
-            {
-                Console.WriteLine("Invalid mailbox.");
-                Environment.Exit(-1);
-                return -1;
-            }
-            mailboxes.Add(new UserMailbox
-            {
-                DisplayName = mbName,
-                Host = host,
-                Identity = identity
-            });
+            Console.WriteLine("Invalid email.");
+            Environment.Exit(-1);
+            return -1;
         }
 
-        byte[] raw = new byte[10];
-        Random.Shared.NextBytes(raw);
-        var otpSecret = Base32Encoding.ToString(raw);
+        var mailboxAddress = new MailboxAddress(displayName, email);
 
         var newUser = new User
         {
-            OtpSecret = otpSecret,
+            OtpEnabled = false,
             PasswordHash = hash,
             Username = username,
             Roles = roles,
-            Mailboxes = mailboxes
+            Mailboxes = new List<UserMailbox>()
+            {
+                new UserMailbox
+                {
+                    DisplayName = displayName,
+                    Host = mailboxAddress.Domain,
+                    Identity = mailboxAddress.Name,
+                }
+            },
+            Identities = new List<UserIdentity>()
+            {
+                new UserIdentity
+                {
+                    DisplayName = displayName,
+                    Email = email,
+                }
+            }
         };
 
         dbContext.Users.Add(newUser);
@@ -252,7 +257,10 @@ public class CommandLine
         var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
 
-        var users = dbContext.Users.Include(u => u.Mailboxes).ToList();
+        var users = dbContext.Users
+            .Include(u => u.Identities)
+            .Include(u => u.Mailboxes)
+            .ToList();
 
         foreach (var user in users)
         {
