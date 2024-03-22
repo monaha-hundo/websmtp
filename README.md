@@ -61,6 +61,7 @@ In active development, partial features, missing features, security issues, not 
 
 ### Send Emails
 ![Screenshot from 2024-03-19 14-20-08](https://github.com/monaha-hundo/websmtp/assets/139830086/fee58ee6-8396-4cdc-a2b0-4f267455609a)
+- DKIM Signing
 
 ### Supports raw message display
 ![Screenshot from 2024-03-15 08-44-24](https://github.com/monaha-hundo/websmtp/assets/139830086/a3d650cf-b5a3-4fe6-b531-721935a78378)
