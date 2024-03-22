@@ -49,6 +49,7 @@ public class CommandLine
         if (shouldMigrate)
         {
             MigrateDatabase(app);
+            Environment.Exit(0);
         }
     }
 

@@ -71,41 +71,6 @@
             <div class="my-2">
                 <span class="fw-bold d-inline-block mw-50px">From:</span>
                 <partial name="MailboxAddresses" model="Model.Message.From" />
-
-
-                <span
-                    class='text-decoration-none badge rounded-pill @(Model.Message.DkimFailed ? "text-bg-danger" : "text-bg-success") fs-6 me-2'>DKIM
-                    <i class='bi bi-hand-thumbs-@(Model.Message.DkimFailed ? "down" : "up")-fill'></i>
-                </span>
-
-                @switch (Model.Message.SpfStatus)
-                {
-                    case services.SpfVerifyResult.Fail:
-                    case services.SpfVerifyResult.Softfail:
-                    case services.SpfVerifyResult.Temperror:
-                    case services.SpfVerifyResult.Permerror:
-                        <span class="text-decoration-none badge rounded-pill text-bg-danger fs-6 me-2">
-                            SPF
-                            <i class="bi bi-emoji-frown"></i>
-                        </span>
-                        break;
-
-                    default:
-                    case services.SpfVerifyResult.Neutral:
-                    case services.SpfVerifyResult.None:
-                        <span class="text-decoration-none badge rounded-pill text-bg-warning fs-6 me-2">
-                            SPF
-                            <i class="bi bi-emoji-neutral"></i>
-                        </span>
-                        break;
-
-                    case services.SpfVerifyResult.Pass:
-                        <span class="text-decoration-none badge rounded-pill text-bg-success fs-6 me-2">
-                            SPF
-                            <i class="bi bi-emoji-smile"></i>
-                        </span>
-                        break;
-                }
             </div>
         </div>
         <div class="d-flex justify-content-between">
@@ -195,6 +160,25 @@
             <div class="card outlined p-2 text-white">@Model.Message.TextContent</div>
         }
 
+        @if (!string.IsNullOrEmpty(Model.Message.Headers))
+        {
+
+            <button class="accordion-button fw-bold my-2" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                Headers <span class="ms-2 text-secondary">Click to toggle visibility</span>
+            </button>
+
+            <div class="accordion accordion-flush" id="accordionExample">
+                <div class="accordion-item">
+                    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                        <div class="accordion-body">
+                            <pre class="whitespace--brsp text-white">@Model.Message.Headers</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
         @if (Model.Message.RawMessage != null)
         {
             <div class="mt-2">
@@ -206,5 +190,6 @@
 </div>
 
 @section Scripts {
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"> </script>
     <script src="~/js/view.js"> </script>
 }

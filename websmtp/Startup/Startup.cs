@@ -88,9 +88,8 @@ public static class Startup
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
         builder.Services.AddAuthorization();
         builder.Services.AddRazorPages();
-        builder.Services.AddTransient<BasicPublicKeyLocator>();
-        builder.Services.AddTransient<IncomingEmailValidator>();
         builder.Services.AddTransient<SendMailService>();
+        builder.Services.AddTransient<SpamAssassin>();
         builder.Services.AddSingleton<IMessageStore, websmtp.services.MessageStore>();
         builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
         builder.Services.AddHostedService<SmtpServerService>();

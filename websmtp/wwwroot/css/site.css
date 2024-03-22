@@ -518,3 +518,7 @@ div:where(.swal2-container).swal2-noanimation {
 #new--message-form .ql-toolbar.ql-snow .ql-formats {
     margin-bottom: 8px;
 }
+
+.whitespace--brsp{
+    white-space: break-spaces;
+}
