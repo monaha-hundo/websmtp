@@ -58,8 +58,6 @@ public class LoginModel : PageModel
     private (bool, User?) CheckPassword()
     {
         var passwordHasher = new PasswordHasher();
-        var configuredUsername = _conf["Security:Username"] ?? throw new Exception("Please configure the Security:Username settings key.");
-        var configuredPasswordHash = _conf["Security:PasswordHash"] ?? throw new Exception("Please configure the Security:PasswordHash settings key.");
 
         var user = _data.Users.SingleOrDefault(u => !u.Deleted && u.Username == Username);
 
