@@ -68,7 +68,7 @@ public class SendMailService
                 {
                     _logger.LogTrace($"Transfering email locally");
                     using var localClient = new SmtpClient();
-                    localClient.Connect("127.0.0.1", 1025, SecureSocketOptions.None);
+                    localClient.Connect("localhost", RemoteSmtpPort, SecureSocketOptions.Auto);
                     var localResult = localClient.Send(message);
                     return;
                 }

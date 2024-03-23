@@ -30,7 +30,12 @@ By default the app is published as an AOT single file executable.
 Running the app once configured done by running the `websmtp` binary.
 
 #### Docker
-Someday...
+`docker compose up` in the root folder, then visit `https://localhost/`. 
+Use `admin/admin` as the default credentials. 
+
+You can send emails to accounts @ localhost, they will appear in the admin user mailbox which is configured as catch-all. **E.g. the docker image is for demonstration purpose only right now.** Do not send emails to remote servers: doing so through the default configuration will probably damage your email/domain/ip reputation. 
+
+Until there is a way to configure the docker image (domain, certs, etc.), the recommended production install is through the binary build.
 
 ### Testing
 By default the `appSettings.Development.json` will look for a test/dev database on localhost, as such it is recommended to use docker and launch a local MariaDb instance for each test run.

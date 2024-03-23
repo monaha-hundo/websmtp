@@ -33,23 +33,35 @@ public class CommandLine
     /// <param name="app"></param>
     public static void ParseModifiersArgs(string[] args, WebApplication app)
     {
+        var shouldMigrate = args.Any(arg => arg.StartsWith("--migrate-database"));
+        if (shouldMigrate)
+        {
+            MigrateDatabase(app);
+        }
+
+        var shouldMigrateAndExit = args.Any(arg => arg.StartsWith("--migrate-database-only"));
+        if (shouldMigrateAndExit)
+        {
+            MigrateDatabase(app);
+            Environment.Exit(0);
+        }
+
         var shouldAddUser = args.Any(arg => arg.StartsWith("--add-user"));
         if (shouldAddUser)
         {
             AddUser(app, args);
         }
 
+        var enableAdmin = args.Any(arg => arg.StartsWith("--enable-admin"));
+        if (enableAdmin)
+        {
+            EnableAdminUser(app, args);
+        }
+
         var shouldListUsers = args.Any(arg => arg.StartsWith("--list-users"));
         if (shouldListUsers)
         {
             ListUsers(app);
-        }
-
-        var shouldMigrate = args.Any(arg => arg.StartsWith("--migrate-database"));
-        if (shouldMigrate)
-        {
-            MigrateDatabase(app);
-            Environment.Exit(0);
         }
     }
 
@@ -169,7 +181,7 @@ public class CommandLine
         using var scope = app.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
-        
+
         var displayName = args
             .Single(arg => arg.StartsWith("--displayName="))
             .Split("=")[1];
@@ -221,6 +233,61 @@ public class CommandLine
         };
 
         dbContext.Users.Add(newUser);
+        dbContext.SaveChanges();
+
+        Environment.Exit(0);
+        return 0;
+    }
+
+    public static int EnableAdminUser(WebApplication app, string[] args)
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<CommandLine>>();
+
+        var username = args
+            .Single(arg => arg.StartsWith("--username="))
+            .Split("=")[1];
+        var passwordToHash = args
+            .Single(arg => arg.StartsWith("--password="))
+            .Split("=")[1];
+
+        var hasher = new PasswordHasher();
+        var hash = hasher.HashPassword(passwordToHash);
+
+        var alreadyExists = dbContext.Users.Any(u => u.Username == username);
+        if (alreadyExists)
+        {
+            logger.LogInformation($"A user with the username {username} already exists. Skipping.");
+            return 0;
+        }
+
+        var adminUser = new User
+        {
+            OtpEnabled = false,
+            PasswordHash = hash,
+            Username = username,
+            Roles = "admin",
+            Mailboxes = new List<UserMailbox>()
+            {
+                new UserMailbox
+                {
+                    DisplayName = "Postmaster",
+                    Host = "*",
+                    Identity = "*",
+                }
+            },
+            Identities = new List<UserIdentity>()
+            {
+                new UserIdentity
+                {
+                    DisplayName = "Postmaster",
+                    Email = "postmaster@websmtp.local",
+                }
+            }
+        };
+
+        dbContext.Users.Add(adminUser);
         dbContext.SaveChanges();
 
         Environment.Exit(0);
