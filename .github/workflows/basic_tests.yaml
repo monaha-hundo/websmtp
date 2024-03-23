@@ -32,6 +32,6 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Migrate Database
-      run: dotnet run --project websmtp --migrate-database
+      run: dotnet run --project websmtp --migrate-database-only
     - name: Test
       run: dotnet test --no-build --verbosity normal

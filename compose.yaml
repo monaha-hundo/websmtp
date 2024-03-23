@@ -1,0 +1,43 @@
+version: '3.1'
+
+services:
+
+  mariadb:
+    image: mariadb:latest
+    restart: always
+    environment:
+      MARIADB_USER: websmtp
+      MARIADB_PASSWORD: websmtp
+      MARIADB_DATABASE: websmtp
+      MARIADB_RANDOM_ROOT_PASSWORD: 1
+    # ports:
+    #   - 3306:3306
+    healthcheck:
+      interval: 5s
+      retries: 3
+      test:
+        [
+          "CMD",
+          "healthcheck.sh",
+          "--su-mysql",
+          "--connect",
+          "--innodb_initialized"
+        ]
+      timeout: 30s
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - mariadb
+
+  websmtp:
+    image: yvansolutions/websmtp:latest
+    restart: always
+    ports:
+      - 443:443
+      - 25:25
+    depends_on:
+      - mariadb
