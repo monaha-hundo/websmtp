@@ -12,5 +12,3 @@ libssl-3-x64.dll
 *.pem
 *.key
 *.crt
-appSettings.Production.json
-appSettings.*.json
