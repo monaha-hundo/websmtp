@@ -26,7 +26,7 @@ Available command line arguments:
 ### Running
 
 #### Binary
-By default the app is published as an AOT single file executable. 
+By default the app is published as self-contained single file executable. 
 Running the app once configured done by running the `websmtp` binary.
 
 #### Docker
@@ -40,7 +40,7 @@ Until there is a way to configure the docker image (domain, certs, etc.), the re
 ### Testing
 By default the `appSettings.Development.json` will look for a test/dev database on localhost, as such it is recommended to use docker and launch a local MariaDb instance for each test run.
 Each test is responsible for creating a test user, logging in and cleaning up the test user.
-The send mail test depends on running a local DNS server with mock domains and records (done programmatically, no external services are required), make sure to use ports bindable by the test host (e.g. > 1080).
+The send mail test depends on running a local DNS server with mock domains and records (done programmatically, no external services are required), make sure to use ports bindable by the test host (e.g. > 1000).
 **Let it be noted that many ISP, corporate firewall and small businesses block all traffic on port 25.**
 
 ### Concepts
