@@ -31,11 +31,11 @@ Running the app once configured done by running the `websmtp` binary.
 
 #### Docker
 `docker compose up` in the root folder, then visit `https://localhost/`. 
-Use `admin/admin` as the default credentials. 
+Use `admin/admin` as the default credentials. Visit `http://localhost:8080` for a adminer instance to connect to the `mariadb` instance/database. Adminer is the only way to manage users of a running instance.
 
-You can send emails to accounts @ localhost, they will appear in the admin user mailbox which is configured as catch-all. **E.g. the docker image is for demonstration purpose only right now.** Do not send emails to remote servers: doing so through the default configuration will probably damage your email/domain/ip reputation. 
+You can send emails to non existing accounts @ localhost, they will appear in the admin user mailbox which is configured as catch-all. Do not send emails to remote servers: doing so through the default configuration will probably damage your email/domain/ip reputation. 
 
-Until there is a way to configure the docker image (domain, certs, etc.), the recommended production install is through the binary build.
+Until there is a way to configure the docker image (domain, certs, etc.), the recommended install method for testing more thoroughly is through the binary build.
 
 ### Testing
 By default the `appSettings.Development.json` will look for a test/dev database on localhost, as such it is recommended to use docker and launch a local MariaDb instance for each test run.
