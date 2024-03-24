@@ -57,7 +57,7 @@ public class MessageStore : IMessageStore
             if (checkSpam)
             {
                 var rawMsg = System.Text.Encoding.UTF8.GetString(raw);
-                var processedMsg = await _assassin.Run(rawMsg);
+                var processedMsg = await _assassin.Scan(rawMsg);
                 msgBytes = System.Text.Encoding.UTF8.GetBytes(processedMsg);
             }
             else

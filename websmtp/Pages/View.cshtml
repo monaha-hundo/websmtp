@@ -42,16 +42,35 @@
             <button id="btn--read" type="button" class='btn btn-secondary @(Model.Message.Read?"d-none":"")'>Mark as
                 read</button>
         </div>
+        <button id="btn--report--spam" class='btn btn-danger me-2 @(Model.Message.IsSpam ? "d-none":"")'>
+            Report spam
+        </button>
+        <button id="btn--unreport--spam" class='btn btn-success me-2 @(Model.Message.IsSpam ? "":"d-none")'>
+            Not spam
+        </button>
+            <button id="btn--reply" reply-to="@Model.Message.From" class="btn btn-primary me-2">
+                Reply
+            </button>
     </div>
 
-    <h3 class="my-3 mx-4 px-1 pe-5">@Model.Message.Subject</h3>
+
+    <div class="row justify-content-between align-items-center">
+        <div class="col col-auto">
+            <h3 class="my-3 mx-4 px-1 pe-5">@Model.Message.Subject</h3>
+        </div>
+        <div class="col col-auto mx-4">
+        </div>
+    </div>
+
 
 
     <div class="border rounded p-3 mx-4">
         <div class="d-flex align-items-center">
             <div class="my-2">
-                <span class="fw-bold d-inline-block mw-50px">Date:</span>
-                @Model.Message.ReceivedOn.Date.ToLongDateString()
+                <span class="fw-bold d-inline-block mw-50px ">Date:</span>
+                <span class="card badge fs-6">
+                    @Model.Message.ReceivedOn.Date.ToLongDateString()
+                </span>
                 @switch (Model.Message.Importance)
                 {
                     case "High":
@@ -103,33 +122,21 @@
         @if (!Model.Message.Sent)
         {
             <div class="d-flex justify-content-between">
-                <div class="my-2 d-flex align-items-center">
+                <div class="my-2 d-flex ms-1">
+
                     <span class="fw-bold d-inline-block mw-50px ">Spam:</span>
 
-                    @if (Model.Message.IsSpam)
-                    {
-                    }
-                    else
-                    {
-                    }
-
                     <span id="label--is--spam"
-                        class='text-decoration-none badge rounded-pill text-bg-danger fs-6 me-2 @(Model.Message.IsSpam ? "":"d-none")'>
+                        class='text-decoration-none badge  card fs-6 me-2 @(Model.Message.IsSpam ? "":"d-none")'>
                         SPAM
-                        <i class="bi bi-emoji-frown"></i>
-                    </span>
-                    <span id="label--not--spam"
-                        class='text-decoration-none badge rounded-pill text-bg-success fs-6 me-2 @(Model.Message.IsSpam ? "d-none":"")'>
-                        Not Spam
-                        <i class="bi bi-emoji-smile"></i>
+                        <i class="bi bi-emoji-frown text-bg-danger rounded-pill"></i>
                     </span>
 
-                    <button id="btn--mark--spam" class='btn btn-sm btn-danger @(Model.Message.IsSpam ? "d-none":"")'>
-                        Spam
-                    </button>
-                    <button id="btn--mark--notspam" class='btn btn-sm btn-success @(Model.Message.IsSpam ? "":"d-none")'>
-                        Not spam
-                    </button>
+                    <span id="label--not--spam"
+                        class='text-decoration-none badge card  fs-6 me-2 @(Model.Message.IsSpam ? "d-none":"")'>
+                        Not Spam
+                        <i class="bi bi-emoji-smile text-bg-success rounded-pill"></i>
+                    </span>
                 </div>
             </div>
         }

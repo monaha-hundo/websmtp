@@ -13,5 +13,6 @@ public interface IReadableMessageStore
     public void Unstar(List<Guid> messagesIds);
     public void Spam(List<Guid> messagesIds);
     public void NotSpam(List<Guid> messagesIds);
+    public Task TrainSpam(List<Guid> msgIds, bool isSpam);
     public long Count(bool onlyNew);
 }

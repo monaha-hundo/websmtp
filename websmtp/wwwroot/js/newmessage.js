@@ -9,8 +9,9 @@ document.getElementById('new--message-close-btn')
         saveAndCloseDraft();
     });
 document.getElementById('new--message-form')
-    ?.addEventListener("formSubmit", () => {
-        onFormSubmit();
+    ?.addEventListener("submit", (event) => {
+        saveMessage();
+        onFormSubmit(event);
     });
 document.getElementById('show--cc')
     ?.addEventListener("click", () => {
@@ -117,12 +118,7 @@ function saveAndCloseDraft() {
     sectionEl.classList.add('d-none');
     iframeEl.src = 'about:blank';
 }
-function onFormSubmit() {
-    //event.preventDefault();
-    //console.log('form submit');
-
-    saveMessage();
-
+function onFormSubmit(event) {
     let composerEl = document.getElementById('new--message-body');
     let loadingEl = document.getElementById('new--message-sending');
     composerEl.classList.add('d-none');
@@ -131,7 +127,7 @@ function onFormSubmit() {
     iframeEl.style.height = '0px';
 }
 function saveMessage() {
-    let formEls = document.querySelectorAll("#fromEmail, #fromName, #to, #cc, #bcc, #subject, #body");
+    let formEls = document.querySelectorAll("#to, #cc, #bcc, #subject, #body");
     let data = {};
 
     formEls.forEach(el => {
@@ -143,9 +139,10 @@ function deleteMessageBackup() {
     localStorage.setItem('previous-draft', null);
 }
 function restoreDraft() {
-    let formEls = document.querySelectorAll("#fromEmail, #fromName, #to, #cc, #bcc, #subject, #body");
+    let formEls = document.querySelectorAll("#to, #cc, #bcc, #subject, #body");
     let rawStorage = localStorage.getItem('previous-draft');
     let data = JSON.parse(rawStorage);
+    console.log('rawStorage:'+rawStorage);
 
     const changeEvent = new Event("change");
     if (data != null) {
@@ -191,6 +188,10 @@ async function resizeIframe() {
 
 
 
-resizeIframe();
-restoreDraft();
+requestAnimationFrame(resizeIframe);
+
+const isResultDisplay = document.querySelectorAll('.new--message--dialog').length > 0;
+if(!isResultDisplay){
+    restoreDraft();
+}
 //setInterval(resizeIframe, 10);
