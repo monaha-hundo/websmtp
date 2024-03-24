@@ -306,7 +306,7 @@ async function trainSpam(msgsIds, spam) {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({msgsIds, spam})
+            body: JSON.stringify({ msgsIds, spam })
         });
         const success = response.status == 200;
         if (!success) {
@@ -316,9 +316,9 @@ async function trainSpam(msgsIds, spam) {
             });
         }
     };
-
-    let result = await Swal.fire({
-        title: "Report this message as spam?",
+    const title = spam ? "Report this message as spam?" : "Clear spam status from message?"
+    await Swal.fire({
+        title,
         showCancelButton: true,
         confirmButtonText: "Yes",
         showLoaderOnConfirm: true,
