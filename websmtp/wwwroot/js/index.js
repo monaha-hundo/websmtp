@@ -197,31 +197,6 @@ async function unstarMessages(msgsIds) {
     return success;
 }
 
-
-async function markAsSpam(msgsIds) {
-    const response = await fetch(`/api/messages/spam/`, {
-        method: 'post',
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(msgsIds)
-    });
-    const success = response.status == 200;
-    return success;
-}
-
-async function markAsNotSpam(msgsIds) {
-    const response = await fetch(`/api/messages/notspam/`, {
-        method: 'post',
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(msgsIds)
-    });
-    const success = response.status == 200;
-    return success;
-}
-
 async function undeleteMessages(msgsIds) {
     const call = async () => {
         const response = await fetch(`/api/messages/undelete/`, {
