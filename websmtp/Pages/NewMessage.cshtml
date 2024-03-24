@@ -87,13 +87,6 @@ else
                             </li>
                         }
                     </ul>
-
-                    @* <div class="input-group">
-                <input id="fromEmail" name="fromEmail" type="text" class="form-control" placeholder="Address"
-                aria-label="Text input with dropdown button">
-                <input id="fromName" name="fromName" type="text" class="form-control" placeholder="Display Name"
-                aria-label="Text input with dropdown button">
-                </div> *@
                 </div>
             </div>
 
@@ -103,7 +96,8 @@ else
                 </div>
                 <div class="col">
                     <input id="to" name="to" type="text" class="form-control" placeholder="Destination(s)"
-                        aria-label="Text input with dropdown button">
+                        aria-label="Text input with dropdown button"
+                        value="@Model.InitialTo">
                 </div>
                 <div class="col col-auto">
 

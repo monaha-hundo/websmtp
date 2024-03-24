@@ -49,6 +49,11 @@ document.getElementById('btn--unreport--spam')
     ?.addEventListener("click", () => {
         trainSpam(false);
     });
+document.getElementById('btn--reply')
+    ?.addEventListener("click", (event) => {
+        const to = event.currentTarget.getAttribute('reply-to');
+        window.parent.newMessage(to);
+    });
 
 function showHtmlContent(el) {
     var el = document.getElementById("html-content");
