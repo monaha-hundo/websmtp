@@ -10,8 +10,9 @@ namespace websmtp.Startup;
 
 public static class Startup
 {
-    public static void InitAppJsonConfig(WebApplicationBuilder builder)
+    public static void InitAppConfig(WebApplicationBuilder builder)
     {
+
         builder.Configuration.AddJsonFile("appSettings.json", false, true);
 
         if (builder.Environment.IsDevelopment())
@@ -33,6 +34,8 @@ public static class Startup
         {
             builder.Configuration.AddJsonFile("appSettings.Test.json", false, true);
         }
+
+        builder.Configuration.AddEnvironmentVariables();
     }
 
     public static void ConfigureWebHost(WebApplicationBuilder builder)
@@ -70,6 +73,7 @@ public static class Startup
         var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
         var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
         var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
+        Console.WriteLine($"Connection string: '{cs}'.");
         var srvVer = ServerVersion.AutoDetect(cs);
 
         builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
@@ -170,6 +174,8 @@ public static class Startup
     public static void MapEndpoints(WebApplication app)
     {
         // Messages actions
+        app.MapPost("/api/messages/train/", MessagesEndpoints.Train).RequireAuthorization();
+
         app.MapPost("/api/messages/spam/", MessagesEndpoints.Spam).RequireAuthorization();
         app.MapPost("/api/messages/notspam/", MessagesEndpoints.NotSpam).RequireAuthorization();
         app.MapPost("/api/messages/star/", MessagesEndpoints.Star).RequireAuthorization();

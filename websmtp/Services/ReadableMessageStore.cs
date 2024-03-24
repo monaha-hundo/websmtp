@@ -10,13 +10,15 @@ public class ReadableMessageStore : IReadableMessageStore
     private readonly ILogger<MessageStore> _logger;
     private readonly IServiceProvider _services;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly SpamAssassin _sa;
 
 
-    public ReadableMessageStore(ILogger<MessageStore> logger, IServiceProvider services, IHttpContextAccessor httpContextAccessor)
+    public ReadableMessageStore(ILogger<MessageStore> logger, IServiceProvider services, IHttpContextAccessor httpContextAccessor, SpamAssassin sa)
     {
         _logger = logger;
         _services = services;
         _httpContextAccessor = httpContextAccessor;
+        _sa = sa;
     }
 
 
@@ -278,6 +280,33 @@ public class ReadableMessageStore : IReadableMessageStore
             .ExecuteUpdate(s => s.SetProperty(m => m.IsSpam, true));
 
         var msg = _dataContext.Messages.Where(m => msgIds.Contains(m.Id)).ToList();
+    }
+
+    public async Task TrainSpam(List<Guid> msgIds, bool isSpam)
+    {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var userId = _httpContextAccessor.GetUserId();
+        var msgs = _dataContext.Messages
+            .Where(msg => msg.UserId == userId)
+            .Where(m => msgIds.Contains(m.Id))
+            .Include(m => m.RawMessage)
+            .Select(m => new { m.Id, m.RawMessage.Content });
+
+        foreach (var msg in msgs)
+        {
+            var message = System.Text.Encoding.UTF8.GetString(msg.Content);
+            await _sa.Train(message, isSpam);
+        }
+
+        if (isSpam)
+        {
+            Spam(msgIds);
+        }
+        else
+        {
+            NotSpam(msgIds);
+        }
     }
 
     public void NotSpam(List<Guid> msgIds)

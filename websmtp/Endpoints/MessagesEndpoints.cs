@@ -113,6 +113,21 @@ public static partial class MessagesEndpoints
         return Results.Ok();
     }
 
+    public class TrainRequest
+    {
+        public List<Guid> MsgsIds { get; set; } = [];
+        public bool Spam { get; set; }
+    }
+
+    public static async Task<IResult> Train(
+        [FromBody] TrainRequest trainRequest,
+        [FromServices] IReadableMessageStore messages
+    )
+    {
+        await messages.TrainSpam(trainRequest.MsgsIds, trainRequest.Spam);
+        return Results.Ok();
+    }
+
     public static IResult OtpInitiate(
         [FromServices] DataContext data,
         [FromServices] IHttpContextAccessor httpContextAccessor
