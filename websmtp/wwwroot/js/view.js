@@ -41,13 +41,13 @@ document.getElementById('btn--unread')
         markAsUnread();
     });
 
-document.getElementById('btn--mark--spam')
+document.getElementById('btn--report--spam')
     ?.addEventListener("click", () => {
-        markAsSpam();
+        trainSpam(true);
     });
-document.getElementById('btn--mark--notspam')
+document.getElementById('btn--unreport--spam')
     ?.addEventListener("click", () => {
-        markAsNotSpam();
+        trainSpam(false);
     });
 
 function showHtmlContent(el) {
@@ -86,22 +86,22 @@ async function markAsUnread() {
     document.getElementById('btn--unread').classList.add('d-none');
     document.getElementById('btn--read').classList.remove('d-none');
 }
-async function markAsSpam() {
-    await window.parent.markAsSpam([msgId]);
-    document.getElementById('btn--mark--spam').classList.add('d-none');
-    document.getElementById('btn--mark--notspam').classList.remove('d-none');
 
+async function trainSpam(isSpam) {
+    await window.parent.trainSpam([msgId], isSpam);
+    if (isSpam) {
+        document.getElementById('btn--report--spam').classList.add('d-none');
+        document.getElementById('btn--unreport--spam').classList.remove('d-none');
+        document.getElementById('label--is--spam').classList.remove('d-none');
+        document.getElementById('label--not--spam').classList.add('d-none');
+    } else {
+        document.getElementById('btn--report--spam').classList.remove('d-none');
+        document.getElementById('btn--unreport--spam').classList.add('d-none');
+        document.getElementById('label--is--spam').classList.add('d-none');
+        document.getElementById('label--not--spam').classList.remove('d-none');
+    }
+}
 
-    document.getElementById('label--is--spam').classList.remove('d-none');
-    document.getElementById('label--not--spam').classList.add('d-none');
-}
-async function markAsNotSpam() {
-    await window.parent.markAsNotSpam([msgId]);
-    document.getElementById('btn--mark--spam').classList.remove('d-none');
-    document.getElementById('btn--mark--notspam').classList.add('d-none');
-    document.getElementById('label--is--spam').classList.add('d-none');
-    document.getElementById('label--not--spam').classList.remove('d-none');
-}
 function previousMsg() {
     window.parent.previousMessage(msgId);
 }

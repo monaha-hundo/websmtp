@@ -4,7 +4,7 @@ CommandLine.ParseStartupArgs(args);
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
-Startup.InitAppJsonConfig(builder);
+Startup.InitAppConfig(builder);
 Startup.ConfigureWebHost(builder);
 Startup.ConfigureServices(builder);
 

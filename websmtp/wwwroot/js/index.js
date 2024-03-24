@@ -298,6 +298,36 @@ async function deleteMessages(msgsIds) {
 
 }
 
+
+async function trainSpam(msgsIds, spam) {
+    const call = async () => {
+        const response = await fetch(`/api/messages/train/`, {
+            method: 'post',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({msgsIds, spam})
+        });
+        const success = response.status == 200;
+        if (!success) {
+            Swal.fire({
+                title: `Error`,
+                text: 'Could not process request.'
+            });
+        }
+    };
+
+    let result = await Swal.fire({
+        title: "Report this message as spam?",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        showLoaderOnConfirm: true,
+        preConfirm: call,
+        allowOutsideClick: () => !Swal.isLoading()
+    });
+
+}
+
 function previousMessage(msgId) {
     const selector = `[msg-id='${msgId}']`;
     const checkMarkEl = document.querySelector(selector);
