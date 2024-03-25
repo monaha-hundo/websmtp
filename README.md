@@ -46,12 +46,19 @@ Running the app once configured done by running the `websmtp` binary.
 Available on the docker hub: [yvansolutions/websmtp](https://hub.docker.com/r/yvansolutions/websmtp).
 You must generate all the HTTPS certificates and optionally the DKIM signing certificate and mount their location in the `/certificates/` volume.
 You must then use the required environment variables to configure the app to use them (`SSL__PrivateKey, SSL__PublicKey, DKIM__Domains__X__PrivateKey`).
+If you don't have certs on hand, use the provided `setup_docker_compose.sh` to quicly generate self-signed localhost ones for HTTPS and the `--generage-dkim-config` command line utility to get started with DKIM.
 
 ##### Building
 Use the provided `build_docker.sh`
 ##### Launching
 Assuming the certificates to be used are in the `/websmtp/certificates` folder.
-`docker run -p 443:443 -p 25:25 -v /websmtp/certificates/:/certificates/:ro -e Database__Server=some-database-server yvansolutions/websmtp:latest`
+
+Here is a command to run the app for the `example.com` domain:
+`docker run -it -p 443:443 -p 25:25 -v /websmtp/certificates/:/certificates/:ro -e Database__Server=some-database-server yvansolutions/websmtp:latest ./websmtp --migrate-database --enable-admin --username=admin --password=admin --domain=example.com`.
+
+This would launch the app, which would use `some-database-server` with the default database named `websmtp` with default credentials of `websmtp/websmtp`. It would listen for HTTPS connection on port `443` and SMTP `25`. An admin account with a catch-all mailbox and an identity of `postmaster@example.com`.
+
+If DKIM setup was donne corretly, the app can send and receive email from major providers such as gmail, outlook and proton mail.
 
 Here are the avaiable environment variables and their default:
 
@@ -79,16 +86,12 @@ Here are the avaiable environment variables and their default:
 `SSL__PublicKey: /certificates/ssl.crt`
 
 #### Docker Compose
-A `compose.yaml` file is available to quicly launch an instance without setting up a database/server. You must still generate the default HTTPS certificates and put them in `/websmtp/certificates` with the default names (see previous section). If you don't have certs on hand, use the provided `setup_docker_compose.sh` to quicly generate self-signed localhost ones.
+A `compose.yaml` file is available to quicly launch an instance without setting up a database/server. 
 
 Use `docker compose up` in the root folder . 
 Visit `https://localhost/`, use `admin/admin` as the default credentials. 
 Visit `http://localhost:8080` for a adminer instance to connect to the `mariadb` instance/database. 
 Adminer is the only way to manage users of a running instance.
-
-You can send emails to non existing accounts @ localhost, they will appear in the admin user mailbox which is configured as catch-all. Do not send emails to remote servers: doing so through the default configuration will probably damage your email/domain/ip reputation. 
-
-Until there is a way to configure the docker image (domain, certs, etc.), the recommended install method for testing more thoroughly is through the binary build.
 
 ### Testing
 By default the `appSettings.Development.json` will look for a test/dev database on localhost, as such it is recommended to use docker and launch a local MariaDb instance for each test run.
