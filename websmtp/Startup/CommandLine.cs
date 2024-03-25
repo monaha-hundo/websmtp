@@ -248,9 +248,14 @@ public class CommandLine
         var username = args
             .Single(arg => arg.StartsWith("--username="))
             .Split("=")[1];
+            
         var passwordToHash = args
             .Single(arg => arg.StartsWith("--password="))
             .Split("=")[1];
+
+        var forDomain = args.Any(arg => arg.StartsWith("--domain="))
+            ? args.Single(arg => arg.StartsWith("--domain=")).Split("=")[1]
+            : "localhost";
 
         var hasher = new PasswordHasher();
         var hash = hasher.HashPassword(passwordToHash);
@@ -282,7 +287,7 @@ public class CommandLine
                 new UserIdentity
                 {
                     DisplayName = "Postmaster",
-                    Email = "postmaster@websmtp.local",
+                    Email = $"postmaster@{forDomain}",
                 }
             }
         };
