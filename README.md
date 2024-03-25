@@ -1,4 +1,5 @@
 # websmtp
+__Under development.__
 ## Description
 Simple combined mail transfer agent and mail user agent with a web UI in C#, meaning the app receive emails from remote SMTP servers on port 25 and send mail directly to remote exchanges without going through relay servers. Purpose is to be simple to setup and use while being somewhat flexible. The app web interface is the sole consumer of the messages store.
 
@@ -11,6 +12,8 @@ It is possible to display HTML emails with their embeded media content. Remote c
 The app has a small command line utility to quicly generate a DKIM setup and outgoing emails can then be DKIM signed. It is also possible to import existing DKIM DNS setup in the app through manual configuration.
 
 Possible uses: mock SMTP server for testing, home emails for LAN devices such as printers and ip cameras, your own web email provider business.
+
+
 
 ## Usage
 ### Configuration
@@ -26,12 +29,52 @@ Available command line arguments:
 ### Running
 
 #### Binary
-By default the app is published as an AOT single file executable. 
+By default the app is published as self-contained single file executable. 
 Running the app once configured done by running the `websmtp` binary.
 
 #### Docker
-`docker compose up` in the root folder, then visit `https://localhost/`. 
-Use `admin/admin` as the default credentials. Visit `http://localhost:8080` for a adminer instance to connect to the `mariadb` instance/database. Adminer is the only way to manage users of a running instance.
+Available on the docker hub: [yvansolutions/websmtp](https://hub.docker.com/r/yvansolutions/websmtp).
+You must generate all the HTTPS certificates and optionally the DKIM signing certificate and mount their location in the `/certificates/` volume.
+You must then use the required environment variables to configure the app to use them (`SSL__PrivateKey, SSL__PublicKey, DKIM__Domains__X__PrivateKey`).
+
+##### Building
+Use the provided `build_docker.sh`
+##### Launching
+Assuming the certificates to be used are in the `/websmtp/certificates` folder.
+`docker run -p 443:443 -p 25:25 -v /websmtp/certificates/:/certificates/:ro -e Database__Server=some-database-server yvansolutions/websmtp:latest`
+
+Here are the avaiable environment variables and their default:
+
+`AllowedHosts: '*'`
+`Database__Name: websmtp`
+`Database__Password: websmtp`
+`Database__Server: mariadb`
+`Database__Username: websmtp`
+`DKIM__Enabled: True`
+`DKIM__SigningEnabled: False`
+`DKIM__Domains__0__Name: websmtp.local`
+`DKIM__Domains__0__PrivateKey: dkim_private.dev.pem`
+`DKIM__Domains__0__Selector: dkim`
+`DNS__IP: 192.168.1.1`
+`DNS__Port: 53`
+`Security__EnableHtmlDisplay: True`
+`Security__EnableMediaInHtml: True`
+`SMTP__Port: 25`
+`SMTP__RemotePort: 25`
+`SpamAssassin__Enabled: True`
+`SPF__Enabled: True`
+`SSL__Enabled: True`
+`SSL__Port: 443`
+`SSL__PrivateKey: /certificates/ssl.key`
+`SSL__PublicKey: /certificates/ssl.crt`
+
+#### Docker Compose
+A `compose.yaml` file is available to quicly launch an instance without setting up a database/server. You must still generate the default HTTPS certificates and put them in `/websmtp/certificates` with the default names (see previous section). If you don't have certs on hand, use the provided `setup_docker_compose.sh` to quicly generate self-signed localhost ones.
+
+Use `docker compose up` in the root folder . 
+Visit `https://localhost/`, use `admin/admin` as the default credentials. 
+Visit `http://localhost:8080` for a adminer instance to connect to the `mariadb` instance/database. 
+Adminer is the only way to manage users of a running instance.
 
 You can send emails to non existing accounts @ localhost, they will appear in the admin user mailbox which is configured as catch-all. Do not send emails to remote servers: doing so through the default configuration will probably damage your email/domain/ip reputation. 
 
@@ -40,7 +83,7 @@ Until there is a way to configure the docker image (domain, certs, etc.), the re
 ### Testing
 By default the `appSettings.Development.json` will look for a test/dev database on localhost, as such it is recommended to use docker and launch a local MariaDb instance for each test run.
 Each test is responsible for creating a test user, logging in and cleaning up the test user.
-The send mail test depends on running a local DNS server with mock domains and records (done programmatically, no external services are required), make sure to use ports bindable by the test host (e.g. > 1080).
+The send mail test depends on running a local DNS server with mock domains and records (done programmatically, no external services are required), make sure to use ports bindable by the test host (e.g. > 1000).
 **Let it be noted that many ISP, corporate firewall and small businesses block all traffic on port 25.**
 
 ### Concepts
