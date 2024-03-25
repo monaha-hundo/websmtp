@@ -42,15 +42,18 @@
             <button id="btn--read" type="button" class='btn btn-secondary @(Model.Message.Read?"d-none":"")'>Mark as
                 read</button>
         </div>
-        <button id="btn--report--spam" class='btn btn-danger me-2 @(Model.Message.IsSpam ? "d-none":"")'>
-            Report spam
-        </button>
-        <button id="btn--unreport--spam" class='btn btn-success me-2 @(Model.Message.IsSpam ? "":"d-none")'>
-            Not spam
-        </button>
+        @if (!Model.Message.Sent)
+        {
+            <button id="btn--report--spam" class='btn btn-danger me-2 @(Model.Message.IsSpam ? "d-none":"")'>
+                Report spam
+            </button>
+            <button id="btn--unreport--spam" class='btn btn-success me-2 @(Model.Message.IsSpam ? "":"d-none")'>
+                Not spam
+            </button>
             <button id="btn--reply" reply-to="@Model.Message.From" class="btn btn-primary me-2">
                 Reply
             </button>
+        }
     </div>
 
 

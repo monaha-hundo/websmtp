@@ -22,9 +22,19 @@ The `Test` environment use the development configuration and _apply database mig
 
 Available command line arguments:
 - `--add-user`: quickly add a user by answering a couple of questions. User will have OTP disabled.
+  - `--displayName=`
+  - `--username=`
+  - `--password=`
+  - `--email=`
+  - `--mailbox=`
+  - `--roles=`
 - `--list--users`: display all the users data in JSON.
 - `--migrate-database`: apply migrations to database up to the lastest available at build time.
-- `--generate-dkim-config`: generate the pub/priv certs, DNS record data and the configuration file data to enable DKIM signing and DNS configuration. 
+- `--enable-admin`: enable/create an admin user, similar to `--add-user` but if the username is taken, skip.
+  - `--username=`
+  - `--password=`
+  - `--domain=`:
+- `--generate-dkim-config`: generate the pub/priv certs, DNS record data and the configuration file data to enable DKIM signing and DNS configuration. Output contains information to configure a domain records.
 
 ### Running
 
