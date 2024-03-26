@@ -6,8 +6,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MimeKit;
 using MimeKit.Cryptography;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+
+
 
 //using System.Net.Mail;
 using websmtp;
@@ -241,7 +246,7 @@ public class Basic
         {
             Console.WriteLine("Test failed, exception while sending emails:");
             Console.WriteLine(ex);
-            //throw;
+            throw;
             // Assert.Fail("Test failed, exception while sending emails.");
         }
         finally
