@@ -238,6 +238,9 @@ public class Basic
             await server.Listen(dnsPort, IPAddress.Parse("127.0.0.1"));
         }, ct);
 
+        DeleteTesterUser();
+        LoginAsTester().Wait();
+
         try
         {
             Console.WriteLine($"Sending {testEmailCount} emails...");
