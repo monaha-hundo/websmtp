@@ -16,10 +16,10 @@ Startup.MapEndpoints(app);
 
 CommandLine.ParseModifiersArgs(args, app);
 
-if (app.Environment.IsEnvironment("Test"))
-{
-    CommandLine.MigrateDatabase(app);
-}
+// if (app.Environment.IsEnvironment("Test"))
+// {
+//     CommandLine.MigrateDatabase(app);
+// }
 
 app.Run();
 

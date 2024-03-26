@@ -27,10 +27,6 @@ document.getElementById('new--msg--close')
         deleteMessageBackup();
         closeWindow();
     });
-document.getElementById('new--msg--back')
-    ?.addEventListener("click", () => {
-        history.back()
-    });
 document.querySelectorAll('.identity--dropdown--value')
     .forEach(el => {
         el.addEventListener("click", (event) => {
@@ -105,11 +101,7 @@ function destroy_quill() {
 }
 
 function closeWindow() {
-    event.preventDefault();
-    let sectionEl = window.parent.document.getElementById('new--message');
-    let iframeEl = window.parent.document.getElementById('new--message-frame');
-    sectionEl.classList.add('d-none');
-    iframeEl.src = 'about:blank';
+    window.parent.closeNewMsgWindow();
 }
 function saveAndCloseDraft() {
     event.preventDefault();

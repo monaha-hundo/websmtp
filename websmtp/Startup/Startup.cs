@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmtpServer.Storage;
 using websmtp.Database;
@@ -60,7 +61,8 @@ public static class Startup
                     listenOptions.UseHttps(x509);
                 });
             });
-        }else
+        }
+        else
         {
             builder.WebHost.UseKestrel();
         }
@@ -86,10 +88,21 @@ public static class Startup
             });
         }
 
+        builder.Services.Configure<CookieTempDataProviderOptions>(options =>
+        {
+            options.Cookie.Name = Guid.NewGuid().ToString("N");
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+        });
         //builder.Services.AddSession();
-        builder.Services.AddAntiforgery();
-        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddAntiforgery(opts =>
+        {
+            opts.Cookie.Name = Guid.NewGuid().ToString("N");
+            opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            opts.Cookie.SameSite = SameSiteMode.Strict;
+        });
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
+        builder.Services.AddHttpContextAccessor();
         builder.Services.AddAuthorization();
         builder.Services.AddRazorPages();
         builder.Services.AddTransient<SendMailService>();
@@ -105,6 +118,9 @@ public static class Startup
         opts.AccessDeniedPath = "/error/";
         opts.ExpireTimeSpan = TimeSpan.FromMinutes(20);
         opts.SlidingExpiration = true;
+        opts.Cookie.Name = Guid.NewGuid().ToString("N");
+        opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        opts.Cookie.SameSite = SameSiteMode.Strict;
     }
 
     public static void ConfigureSecurity(WebApplication app)
@@ -127,11 +143,12 @@ public static class Startup
             {"frame-src", new List<string>{"self"}}
         };
 
-        if(enableHtmlMedia){
+        if (enableHtmlMedia)
+        {
             csp["img-src"].Add("data:");
         }
 
-        var cspHeaderValue = string.Join("; ", csp.Keys.Select(c => $"{c} {string.Join(' ', csp[c].Select(s => s.Contains(':')  ? s : "'" + s + "'"))}"));
+        var cspHeaderValue = string.Join("; ", csp.Keys.Select(c => $"{c} {string.Join(' ', csp[c].Select(s => s.Contains(':') ? s : "'" + s + "'"))}"));
 
         app.Use(async (context, next) =>
         {
@@ -195,5 +212,9 @@ public static class Startup
 
         // Password change
         app.MapPost("/api/settings/pwd/change", MessagesEndpoints.ChangePassword).RequireAuthorization();
+
+        // Mailboxes & identities
+        app.MapPost("/api/settings/mailboxes/add", MessagesEndpoints.AddMailbox).RequireAuthorization();
+        app.MapPost("/api/settings/identities/add", MessagesEndpoints.AddIdentity).RequireAuthorization();
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OtpNet;
 using QRCoder;
+using SmtpServer.Mail;
 using websmtp.Database;
 
 namespace websmtp;
@@ -197,6 +198,65 @@ public static partial class MessagesEndpoints
         }
 
         user.PasswordHash = passwordHasher.HashPassword(pwdData.NewPassword);
+        data.SaveChanges();
+
+        return Results.Ok();
+    }
+
+    public class AddMailboxRequest
+    {
+        public string DisplayName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public static IResult AddMailbox(
+        [FromBody] AddMailboxRequest addMailboxReq,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var mbAddr = new MimeKit.MailboxAddress(
+            addMailboxReq.DisplayName,
+            addMailboxReq.Email
+        );
+
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+
+        var newMailbox = new UserMailbox
+        {
+            DisplayName = addMailboxReq.DisplayName,
+            Identity = mbAddr.LocalPart,
+            Host = mbAddr.Domain,
+        };
+
+        user.Mailboxes.Add(newMailbox);
+        data.SaveChanges();
+
+        return Results.Ok();
+    }
+
+    public static IResult AddIdentity(
+        [FromBody] AddMailboxRequest addMailboxReq,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var mbAddr = new MimeKit.MailboxAddress(
+            addMailboxReq.DisplayName,
+            addMailboxReq.Email
+        );
+
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+
+        var newIdentity = new UserIdentity
+        {
+            DisplayName = addMailboxReq.DisplayName,
+            Email = addMailboxReq.Email
+        };
+
+        user.Identities.Add(newIdentity);
         data.SaveChanges();
 
         return Results.Ok();
