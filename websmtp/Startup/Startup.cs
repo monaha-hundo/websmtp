@@ -212,5 +212,9 @@ public static class Startup
 
         // Password change
         app.MapPost("/api/settings/pwd/change", MessagesEndpoints.ChangePassword).RequireAuthorization();
+
+        // Mailboxes & identities
+        app.MapPost("/api/settings/mailboxes/add", MessagesEndpoints.AddMailbox).RequireAuthorization();
+        app.MapPost("/api/settings/identities/add", MessagesEndpoints.AddIdentity).RequireAuthorization();
     }
 }

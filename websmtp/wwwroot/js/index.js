@@ -101,10 +101,6 @@ async function openwMsgView(msgId, showRaw) {
     msgViewEl.setAttribute('src', url);
     sectionEl.classList.remove('d-none');
     containerEl.classList.remove('d-none');
-
-    if (showRaw !== true) {
-        history.pushState({ page: 'view', msgId }, "");
-    }
 }
 
 function updateTrashCount(count) {
@@ -290,9 +286,11 @@ async function trainSpam(msgsIds, spam) {
                 text: 'Could not process request.'
             });
         }
+        return success;
     };
     const title = spam ? "Report this message as spam?" : "Clear spam status from message?"
-    await Swal.fire({
+
+    const result = await Swal.fire({
         title,
         showCancelButton: true,
         confirmButtonText: "Yes",
@@ -301,12 +299,16 @@ async function trainSpam(msgsIds, spam) {
         allowOutsideClick: () => !Swal.isLoading()
     });
 
+    console.log(result);
+
+    return result;
 }
 
 function previousMessage(msgId) {
     const selector = `[msg-id='${msgId}']`;
     const checkMarkEl = document.querySelector(selector);
     const prevMsgId = checkMarkEl.previousElementSibling.getAttribute('msg-id');
+    if (prevMsgId == null) return;
     closeMsgView();
     openwMsgView(prevMsgId);
 }
@@ -326,14 +328,22 @@ function openRawMsg(msgId) {
 
 function newMessage(to) {
     let sectionEl = window.parent.document.getElementById('new--message');
-    let iframeEl = window.parent.document.getElementById('new--message-frame');
+    let iframeEl = document.createElement('iframe');
+    iframeEl.id = 'new--message-frame';
+    
     if (to == null) {
         iframeEl.src = '/NewMessage';
     } else {
         iframeEl.src = '/NewMessage?initialTo=' + to;
     }
+    sectionEl.appendChild(iframeEl);
     sectionEl.classList.remove('expanded');
     sectionEl.classList.remove('d-none');
+}
+function closeNewMsgWindow() {
+    let sectionEl = document.getElementById('new--message');
+    sectionEl.innerHTML = '';
+    sectionEl.classList.add('d-none');
 }
 
 const handleMarkSelectedAsRead = async () => {
@@ -395,9 +405,6 @@ const handleMarkSelectedAsUnread = async () => {
         .map(el => el.getAttribute('msg-id'));
     await markMessagesAsUnread(selectedMsgIds);
 };
-window.addEventListener("popstate", (event) => {
-    closeMsgView();
-});
 
 document.querySelectorAll('[open-msg-view]')
     .forEach(btn => {
