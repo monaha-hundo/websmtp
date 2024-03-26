@@ -91,9 +91,13 @@ public class Basic
             OtpEnabled = false,
             Deleted = false,
             Mailboxes = [new UserMailbox{
-                DisplayName = "Tester @ Localhost",
+                DisplayName = "Tester @ websmtp.local",
                 Host = "websmtp.local",
                 Identity = "tester"
+            }],
+            Identities = [new UserIdentity{
+                DisplayName = "Tester",
+                Email = "tester@websmtp.local"
             }]
         };
 
@@ -161,10 +165,12 @@ public class Basic
 
         var emailAddrs = new List<MailAddress>();
 
-        for (int e = 0; e < 15; e++)
-        {
-            emailAddrs.Add(new MailAddress($"user.{e}@websmtp.local", $"User {e}"));
-        }
+        emailAddrs.Add(new MailAddress("tester@websmtp.local", "Tester"));
+        
+        // for (int e = 0; e < 15; e++)
+        // {
+        //     emailAddrs.Add(new MailAddress($"user.{e}@websmtp.local", $"User {e}"));
+        // }
 
         var files = new List<FakeFile>(10);
 
