@@ -14,16 +14,24 @@ public class CommandLine
     /// These are executed before the APP is configured/launched.
     /// </summary>
     /// <param name="args"></param>
-    /// <returns></returns>
-    public static int? ParseStartupArgs(string[] args)
+    /// <returns>true if a SMTP only startup is requested</returns>
+    public static bool ParseStartupArgs(string[] args)
     {
         var shouldGenerateDkimConfig = args.Any(arg => arg.StartsWith("--generate-dkim-config"));
         if (shouldGenerateDkimConfig)
         {
-            return CommandLine.GenerateDkimConfig();
+            GenerateDkimConfig();
         }
 
-        return null;
+        var smtpOnly = args.Any(arg => arg.StartsWith("--smtp-only")) 
+            || IsEnvDefined("WS_SMTP_ONLY");
+
+        return smtpOnly;
+    }
+
+    private static bool IsEnvDefined(string variable)
+    {
+        return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable));
     }
 
     /// <summary>
@@ -33,7 +41,8 @@ public class CommandLine
     /// <param name="app"></param>
     public static void ParseModifiersArgs(string[] args, WebApplication app)
     {
-        var shouldMigrate = args.Any(arg => arg.StartsWith("--migrate-database"));
+        var shouldMigrate = args.Any(arg => arg.StartsWith("--migrate-database")) 
+            || IsEnvDefined("WS_MIGRATE_DATABASE");
         if (shouldMigrate)
         {
             MigrateDatabase(app);
