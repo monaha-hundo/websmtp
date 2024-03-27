@@ -112,6 +112,10 @@ public class Basic
             verificationToken = verificationToken.Substring(verificationToken.IndexOf("value=\"") + 7);
             verificationToken = verificationToken.Substring(0, verificationToken.IndexOf("\""));
         }
+        if (string.IsNullOrWhiteSpace(verificationToken))
+        {
+            throw new Exception("Could not get verification token while login-in");
+        }
         var contentToSend = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("username", "tester"),
@@ -166,7 +170,7 @@ public class Basic
         var emailAddrs = new List<MailAddress>();
 
         emailAddrs.Add(new MailAddress("tester@websmtp.local", "Tester"));
-        
+
         // for (int e = 0; e < 15; e++)
         // {
         //     emailAddrs.Add(new MailAddress($"user.{e}@websmtp.local", $"User {e}"));

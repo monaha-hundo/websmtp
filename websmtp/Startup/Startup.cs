@@ -11,7 +11,7 @@ namespace websmtp.Startup;
 
 public static class Startup
 {
-    public static void InitAppConfig(WebApplicationBuilder builder)
+    public static void InitAppConfig(IHostApplicationBuilder builder)
     {
 
         builder.Configuration.AddJsonFile("appSettings.json", false, true);
@@ -68,17 +68,9 @@ public static class Startup
         }
     }
 
-    public static void ConfigureServices(WebApplicationBuilder builder)
+    public static void ConfigureWebServices(IHostApplicationBuilder builder)
     {
-        var dbServer = builder.Configuration.GetValue<string>("Database:Server");
-        var dbName = builder.Configuration.GetValue<string>("Database:Name");
-        var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
-        var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
-        var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
-        Console.WriteLine($"Connection string: '{cs}'.");
-        var srvVer = ServerVersion.AutoDetect(cs);
-
-        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
+        ConfigureDatabase(builder);
 
         if (builder.Environment.IsProduction())
         {
@@ -105,11 +97,29 @@ public static class Startup
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddAuthorization();
         builder.Services.AddRazorPages();
+        builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
+        ConfigureSmtpServices(builder);
+    }
+
+    public static void ConfigureSmtpServices(IHostApplicationBuilder builder)
+    {
         builder.Services.AddTransient<SendMailService>();
         builder.Services.AddTransient<SpamAssassin>();
         builder.Services.AddSingleton<IMessageStore, websmtp.services.MessageStore>();
-        builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
         builder.Services.AddHostedService<SmtpServerService>();
+    }
+
+    public static void ConfigureDatabase(IHostApplicationBuilder builder)
+    {
+        var dbServer = builder.Configuration.GetValue<string>("Database:Server");
+        var dbName = builder.Configuration.GetValue<string>("Database:Name");
+        var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
+        var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
+        var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
+        Console.WriteLine($"Connection string: '{cs}'.");
+        var srvVer = ServerVersion.AutoDetect(cs);
+
+        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
     }
 
     public static void ConfigureAuthenticationCookie(CookieAuthenticationOptions opts)
