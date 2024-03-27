@@ -1,0 +1,121 @@
+﻿@page
+@model MyApp.Namespace.AdminModel
+
+@section Head {
+    <link rel="stylesheet" href="~/lib/sweetalert2/sweetalert2.min.css" />
+}
+
+<a class="logout--btn btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed" href="/logout" title="Log Out">
+    <i class="bi bi-door-open fs-1_5rem"></i>
+</a>
+<btn class="hamburger--btn btn btn-primary mx-2 my-2 text-nowrap rounded-pill position-fixed d-xl-none">
+    <i class="bi bi-list fs-1_5rem"></i>
+</btn>
+
+<partial name="Sidebar" model="Model.Listing" />
+
+<div class="content">
+    <section class="listing d-flex flex-column h-100 flex-align-start">
+        <form id="search--form" class="d-inline-flex align-items-center ps-2" action="/all" method="get">
+            <div class="input-group my-2">
+                <span class="input-group-text" id="basic-addon1">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input name="filter" id="filter" type="text" class="form-control from-control-sm"
+                    placeholder="Search messages" value="" aria-label="Any text value"
+                    aria-describedby="basic-addon1" />
+            </div>
+            <div class="flex-1-1-100p"></div>
+        </form>
+        <div id="messages--list" class="list list-group ">
+            <div id="messages--list--header" class="list-group-item  border-left-none px-1 position-sticky ">
+                <div class="row align-items-center  g-0 px-2">
+                    <div class="col-offset-2 col-auto text-truncate d-flex align-items-center ">
+                        <span class="text-capitalize fs-3 me-3">Administration</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-group-item  border-left-none px-1 position-sticky unread ">
+                <div class="row align-items-center justify-content-between g-0 px-2">
+                    <div class="col  col-auto text-truncate d-flex align-items-center ">
+                        <span class="text-capitalize fs-5 me-3">Users (@Model.Users.Total)</span>
+                        <button id="btn--add--user" class="btn btn-sm btn-primary rounded-pill  ms-2">Add</button>
+                    </div>
+                </div>
+            </div>
+            @foreach (var user in Model.Users.Users)
+            {
+                <div class="list-group-item  border-left-none px-1 position-sticky ">
+                    <i class="bi bi-person fs-1 position-absolute"></i>
+                    <div class="row align-items-center px-2 ms-4  my-2">
+                        <div class="col-12 text-truncate d-flex align-items-center fs-5">
+                            <span class="badge fs-6">Username</span>
+                            <span class="badge fs-6 card">@user.Username</span>
+                            <button class="btn btn-sm btn-secondary ms-2">Change</button>
+                        </div>
+                    </div>
+                    <div class="row align-items-center px-2 ms-4  my-2">
+                        <div class="col-12 text-truncate d-flex align-items-center fs-5">
+                            <span class="badge fs-6">Password</span>
+                            <button class="btn btn-sm btn-secondary ms-2">Set</button>
+                        </div>
+                    </div>
+                    <div class="row align-items-center px-2 ms-4  my-2">
+                        <div class="col-12 text-truncate d-flex align-items-center fs-5">
+                            <span class="badge fs-6 align-self-start">Mailboxes</span>
+                            <div class="badge fs-6 card d-flex flex-column align-items-start">
+                                @foreach (var mailbox in user.Mailboxes)
+                                {
+                                    <div class="my-1">
+                                        @mailbox.Identity@@@mailbox.Host
+                                        <button class="btn btn-sm btn-secondary ms-2">Remove</button>
+                                    </div>
+                                }
+                            </div>
+                            <button class="btn btn-sm btn-secondary ms-2 align-self-start">Add new mailbox</button>
+                        </div>
+                    </div>
+                    <div class="row align-items-center px-2 ms-4  my-2">
+                        <div class="col-12 text-truncate d-flex align-items-center fs-5">
+                            <span class="badge fs-6 align-self-start">Identities</span>
+                            <div class="badge fs-6 card d-flex flex-column align-items-stretch">
+                                @foreach (var identity in user.Identities)
+                                {
+                                    <div class="my-1 d-flex align-items-center justify-content-between">
+                                        &OpenCurlyDoubleQuote;@identity.DisplayName&CloseCurlyDoubleQuote;
+                                        &lt;@identity.Email&gt;
+                                        <button class="btn btn-sm btn-secondary ms-2">Remove</button>
+                                    </div>
+                                }
+                            </div>
+                            <button class="btn btn-sm btn-secondary ms-2 align-self-start">Add new identity</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="d-flex justify-content-center my-4">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                    <li class="page-item"><a class="page-link" href="/admin?page=@(Model.Users.Page-1)">Previous</a>
+                    </li>
+                    <li class="page-item"><a class="page-link" href="/admin?page=@(Model.Users.Page+1)">Next</a></li>
+                </ul>
+            </nav>
+        </div>
+
+
+    </section>
+
+
+    <section id="new--message" class="d-none">
+        <iframe id="new--message-frame" src="about:blank"></iframe>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
+    <script src="~/js/index.js"></script>
+    <script src="~/js/settings.js"></script>
+}
