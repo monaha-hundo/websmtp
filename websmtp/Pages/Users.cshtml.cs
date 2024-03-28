@@ -13,27 +13,27 @@ namespace MyApp.Namespace;
 
 public class ListUserResult
 {
-    public List<User> Users { get; set; }
+    public List<User> Users { get; set; } = null!;
     public int Page { get; set; }
     public int PerPage { get; set; }
     public int Total { get; set; }
 }
 
 [Authorize(Roles = "admin")]
-public class AdminModel : PageModel
+public class UsersModel : PageModel
 {
     private readonly IReadableMessageStore _messageStore;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly DataContext _data;
 
-    public ListUserResult Users { get; set; }
+    public ListUserResult Users { get; set; } = null!;
 
-    [BindProperty] public int? CurrentPage { get; set; }
-    [BindProperty] public int? PerPage { get; set; }
-    [BindProperty] public string Filter { get; set; }
+    [FromQuery] public int? CurrentPage { get; set; }
+    [FromQuery] public int? PerPage { get; set; }
+    [FromQuery] public string Filter { get; set; } = string.Empty;
     public ListResult Listing { get; set; } = new ListResult();
 
-    public AdminModel(IHttpContextAccessor httpContextAccessor,
+    public UsersModel(IHttpContextAccessor httpContextAccessor,
         DataContext data,
         IReadableMessageStore messageStore)
     {
@@ -48,10 +48,12 @@ public class AdminModel : PageModel
         PerPage = PerPage.HasValue ? PerPage.Value : 25;
         var userId = _httpContextAccessor.GetUserId();
         Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
-        var userCount = _data.Users.Count();
+        var userCount = string.IsNullOrWhiteSpace(Filter)
+            ? _data.Users.Count()
+            : _data.Users.Count(u => u.Username.Contains(Filter));
         var users = string.IsNullOrWhiteSpace(Filter)
-            ? _data.Users.Include(u => u.Mailboxes).Include(u => u.Identities).Skip((CurrentPage.Value - 1) * PerPage.Value).Take(PerPage.Value).ToList()
-            : _data.Users.Include(u => u.Mailboxes).Include(u => u.Identities).Where(u => u.Username.Contains(Filter)).Skip((CurrentPage.Value - 1) * PerPage.Value).Take(PerPage.Value).ToList();
+            ? _data.Users.Include(u => u.Mailboxes).Include(u => u.Identities).OrderByDescending(u => u.Id).Skip((CurrentPage.Value - 1) * PerPage.Value).Take(PerPage.Value).ToList()
+            : _data.Users.Include(u => u.Mailboxes).Include(u => u.Identities).OrderByDescending(u => u.Id).Where(u => u.Username.Contains(Filter)).Skip((CurrentPage.Value - 1) * PerPage.Value).Take(PerPage.Value).ToList();
 
         Users = new ListUserResult
         {

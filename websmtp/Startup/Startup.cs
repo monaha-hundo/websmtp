@@ -119,10 +119,10 @@ public static class Startup
         var dbName = builder.Configuration.GetValue<string>("Database:Name");
         var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
         var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
-        var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
-        Console.WriteLine($"Connection string: '{cs}'.");
+        var csWithoutPassword = $"server={dbServer};database={dbName};user={dbUsername};";
+        Console.WriteLine($"Connection string: '{csWithoutPassword}'.");
+        var cs = csWithoutPassword + $"password={dbPassword}";
         var srvVer = ServerVersion.AutoDetect(cs);
-
         builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
     }
 

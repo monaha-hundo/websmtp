@@ -18,8 +18,8 @@ function initNavbar() {
     let sent = window.location.pathname.startsWith('/sent');
     let spam = window.location.pathname.startsWith('/spam');
     let trash = window.location.pathname.startsWith('/trash');
-    let settings = window.location.pathname.startsWith('/settings');
-    let admin = window.location.pathname.startsWith('/admin');
+    let account = window.location.pathname.startsWith('/account');
+    let users = window.location.pathname.startsWith('/users');
 
     if (trash) {
         const selector = `#btn-mailbox-trash`;
@@ -29,16 +29,16 @@ function initNavbar() {
         return;
     }
 
-    if (admin) {
-        const selector = `#btn-mailbox-admin`;
+    if (users) {
+        const selector = `#btn-mailbox-users`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
         mailboxEl.classList.add('btn-dark', 'active');
         return;
     }
 
-    if (settings) {
-        const selector = `#btn-mailbox-settings`;
+    if (account) {
+        const selector = `#btn-mailbox-account`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
         mailboxEl.classList.add('btn-dark', 'active');

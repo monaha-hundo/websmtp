@@ -11,7 +11,7 @@ using websmtp.services;
 namespace MyApp.Namespace
 {
     [Authorize]
-    public class SettingsModel : PageModel
+    public class AccountModel : PageModel
     {
         private readonly IReadableMessageStore _messageStore;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -21,7 +21,7 @@ namespace MyApp.Namespace
 
         public User Profile { get; set; } = null!;
 
-        public SettingsModel(IReadableMessageStore messageStore, IHttpContextAccessor httpContextAccessor, DataContext data)
+        public AccountModel(IReadableMessageStore messageStore, IHttpContextAccessor httpContextAccessor, DataContext data)
         {
             _messageStore = messageStore;
             _httpContextAccessor = httpContextAccessor;
