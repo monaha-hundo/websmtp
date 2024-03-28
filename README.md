@@ -135,6 +135,3 @@ In active development, partial features, missing features, security issues, not 
 ![Screenshot from 2024-03-28 07-55-47](https://github.com/monaha-hundo/websmtp/assets/139830086/e715888c-fe1d-46f8-883c-32f93fc62732)
 ![Screenshot from 2024-03-28 07-55-57](https://github.com/monaha-hundo/websmtp/assets/139830086/991b504b-457c-485e-ba88-017aa3482490)
 ![Screenshot from 2024-03-28 07-56-02](https://github.com/monaha-hundo/websmtp/assets/139830086/31672560-b6cb-4a57-9394-89bbeb78c397)
-
-
-
