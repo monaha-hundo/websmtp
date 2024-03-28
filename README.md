@@ -1,5 +1,5 @@
 # websmtp
-[websmtp-ui.webm](https://github.com/monaha-hundo/websmtp/assets/139830086/e3310bb1-e6fc-462f-871c-ed2f1c7ef788)
+[websmtp.webm](https://github.com/monaha-hundo/websmtp/assets/139830086/3f4b4234-9442-408c-90d4-ea73ed4ada39)
 ###### __Under development.__
 ## Description
 Simple combined mail transfer agent and mail user agent with a web UI in C#, meaning the app receive emails from remote SMTP servers on port 25 and send mail directly to remote exchanges without going through relay servers. Purpose is to be simple to setup and use while being somewhat flexible. The app web interface is the sole consumer of the messages store.
@@ -14,6 +14,14 @@ The app has a small command line utility to quicly generate a DKIM setup and out
 
 Possible uses: mock SMTP server for testing, home emails for LAN devices such as printers and ip cameras, your own web email provider business.
 
+
+## Quick Start
+Setup for `example.com`:
+1. Create a mariadb database named `websmtp` and a login/user with the `websmtp/websmtp` access credentials.
+2. Put your domain SSL certificates in `/websmtp/certificates/`, with the key named `ssl.key` and the cert named `ssl.crt`
+   - Or run `setup_docker_compose.sh` to generate self-signed localhost certs.
+3. `docker run -it -p 443:443 -p 25:25 -v /websmtp/certificates/:/certificates/:ro -e Database__Server=some-database-server yvansolutions/websmtp:latest ./websmtp --migrate-database --enable-admin --username=admin --password=admin --domain=example.com`.
+4. Either visit example.com or localhost and use the default `admin/admin` credentials.
 
 
 ## Usage
@@ -90,9 +98,7 @@ Here are the avaiable environment variables and their default:
 A `compose.yaml` file is available to quicly launch an instance without setting up a database/server. 
 
 Use `docker compose up` in the root folder . 
-Visit `https://localhost/`, use `admin/admin` as the default credentials. 
-Visit `http://localhost:8080` for a adminer instance to connect to the `mariadb` instance/database. 
-Adminer is the only way to manage users of a running instance.
+Visit `https://localhost/`, use `admin/admin` as the default credentials.
 
 ### Testing
 By default the `appSettings.Development.json` will look for a test/dev database on localhost, as such it is recommended to use docker and launch a local MariaDb instance for each test run.
@@ -120,3 +126,15 @@ In active development, partial features, missing features, security issues, not 
 - [QRCoder](https://github.com/codebude/QRCoder)
 - [SmtpServer](https://github.com/cosullivan/SmtpServer)
 - [Apache's Spam Assassin](https://spamassassin.apache.org/)
+
+## Screenshots
+![1](https://github.com/monaha-hundo/websmtp/assets/139830086/cb880b72-db72-428b-a60c-7dfbbe7d8114)
+![2](https://github.com/monaha-hundo/websmtp/assets/139830086/0e28c450-d3a7-4935-8d99-d8dd52594f89)
+![Screenshot from 2024-03-28 07-53-21](https://github.com/monaha-hundo/websmtp/assets/139830086/317654d2-cd1b-40a4-9453-f01ab9669c2f)
+![Screenshot from 2024-03-28 07-53-32](https://github.com/monaha-hundo/websmtp/assets/139830086/cdb07c28-9810-4917-8d58-aa85e89bc6f6)
+![Screenshot from 2024-03-28 07-55-47](https://github.com/monaha-hundo/websmtp/assets/139830086/e715888c-fe1d-46f8-883c-32f93fc62732)
+![Screenshot from 2024-03-28 07-55-57](https://github.com/monaha-hundo/websmtp/assets/139830086/991b504b-457c-485e-ba88-017aa3482490)
+![Screenshot from 2024-03-28 07-56-02](https://github.com/monaha-hundo/websmtp/assets/139830086/31672560-b6cb-4a57-9394-89bbeb78c397)
+
+
+
