@@ -12,13 +12,14 @@ function updateSelectedMessages() {
 }
 
 function initNavbar() {
-    let inbox = window.location.href.endsWith('/inbox');
-    let all = window.location.href.endsWith('/all');
-    let favorites = window.location.href.endsWith('/favorites');
-    let sent = window.location.href.endsWith('/sent');
-    let spam = window.location.href.endsWith('/spam');
-    let trash = window.location.href.endsWith('/trash');
-    let settings = window.location.href.endsWith('/settings');
+    let inbox = window.location.pathname.startsWith('/inbox');
+    let all = window.location.pathname.startsWith('/all');
+    let favorites = window.location.pathname.startsWith('/favorites');
+    let sent = window.location.pathname.startsWith('/sent');
+    let spam = window.location.pathname.startsWith('/spam');
+    let trash = window.location.pathname.startsWith('/trash');
+    let account = window.location.pathname.startsWith('/account');
+    let users = window.location.pathname.startsWith('/users');
 
     if (trash) {
         const selector = `#btn-mailbox-trash`;
@@ -28,8 +29,16 @@ function initNavbar() {
         return;
     }
 
-    if (settings) {
-        const selector = `#btn-mailbox-settings`;
+    if (users) {
+        const selector = `#btn-mailbox-users`;
+        const mailboxEl = document.querySelector(selector);
+        mailboxEl.classList.remove('btn-transparent-primary');
+        mailboxEl.classList.add('btn-dark', 'active');
+        return;
+    }
+
+    if (account) {
+        const selector = `#btn-mailbox-account`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
         mailboxEl.classList.add('btn-dark', 'active');
@@ -330,7 +339,7 @@ function newMessage(to) {
     let sectionEl = window.parent.document.getElementById('new--message');
     let iframeEl = document.createElement('iframe');
     iframeEl.id = 'new--message-frame';
-    
+
     if (to == null) {
         iframeEl.src = '/NewMessage';
     } else {

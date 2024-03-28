@@ -95,7 +95,11 @@ public static class Startup
         });
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
         builder.Services.AddHttpContextAccessor();
-        builder.Services.AddAuthorization();
+        builder.Services.AddAuthorization(opts => {
+            opts.AddPolicy("admin", pol => {
+                pol.RequireRole("admin");
+            });
+        });
         builder.Services.AddRazorPages();
         builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
         ConfigureSmtpServices(builder);
@@ -115,10 +119,10 @@ public static class Startup
         var dbName = builder.Configuration.GetValue<string>("Database:Name");
         var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
         var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
-        var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
-        Console.WriteLine($"Connection string: '{cs}'.");
+        var csWithoutPassword = $"server={dbServer};database={dbName};user={dbUsername};";
+        Console.WriteLine($"Connection string: '{csWithoutPassword}'.");
+        var cs = csWithoutPassword + $"password={dbPassword}";
         var srvVer = ServerVersion.AutoDetect(cs);
-
         builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
     }
 
@@ -216,15 +220,21 @@ public static class Startup
         app.MapGet("/api/messages/{msgId}/attachements/{filename}", MessagesEndpoints.GetMessageAttachement).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}.html", MessagesEndpoints.GetMessage).RequireAuthorization();
 
-        // OTP
+        // Self Administration for users
         app.MapGet("/api/settings/otp/initiate", MessagesEndpoints.OtpInitiate).RequireAuthorization();
         app.MapPost("/api/settings/otp/validate", MessagesEndpoints.OtpValidateAndEnable).RequireAuthorization();
-
-        // Password change
         app.MapPost("/api/settings/pwd/change", MessagesEndpoints.ChangePassword).RequireAuthorization();
-
-        // Mailboxes & identities
         app.MapPost("/api/settings/mailboxes/add", MessagesEndpoints.AddMailbox).RequireAuthorization();
         app.MapPost("/api/settings/identities/add", MessagesEndpoints.AddIdentity).RequireAuthorization();
+
+        // Administration actions for adminsitrators
+        app.MapPost("/api/settings/administration/add-user", MessagesEndpoints.AddUser).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/change-user-name", MessagesEndpoints.ChangeUsername).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/change-user-password", MessagesEndpoints.ChangeUserPassword).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/add-user-mailbox", MessagesEndpoints.AddUserMailbox).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/remove-user-mailbox", MessagesEndpoints.RemoveUserMailbox).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/add-user-identity", MessagesEndpoints.AddUserIdentity).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/remove-user-identity", MessagesEndpoints.RemoveUserIdentity).RequireAuthorization("admin");
+        
     }
 }
