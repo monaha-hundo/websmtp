@@ -38,12 +38,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="dkim_private.dev.pem">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="dkim_pub.dev.der">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<None Update="setup.sql">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

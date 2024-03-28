@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmtpServer.Storage;
 using websmtp.Database;
@@ -10,7 +11,7 @@ namespace websmtp.Startup;
 
 public static class Startup
 {
-    public static void InitAppConfig(WebApplicationBuilder builder)
+    public static void InitAppConfig(IHostApplicationBuilder builder)
     {
 
         builder.Configuration.AddJsonFile("appSettings.json", false, true);
@@ -60,23 +61,16 @@ public static class Startup
                     listenOptions.UseHttps(x509);
                 });
             });
-        }else
+        }
+        else
         {
             builder.WebHost.UseKestrel();
         }
     }
 
-    public static void ConfigureServices(WebApplicationBuilder builder)
+    public static void ConfigureWebServices(IHostApplicationBuilder builder)
     {
-        var dbServer = builder.Configuration.GetValue<string>("Database:Server");
-        var dbName = builder.Configuration.GetValue<string>("Database:Name");
-        var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
-        var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
-        var cs = $"server={dbServer};database={dbName};user={dbUsername};password={dbPassword}";
-        Console.WriteLine($"Connection string: '{cs}'.");
-        var srvVer = ServerVersion.AutoDetect(cs);
-
-        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
+        ConfigureDatabase(builder);
 
         if (builder.Environment.IsProduction())
         {
@@ -86,17 +80,50 @@ public static class Startup
             });
         }
 
+        builder.Services.Configure<CookieTempDataProviderOptions>(options =>
+        {
+            options.Cookie.Name = Guid.NewGuid().ToString("N");
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+        });
         //builder.Services.AddSession();
-        builder.Services.AddAntiforgery();
-        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddAntiforgery(opts =>
+        {
+            opts.Cookie.Name = Guid.NewGuid().ToString("N");
+            opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            opts.Cookie.SameSite = SameSiteMode.Strict;
+        });
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
-        builder.Services.AddAuthorization();
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddAuthorization(opts => {
+            opts.AddPolicy("admin", pol => {
+                pol.RequireRole("admin");
+            });
+        });
         builder.Services.AddRazorPages();
+        builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
+        ConfigureSmtpServices(builder);
+    }
+
+    public static void ConfigureSmtpServices(IHostApplicationBuilder builder)
+    {
         builder.Services.AddTransient<SendMailService>();
         builder.Services.AddTransient<SpamAssassin>();
         builder.Services.AddSingleton<IMessageStore, websmtp.services.MessageStore>();
-        builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
         builder.Services.AddHostedService<SmtpServerService>();
+    }
+
+    public static void ConfigureDatabase(IHostApplicationBuilder builder)
+    {
+        var dbServer = builder.Configuration.GetValue<string>("Database:Server");
+        var dbName = builder.Configuration.GetValue<string>("Database:Name");
+        var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
+        var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
+        var csWithoutPassword = $"server={dbServer};database={dbName};user={dbUsername};";
+        Console.WriteLine($"Connection string: '{csWithoutPassword}'.");
+        var cs = csWithoutPassword + $"password={dbPassword}";
+        var srvVer = ServerVersion.AutoDetect(cs);
+        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
     }
 
     public static void ConfigureAuthenticationCookie(CookieAuthenticationOptions opts)
@@ -105,6 +132,9 @@ public static class Startup
         opts.AccessDeniedPath = "/error/";
         opts.ExpireTimeSpan = TimeSpan.FromMinutes(20);
         opts.SlidingExpiration = true;
+        opts.Cookie.Name = Guid.NewGuid().ToString("N");
+        opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        opts.Cookie.SameSite = SameSiteMode.Strict;
     }
 
     public static void ConfigureSecurity(WebApplication app)
@@ -127,11 +157,12 @@ public static class Startup
             {"frame-src", new List<string>{"self"}}
         };
 
-        if(enableHtmlMedia){
+        if (enableHtmlMedia)
+        {
             csp["img-src"].Add("data:");
         }
 
-        var cspHeaderValue = string.Join("; ", csp.Keys.Select(c => $"{c} {string.Join(' ', csp[c].Select(s => s.Contains(':')  ? s : "'" + s + "'"))}"));
+        var cspHeaderValue = string.Join("; ", csp.Keys.Select(c => $"{c} {string.Join(' ', csp[c].Select(s => s.Contains(':') ? s : "'" + s + "'"))}"));
 
         app.Use(async (context, next) =>
         {
@@ -189,11 +220,21 @@ public static class Startup
         app.MapGet("/api/messages/{msgId}/attachements/{filename}", MessagesEndpoints.GetMessageAttachement).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}.html", MessagesEndpoints.GetMessage).RequireAuthorization();
 
-        // OTP
+        // Self Administration for users
         app.MapGet("/api/settings/otp/initiate", MessagesEndpoints.OtpInitiate).RequireAuthorization();
         app.MapPost("/api/settings/otp/validate", MessagesEndpoints.OtpValidateAndEnable).RequireAuthorization();
-
-        // Password change
         app.MapPost("/api/settings/pwd/change", MessagesEndpoints.ChangePassword).RequireAuthorization();
+        app.MapPost("/api/settings/mailboxes/add", MessagesEndpoints.AddMailbox).RequireAuthorization();
+        app.MapPost("/api/settings/identities/add", MessagesEndpoints.AddIdentity).RequireAuthorization();
+
+        // Administration actions for adminsitrators
+        app.MapPost("/api/settings/administration/add-user", MessagesEndpoints.AddUser).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/change-user-name", MessagesEndpoints.ChangeUsername).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/change-user-password", MessagesEndpoints.ChangeUserPassword).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/add-user-mailbox", MessagesEndpoints.AddUserMailbox).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/remove-user-mailbox", MessagesEndpoints.RemoveUserMailbox).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/add-user-identity", MessagesEndpoints.AddUserIdentity).RequireAuthorization("admin");
+        app.MapPost("/api/settings/administration/remove-user-identity", MessagesEndpoints.RemoveUserIdentity).RequireAuthorization("admin");
+        
     }
 }

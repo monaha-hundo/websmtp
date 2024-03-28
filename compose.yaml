@@ -36,6 +36,8 @@ services:
   websmtp:
     image: yvansolutions/websmtp:latest
     restart: always
+    volumes:
+      - /websmtp/certificates/:/certificates/:ro
     ports:
       - 443:443
       - 25:25

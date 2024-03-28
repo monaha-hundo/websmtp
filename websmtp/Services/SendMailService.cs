@@ -76,7 +76,7 @@ public class SendMailService
                 var exchange = exchangeRecord.TrimEnd('.');
                 _logger.LogTrace($"Attempt #{attempts}: '{exchange}'.");
                 using var client = new SmtpClient();
-                client.Connect(exchange, RemoteSmtpPort, SecureSocketOptions.Auto); //SecureSocketOptions.StartTls
+                client.Connect(exchange, RemoteSmtpPort, SecureSocketOptions.Auto); 
                 var result = client.Send(message);
                 _logger.LogDebug($"Attempt #{attempts}: sent through {exchange}.");
                 _logger.LogTrace(result);
@@ -89,8 +89,7 @@ public class SendMailService
             }
         }
 
-        throw new Exception ("Could not deliver the mail. Maybe try later.");
-
+        throw new Exception ($"Could not deliver the mail after {attempts} attempts. Maybe try later.");
     }
 
     private void Sign(MimeMessage mimeMessage)
