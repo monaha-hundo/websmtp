@@ -28,7 +28,7 @@ public class AdminModel : PageModel
 
     public ListUserResult Users { get; set; }
 
-    [BindProperty] public int? Page { get; set; }
+    [BindProperty] public int? CurrentPage { get; set; }
     [BindProperty] public int? PerPage { get; set; }
     [BindProperty] public string Filter { get; set; }
     public ListResult Listing { get; set; } = new ListResult();
@@ -44,18 +44,18 @@ public class AdminModel : PageModel
 
     public void OnGet()
     {
-        Page = Page.HasValue ? Page.Value : 1;
+        CurrentPage = CurrentPage.HasValue ? CurrentPage.Value : 1;
         PerPage = PerPage.HasValue ? PerPage.Value : 25;
         var userId = _httpContextAccessor.GetUserId();
         Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
         var userCount = _data.Users.Count();
         var users = string.IsNullOrWhiteSpace(Filter)
-            ? _data.Users.Include(u => u.Mailboxes).Include(u => u.Identities).Skip((Page.Value - 1) * PerPage.Value).Take(PerPage.Value).ToList()
-            : _data.Users.Include(u => u.Mailboxes).Include(u => u.Identities).Where(u => u.Username.Contains(Filter)).Skip((Page.Value - 1) * PerPage.Value).Take(PerPage.Value).ToList();
+            ? _data.Users.Include(u => u.Mailboxes).Include(u => u.Identities).Skip((CurrentPage.Value - 1) * PerPage.Value).Take(PerPage.Value).ToList()
+            : _data.Users.Include(u => u.Mailboxes).Include(u => u.Identities).Where(u => u.Username.Contains(Filter)).Skip((CurrentPage.Value - 1) * PerPage.Value).Take(PerPage.Value).ToList();
 
         Users = new ListUserResult
         {
-            Page = Page.Value,
+            Page = CurrentPage.Value,
             PerPage = PerPage.Value,
             Total = userCount,
             Users = users

@@ -50,15 +50,17 @@
                     <i class="bi bi-person fs-1 position-absolute"></i>
                     <div class="row align-items-center px-2 ms-4  my-2">
                         <div class="col-12 text-truncate d-flex align-items-center fs-5">
-                            <span class="badge fs-6">Username</span>
-                            <span class="badge fs-6 card">@user.Username</span>
-                            <button class="btn btn-sm btn-secondary ms-2">Change</button>
+                            <span class="badge fs-6 ">Username</span>
+                            <span class="badge fs-6 card lbl--username" user-id="@user.Id">@user.Username</span>
+                            <button class="btn btn--change--username btn-sm btn-secondary ms-2"
+                                user-id="@user.Id">Change</button>
                         </div>
                     </div>
                     <div class="row align-items-center px-2 ms-4  my-2">
                         <div class="col-12 text-truncate d-flex align-items-center fs-5">
                             <span class="badge fs-6">Password</span>
-                            <button class="btn btn-sm btn-secondary ms-2">Set</button>
+                            <button class="btn btn--change--password btn-sm btn-secondary ms-2"
+                                user-id="@user.Id">Set</button>
                         </div>
                     </div>
                     <div class="row align-items-center px-2 ms-4  my-2">
@@ -67,13 +69,15 @@
                             <div class="badge fs-6 card d-flex flex-column align-items-start">
                                 @foreach (var mailbox in user.Mailboxes)
                                 {
-                                    <div class="my-1">
+                                    <div class="my-1 mailbox" mailbox-id="@mailbox.Id">
                                         @mailbox.Identity@@@mailbox.Host
-                                        <button class="btn btn-sm btn-secondary ms-2">Remove</button>
+                                        <button class="btn btn-sm btn-secondary ms-2 btn--remove--mailbox"
+                                            mailbox-id="@mailbox.Id" user-id="@user.Id">Remove</button>
                                     </div>
                                 }
                             </div>
-                            <button class="btn btn-sm btn-secondary ms-2 align-self-start">Add new mailbox</button>
+                            <button class="btn btn--add--mailbox btn-sm btn-secondary ms-2 align-self-start"
+                                user-id="@user.Id">Add new mailbox</button>
                         </div>
                     </div>
                     <div class="row align-items-center px-2 ms-4  my-2">
@@ -82,28 +86,41 @@
                             <div class="badge fs-6 card d-flex flex-column align-items-stretch">
                                 @foreach (var identity in user.Identities)
                                 {
-                                    <div class="my-1 d-flex align-items-center justify-content-between">
+                                    <div class="my-1 d-flex align-items-center justify-content-between"
+                                        identity-id="@identity.Id">
                                         &OpenCurlyDoubleQuote;@identity.DisplayName&CloseCurlyDoubleQuote;
                                         &lt;@identity.Email&gt;
-                                        <button class="btn btn-sm btn-secondary ms-2">Remove</button>
+                                        <button class="btn btn-sm btn-secondary ms-2 btn--remove--identity"
+                                            identity-id="@identity.Id" user-id="@user.Id">Remove</button>
                                     </div>
                                 }
                             </div>
-                            <button class="btn btn-sm btn-secondary ms-2 align-self-start">Add new identity</button>
+                            <button user-id="@user.Id"
+                                class="btn btn--add--identity btn-sm btn-secondary ms-2 align-self-start">Add new
+                                identity</button>
                         </div>
                     </div>
                 </div>
             }
         </div>
-        <div class="d-flex justify-content-center my-4">
-            <nav aria-label="Page navigation example">
-                <ul class="pagination">
-                    <li class="page-item"><a class="page-link" href="/admin?page=@(Model.Users.Page-1)">Previous</a>
-                    </li>
-                    <li class="page-item"><a class="page-link" href="/admin?page=@(Model.Users.Page+1)">Next</a></li>
-                </ul>
-            </nav>
-        </div>
+        @if (Model.Users.Users.Count < Model.Users.Total)
+        {
+            <div class="d-flex justify-content-center my-4">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination">
+                        @if (Model.Users.Page > 1)
+                        {
+                            <li class="page-item"><a class="page-link" href="/admin?page=@(Model.Users.Page-1)">Previous</a>
+                            </li>
+                        }
+                        @if (Model.Users.Page < Model.Users.Total / Model.Users.Users.Count)
+                        {
+                            <li class="page-item"><a class="page-link" href="/admin?page=@(Model.Users.Page+1)">Next</a></li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
 
 
     </section>
@@ -117,5 +134,5 @@
 @section Scripts {
     <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
     <script src="~/js/index.js"></script>
-    <script src="~/js/settings.js"></script>
+    <script src="~/js/users.js"></script>
 }
