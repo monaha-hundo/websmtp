@@ -69,7 +69,7 @@ function showSource(el) {
     el.style.display = visibility;
 }
 function closeMsg() {
-    history.back();
+    window.parent.closeMsgView();
 }
 async function deleteMsg() {
     await window.parent.deleteMessages([msgId]);
@@ -93,7 +93,10 @@ async function markAsUnread() {
 }
 
 async function trainSpam(isSpam) {
-    await window.parent.trainSpam([msgId], isSpam);
+    const result = await window.parent.trainSpam([msgId], isSpam);
+    
+    if(result.isDismissed || !result.value) return;
+
     if (isSpam) {
         document.getElementById('btn--report--spam').classList.add('d-none');
         document.getElementById('btn--unreport--spam').classList.remove('d-none');

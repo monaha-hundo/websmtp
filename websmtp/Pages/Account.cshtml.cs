@@ -11,7 +11,7 @@ using websmtp.services;
 namespace MyApp.Namespace
 {
     [Authorize]
-    public class SettingsModel : PageModel
+    public class AccountModel : PageModel
     {
         private readonly IReadableMessageStore _messageStore;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -21,25 +21,7 @@ namespace MyApp.Namespace
 
         public User Profile { get; set; } = null!;
 
-        private int GetUserGuid()
-        {
-            try
-            {
-                var rawId = _httpContextAccessor?.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? throw new Exception("Could not fund user id claim");
-                if (int.TryParse(rawId, out var userId))
-                {
-                    return userId;
-                }
-                throw new Exception("Could not cast user id claim to int.");
-            }
-            catch (System.Exception ex)
-            {
-                throw new Exception("Could not get user guid: ", ex);
-            }
-        }
-
-        public SettingsModel(IReadableMessageStore messageStore, IHttpContextAccessor httpContextAccessor, DataContext data)
+        public AccountModel(IReadableMessageStore messageStore, IHttpContextAccessor httpContextAccessor, DataContext data)
         {
             _messageStore = messageStore;
             _httpContextAccessor = httpContextAccessor;
@@ -48,7 +30,7 @@ namespace MyApp.Namespace
 
         public void OnGet()
         {
-            var userId = GetUserGuid();
+            var userId = _httpContextAccessor.GetUserId();
             Profile = _data.Users.Include(u => u.Identities).Include(u => u.Mailboxes).Single(u => u.Id == userId);
             Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
         }

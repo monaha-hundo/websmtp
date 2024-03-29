@@ -1,28 +1,33 @@
 using websmtp.Startup;
 
-CommandLine.ParseStartupArgs(args);
+var smtpServerOnly = CommandLine.ParseStartupArgs(args);
 
-var builder = WebApplication.CreateSlimBuilder(args);
-
-Startup.InitAppConfig(builder);
-Startup.ConfigureWebHost(builder);
-Startup.ConfigureServices(builder);
-
-var app = builder.Build();
-
-Startup.ConfigureSecurity(app);
-Startup.ConfigureAppPipeline(app);
-Startup.MapEndpoints(app);
-
-CommandLine.ParseModifiersArgs(args, app);
-
-if (app.Environment.IsEnvironment("Test"))
+if (smtpServerOnly)
 {
-    CommandLine.MigrateDatabase(app);
+    var cliBuilder = Host.CreateApplicationBuilder(args);
+    Startup.InitAppConfig(cliBuilder);
+    Startup.ConfigureDatabase(cliBuilder);
+    Startup.ConfigureSmtpServices(cliBuilder);
+    var cliApp = cliBuilder.Build();
+    cliApp.Run();
+    return 0;
 }
 
-app.Run();
+var webBuilder = WebApplication.CreateSlimBuilder(args);
 
+Startup.InitAppConfig(webBuilder);
+Startup.ConfigureWebHost(webBuilder);
+Startup.ConfigureWebServices(webBuilder);
+
+var webApp = webBuilder.Build();
+
+Startup.ConfigureSecurity(webApp);
+Startup.ConfigureAppPipeline(webApp);
+Startup.MapEndpoints(webApp);
+
+CommandLine.ParseModifiersArgs(args, webApp);
+
+webApp.Run();
 return 0;
 
 public partial class Program { } // To enable testing

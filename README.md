@@ -1,4 +1,6 @@
 # websmtp
+[websmtp.webm](https://github.com/monaha-hundo/websmtp/assets/139830086/3f4b4234-9442-408c-90d4-ea73ed4ada39)
+###### __Under development.__
 ## Description
 Simple combined mail transfer agent and mail user agent with a web UI in C#, meaning the app receive emails from remote SMTP servers on port 25 and send mail directly to remote exchanges without going through relay servers. Purpose is to be simple to setup and use while being somewhat flexible. The app web interface is the sole consumer of the messages store.
 
@@ -12,6 +14,16 @@ The app has a small command line utility to quicly generate a DKIM setup and out
 
 Possible uses: mock SMTP server for testing, home emails for LAN devices such as printers and ip cameras, your own web email provider business.
 
+
+## Quick Start
+Setup for `example.com`:
+1. Create a mariadb database named `websmtp` and a login/user with the `websmtp/websmtp` access credentials.
+2. Put your domain SSL certificates in `/websmtp/certificates/`, with the key named `ssl.key` and the cert named `ssl.crt`
+   - Or run `setup_docker_compose.sh` to generate self-signed localhost certs.
+3. `docker run -it -p 443:443 -p 25:25 -v /websmtp/certificates/:/certificates/:ro -e Database__Server=some-database-server yvansolutions/websmtp:latest ./websmtp --migrate-database --enable-admin --username=admin --password=admin --domain=example.com`.
+4. Either visit example.com or localhost and use the default `admin/admin` credentials.
+
+
 ## Usage
 ### Configuration
 The `appSettings.json` file is empty and contains all the configurable keys. All keys must be configured. Environment decide if `appSettings.Development.json` or `appSettings.Production.json` will be loaded additionaly. Each file must be present to run the app in each respective environment. 
@@ -19,9 +31,19 @@ The `Test` environment use the development configuration and _apply database mig
 
 Available command line arguments:
 - `--add-user`: quickly add a user by answering a couple of questions. User will have OTP disabled.
+  - `--displayName=`
+  - `--username=`
+  - `--password=`
+  - `--email=`
+  - `--mailbox=`
+  - `--roles=`
 - `--list--users`: display all the users data in JSON.
 - `--migrate-database`: apply migrations to database up to the lastest available at build time.
-- `--generate-dkim-config`: generate the pub/priv certs, DNS record data and the configuration file data to enable DKIM signing and DNS configuration. 
+- `--enable-admin`: enable/create an admin user, similar to `--add-user` but if the username is taken, skip.
+  - `--username=`
+  - `--password=`
+  - `--domain=`:
+- `--generate-dkim-config`: generate the pub/priv certs, DNS record data and the configuration file data to enable DKIM signing and DNS configuration. Output contains information to configure a domain records.
 
 ### Running
 
@@ -30,12 +52,53 @@ By default the app is published as self-contained single file executable.
 Running the app once configured done by running the `websmtp` binary.
 
 #### Docker
-`docker compose up` in the root folder, then visit `https://localhost/`. 
-Use `admin/admin` as the default credentials. Visit `http://localhost:8080` for a adminer instance to connect to the `mariadb` instance/database. Adminer is the only way to manage users of a running instance.
+Available on the docker hub: [yvansolutions/websmtp](https://hub.docker.com/r/yvansolutions/websmtp).
+You must generate all the HTTPS certificates and optionally the DKIM signing certificate and mount their location in the `/certificates/` volume.
+You must then use the required environment variables to configure the app to use them (`SSL__PrivateKey, SSL__PublicKey, DKIM__Domains__X__PrivateKey`).
+If you don't have certs on hand, use the provided `setup_docker_compose.sh` to quicly generate self-signed localhost ones for HTTPS and the `--generage-dkim-config` command line utility to get started with DKIM.
 
-You can send emails to non existing accounts @ localhost, they will appear in the admin user mailbox which is configured as catch-all. Do not send emails to remote servers: doing so through the default configuration will probably damage your email/domain/ip reputation. 
+##### Building
+Use the provided `build_docker.sh`
+##### Launching
+Assuming the certificates to be used are in the `/websmtp/certificates` folder.
 
-Until there is a way to configure the docker image (domain, certs, etc.), the recommended install method for testing more thoroughly is through the binary build.
+Here is a command to run the app for the `example.com` domain:
+`docker run -it -p 443:443 -p 25:25 -v /websmtp/certificates/:/certificates/:ro -e Database__Server=some-database-server yvansolutions/websmtp:latest ./websmtp --migrate-database --enable-admin --username=admin --password=admin --domain=example.com`.
+
+This would launch the app, which would use `some-database-server` with the default database named `websmtp` with default credentials of `websmtp/websmtp`. It would listen for HTTPS connection on port `443` and SMTP `25`. An admin account with a catch-all mailbox and an identity of `postmaster@example.com`.
+
+If DKIM setup was donne corretly, the app can send and receive email from major providers such as gmail, outlook and proton mail.
+
+Here are the avaiable environment variables and their default:
+
+`AllowedHosts: '*'`
+`Database__Name: websmtp`
+`Database__Password: websmtp`
+`Database__Server: mariadb`
+`Database__Username: websmtp`
+`DKIM__Enabled: True`
+`DKIM__SigningEnabled: False`
+`DKIM__Domains__0__Name: websmtp.local`
+`DKIM__Domains__0__PrivateKey: dkim_private.dev.pem`
+`DKIM__Domains__0__Selector: dkim`
+`DNS__IP: 192.168.1.1`
+`DNS__Port: 53`
+`Security__EnableHtmlDisplay: True`
+`Security__EnableMediaInHtml: True`
+`SMTP__Port: 25`
+`SMTP__RemotePort: 25`
+`SpamAssassin__Enabled: True`
+`SPF__Enabled: True`
+`SSL__Enabled: True`
+`SSL__Port: 443`
+`SSL__PrivateKey: /certificates/ssl.key`
+`SSL__PublicKey: /certificates/ssl.crt`
+
+#### Docker Compose
+A `compose.yaml` file is available to quicly launch an instance without setting up a database/server. 
+
+Use `docker compose up` in the root folder . 
+Visit `https://localhost/`, use `admin/admin` as the default credentials.
 
 ### Testing
 By default the `appSettings.Development.json` will look for a test/dev database on localhost, as such it is recommended to use docker and launch a local MariaDb instance for each test run.
@@ -53,31 +116,6 @@ Identities are email addresses and display name combinations offered to users as
 ## Disclaimer
 In active development, partial features, missing features, security issues, not tested, etc.
 
-## Screenshots
-### Login with one time passwords
-![Screenshot from 2024-03-20 06-36-55](https://github.com/monaha-hundo/websmtp/assets/139830086/07f97399-9856-4b7f-809a-3846e1424176)
-![Screenshot from 2024-03-20 06-37-36](https://github.com/monaha-hundo/websmtp/assets/139830086/4bb75fb9-9352-45fb-9718-1da200e3e52d)
-
-### Basic Inbox/All Mail/Favorites/Trash view
-![Screenshot from 2024-03-15 08-43-49](https://github.com/monaha-hundo/websmtp/assets/139830086/d64d1654-5321-4ace-91e7-8688c37ce7b2)
-
-### Detailed email view
-![Screenshot from 2024-03-15 08-43-59](https://github.com/monaha-hundo/websmtp/assets/139830086/5cacbaf8-141d-4a14-8fb0-070a1dd843bd)
-
-### Send Emails
-![Screenshot from 2024-03-19 14-20-08](https://github.com/monaha-hundo/websmtp/assets/139830086/fee58ee6-8396-4cdc-a2b0-4f267455609a)
-- DKIM Signing
-
-### Supports raw message display
-![Screenshot from 2024-03-15 08-44-24](https://github.com/monaha-hundo/websmtp/assets/139830086/a3d650cf-b5a3-4fe6-b531-721935a78378)
-
-### HTML Email with media support and attachements download
-![Screenshot from 2024-03-19 14-17-21](https://github.com/monaha-hundo/websmtp/assets/139830086/accaea14-974a-4603-b1b9-d2043b79fd22)
-
-### Quick OTP setup with QR code
-![Screenshot from 2024-03-19 14-14-38](https://github.com/monaha-hundo/websmtp/assets/139830086/dc78ddbd-3628-4a52-9170-91dd9af9bbb5)
-![Screenshot from 2024-03-19 14-14-48](https://github.com/monaha-hundo/websmtp/assets/139830086/2b5fd93b-e09f-4262-9789-70dd077b7f7e)
-
 ## Made with
 - [ .Net 8 / Asp.Net / EntityFramework Core](https://dotnet.microsoft.com/)
 - [Bootstrap](https://getbootstrap.com/)
@@ -88,3 +126,12 @@ In active development, partial features, missing features, security issues, not 
 - [QRCoder](https://github.com/codebude/QRCoder)
 - [SmtpServer](https://github.com/cosullivan/SmtpServer)
 - [Apache's Spam Assassin](https://spamassassin.apache.org/)
+
+## Screenshots
+![1](https://github.com/monaha-hundo/websmtp/assets/139830086/cb880b72-db72-428b-a60c-7dfbbe7d8114)
+![2](https://github.com/monaha-hundo/websmtp/assets/139830086/0e28c450-d3a7-4935-8d99-d8dd52594f89)
+![Screenshot from 2024-03-28 07-53-21](https://github.com/monaha-hundo/websmtp/assets/139830086/317654d2-cd1b-40a4-9453-f01ab9669c2f)
+![Screenshot from 2024-03-28 07-53-32](https://github.com/monaha-hundo/websmtp/assets/139830086/cdb07c28-9810-4917-8d58-aa85e89bc6f6)
+![Screenshot from 2024-03-28 07-55-47](https://github.com/monaha-hundo/websmtp/assets/139830086/e715888c-fe1d-46f8-883c-32f93fc62732)
+![Screenshot from 2024-03-28 07-55-57](https://github.com/monaha-hundo/websmtp/assets/139830086/991b504b-457c-485e-ba88-017aa3482490)
+![Screenshot from 2024-03-28 07-56-02](https://github.com/monaha-hundo/websmtp/assets/139830086/31672560-b6cb-4a57-9394-89bbeb78c397)

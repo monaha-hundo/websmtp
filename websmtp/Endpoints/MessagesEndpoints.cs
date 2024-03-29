@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MimeKit;
 using OtpNet;
 using QRCoder;
+using SmtpServer.Mail;
 using websmtp.Database;
+using websmtp.Database.Models;
 
 namespace websmtp;
 
@@ -202,4 +206,249 @@ public static partial class MessagesEndpoints
         return Results.Ok();
     }
 
+    public static IResult AddMailbox(
+        [FromBody] AddMailboxRequest addMailboxReq,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var mbAddr = new MimeKit.MailboxAddress(
+            addMailboxReq.DisplayName,
+            addMailboxReq.Email
+        );
+
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+
+        var newMailbox = new UserMailbox
+        {
+            DisplayName = addMailboxReq.DisplayName,
+            Identity = mbAddr.LocalPart,
+            Host = mbAddr.Domain,
+        };
+
+        user.Mailboxes.Add(newMailbox);
+        data.SaveChanges();
+
+        return Results.Ok();
+    }
+
+    public static IResult AddIdentity(
+        [FromBody] AddMailboxRequest addMailboxReq,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var mbAddr = new MimeKit.MailboxAddress(
+            addMailboxReq.DisplayName,
+            addMailboxReq.Email
+        );
+
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+
+        var newIdentity = new UserIdentity
+        {
+            DisplayName = addMailboxReq.DisplayName,
+            Email = addMailboxReq.Email
+        };
+
+        user.Identities.Add(newIdentity);
+        data.SaveChanges();
+
+        return Results.Ok();
+    }
+
+    public class ChangeUserPasswordRequest
+    {
+        public int UserId { get; set; }
+        public string NewPassword { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+
+    public static IResult ChangeUserPassword(
+        [FromBody] ChangeUserPasswordRequest changePwdReq,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var user = data.Users.Single(u => u.Id == changePwdReq.UserId);
+        var passwordHasher = new PasswordHasher();
+        var canChange = changePwdReq.NewPassword == changePwdReq.ConfirmPassword;
+        if (!canChange)
+        {
+            return Results.BadRequest();
+        }
+        user.PasswordHash = passwordHasher.HashPassword(changePwdReq.NewPassword);
+        data.SaveChanges();
+        return Results.Ok();
+    }
+
+    public class ChangeUsernameRequest
+    {
+        public int UserId { get; set; }
+        public string NewUsername { get; set; } = string.Empty;
+    }
+
+    public static IResult ChangeUsername(
+        [FromBody] ChangeUsernameRequest changeUsernameReq,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var user = data.Users.Single(u => u.Id == changeUsernameReq.UserId);
+        user.Username = changeUsernameReq.NewUsername;
+        data.SaveChanges();
+        return Results.Ok();
+    }
+
+    public class AddUserMailboxRequest
+    {
+        public int UserId { get; set; }
+        public string DisplayName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public static IResult AddUserMailbox(
+        [FromBody] AddUserMailboxRequest addMailboxReq,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var mbAddr = new MimeKit.MailboxAddress(
+            addMailboxReq.DisplayName,
+            addMailboxReq.Email
+        );
+
+        var user = data.Users.Single(u => u.Id == addMailboxReq.UserId);
+
+        var newMailbox = new UserMailbox
+        {
+            DisplayName = addMailboxReq.DisplayName,
+            Identity = mbAddr.LocalPart,
+            Host = mbAddr.Domain,
+        };
+
+        user.Mailboxes.Add(newMailbox);
+        data.SaveChanges();
+
+        return Results.Ok();
+    }
+
+    public static IResult AddUserIdentity(
+        [FromBody] AddUserMailboxRequest addUserIdentityReq,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var mbAddr = new MimeKit.MailboxAddress(
+            addUserIdentityReq.DisplayName,
+            addUserIdentityReq.Email
+        );
+
+        var userId = httpContextAccessor.GetUserId();
+        var user = data.Users.Single(u => u.Id == userId);
+
+        var newIdentity = new UserIdentity
+        {
+            DisplayName = addUserIdentityReq.DisplayName,
+            Email = addUserIdentityReq.Email
+        };
+
+        user.Identities.Add(newIdentity);
+        data.SaveChanges();
+
+        return Results.Ok();
+    }
+
+    public class RemoveUserMailboxRequest
+    {
+        public int UserId { get; set; }
+        public int MailboxId { get; set; }
+    }
+
+    public static IResult RemoveUserMailbox(
+        [FromBody] RemoveUserMailboxRequest removeMailboxReq,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var user = data.Users
+            .Include(u => u.Mailboxes)
+            .Single(u => u.Id == removeMailboxReq.UserId);
+
+        var mbToRemove = user.Mailboxes.Single(m => m.Id == removeMailboxReq.MailboxId);
+
+        user.Mailboxes.Remove(mbToRemove);
+        data.SaveChanges();
+
+        return Results.Ok();
+    }
+
+    public static IResult RemoveUserIdentity(
+        [FromBody] RemoveUserMailboxRequest removeIDentityReq,
+        [FromServices] DataContext data,
+        [FromServices] IHttpContextAccessor httpContextAccessor
+    )
+    {
+        var user = data.Users
+            .Include(u => u.Identities)
+            .Single(u => u.Id == removeIDentityReq.UserId);
+
+        var idToRemove = user.Identities.Single(m => m.Id == removeIDentityReq.MailboxId);
+
+        user.Identities.Remove(idToRemove);
+        data.SaveChanges();
+
+        return Results.Ok();
+    }
+
+    public class AddUserRequest
+    {
+        public string Username { get; set; } = string.Empty;
+        public string RealName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public static IResult AddUser(
+        [FromBody] AddUserRequest addUserReq,
+        [FromServices] DataContext data
+    )
+    {
+        var hasher = new PasswordHasher();
+        var hash = hasher.HashPassword(addUserReq.Password);
+
+        var mailboxAddress = new MailboxAddress(addUserReq.RealName, addUserReq.Email);
+
+        var newUser = new User
+        {
+            OtpEnabled = false,
+            PasswordHash = hash,
+            Username = addUserReq.Username,
+            Roles = "reader",
+            Mailboxes = new List<UserMailbox>()
+            {
+                new UserMailbox
+                {
+                    DisplayName = addUserReq.RealName,
+                    Host = mailboxAddress.Domain,
+                    Identity = mailboxAddress.Name,
+                }
+            },
+            Identities = new List<UserIdentity>()
+            {
+                new UserIdentity
+                {
+                    DisplayName = addUserReq.RealName,
+                    Email = addUserReq.Email,
+                }
+            }
+        };
+
+        data.Users.Add(newUser);
+        data.SaveChanges();
+
+        return Results.Ok();
+    }
 }
