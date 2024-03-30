@@ -98,7 +98,7 @@ window.addEventListener("popstate", (event) => {
 var previousListingScrollPos = 0;
 async function openwMsgView(msgId, showRaw, pushState) {
 
-    markMessagesAsRead([msgId]);
+    //markMessagesAsRead([msgId]);
     let listEl = document.querySelector('.list');
     let listingEl = document.querySelector('.listing');
 
