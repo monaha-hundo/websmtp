@@ -80,10 +80,23 @@ function initNavbar() {
         mailboxEl.classList.add('btn-dark', 'active');
     }
 }
+window.addEventListener("popstate", (event) => {
+    switch (event.state?.page) {
+        case "view-message":
+            closeMsgView();
+            openwMsgView(event.state.msgId, false, false);
+            break;
 
+        case "index":
+            closeMsgView();
+            break;
+
+        default:
+            history.back();
+    }
+});
 var previousListingScrollPos = 0;
-async function openwMsgView(msgId, showRaw) {
-    event?.preventDefault();
+async function openwMsgView(msgId, showRaw, pushState) {
 
     markMessagesAsRead([msgId]);
     let listEl = document.querySelector('.list');
@@ -107,6 +120,10 @@ async function openwMsgView(msgId, showRaw) {
     if (showRaw === true) {
         url = url + '&showRaw=true';
     }
+
+    if (pushState) {
+        history.pushState({ page: 'view-message', msgId }, '');
+    }
     msgViewEl.setAttribute('src', url);
     sectionEl.classList.remove('d-none');
     containerEl.classList.remove('d-none');
@@ -120,7 +137,7 @@ function updateTrashCount(count) {
     trashCountEl.innerText = currentCount + count;
 }
 
-function closeMsgView() {
+function closeMsgView(pushState) {
     try {
         let msgViewEl = document.getElementById('msg-view');
         msgViewEl.parentElement.removeChild(msgViewEl);
@@ -134,6 +151,9 @@ function closeMsgView() {
         listEl.scroll(0, previousListingScrollPos);
     } catch (ex) {
         console.info("Tried to close msg view, but no msg view found.");
+    }
+    if(pushState){
+        history.pushState({ page: 'index' }, '');
     }
 }
 
@@ -308,8 +328,6 @@ async function trainSpam(msgsIds, spam) {
         allowOutsideClick: () => !Swal.isLoading()
     });
 
-    console.log(result);
-
     return result;
 }
 
@@ -319,7 +337,7 @@ function previousMessage(msgId) {
     const prevMsgId = checkMarkEl.previousElementSibling.getAttribute('msg-id');
     if (prevMsgId == null) return;
     closeMsgView();
-    openwMsgView(prevMsgId);
+    openwMsgView(prevMsgId, false, true);
 }
 
 function nextMessage(msgId) {
@@ -327,12 +345,12 @@ function nextMessage(msgId) {
     const checkMarkEl = document.querySelector(selector);
     const prevMsgId = checkMarkEl.nextElementSibling.getAttribute('msg-id');
     closeMsgView();
-    openwMsgView(prevMsgId);
+    openwMsgView(prevMsgId, false, true);
 }
 
 function openRawMsg(msgId) {
     closeMsgView();
-    openwMsgView(msgId, true);
+    openwMsgView(prevMsgId, true, false);
 }
 
 function newMessage(to) {
@@ -365,7 +383,6 @@ const handleMarkSelectedAsRead = async () => {
 const handleStarClick = async (event) => {
     if (event.type == 'keyup' &&
         (event.key != 'Enter' || event.key == 'Space')) {
-        console.log('skipping keyup');
         return;
     };
     event.preventDefault();
@@ -390,7 +407,6 @@ const handleStarClick = async (event) => {
 const handleCheckboxClick = (event) => {
     if (event.type == 'keyup' &&
         (event.key != 'Enter' || event.key == 'Space')) {
-        console.log('skipping keyup');
         return;
     };
     event.preventDefault();
@@ -419,7 +435,7 @@ document.querySelectorAll('[open-msg-view]')
     .forEach(btn => {
         btn.addEventListener("click", (event) => {
             let msgId = btn.getAttribute('open-msg-view');
-            openwMsgView(msgId);
+            openwMsgView(msgId, false, true);
         });
     });
 
@@ -463,6 +479,7 @@ document.querySelectorAll('[unread-msg-id]')
 
 document.getElementById('new--msg--btn')
     ?.addEventListener("click", () => {
+        closeNewMsgWindow();
         newMessage();
     });
 
@@ -517,3 +534,4 @@ document.querySelectorAll('.hamburger--btn')
 
 
 initNavbar();
+history.replaceState({ page: 'index' }, '');
