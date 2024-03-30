@@ -95,8 +95,10 @@ public static class Startup
         });
         builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
         builder.Services.AddHttpContextAccessor();
-        builder.Services.AddAuthorization(opts => {
-            opts.AddPolicy("admin", pol => {
+        builder.Services.AddAuthorization(opts =>
+        {
+            opts.AddPolicy("admin", pol =>
+            {
                 pol.RequireRole("admin");
             });
         });
@@ -235,6 +237,6 @@ public static class Startup
         app.MapPost("/api/settings/administration/remove-user-mailbox", MessagesEndpoints.RemoveUserMailbox).RequireAuthorization("admin");
         app.MapPost("/api/settings/administration/add-user-identity", MessagesEndpoints.AddUserIdentity).RequireAuthorization("admin");
         app.MapPost("/api/settings/administration/remove-user-identity", MessagesEndpoints.RemoveUserIdentity).RequireAuthorization("admin");
-        
+
     }
 }
