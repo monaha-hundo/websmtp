@@ -172,7 +172,8 @@ namespace MyApp.Namespace
                 {
                     RawMessageId = rawSentMessage.Id,
                     UserId = userId,
-                    Sent = true
+                    Sent = true,
+                    Read = true
                 };
                 _data.Messages.Add(sentMessage);
                 _data.SaveChanges();
