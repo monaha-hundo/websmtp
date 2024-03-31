@@ -69,7 +69,7 @@ function showSource(el) {
     el.style.display = visibility;
 }
 function closeMsg() {
-    window.parent.closeMsgView();
+    window.parent.closeMsgView(true);
 }
 async function deleteMsg() {
     await window.parent.deleteMessages([msgId]);
@@ -94,8 +94,8 @@ async function markAsUnread() {
 
 async function trainSpam(isSpam) {
     const result = await window.parent.trainSpam([msgId], isSpam);
-    
-    if(result.isDismissed || !result.value) return;
+
+    if (result.isDismissed || !result.value) return;
 
     if (isSpam) {
         document.getElementById('btn--report--spam').classList.add('d-none');

@@ -41,68 +41,55 @@ public static class Startup
 
     public static void ConfigureWebHost(WebApplicationBuilder builder)
     {
-        var useSsl = builder.Configuration.GetValue<bool>("SSL:Enabled");
-        if (useSsl)
+        builder.WebHost.UseKestrel((context, serverOptions) =>
         {
-            builder.WebHost.UseKestrelHttpsConfiguration();
-
-            var sslPort = builder.Configuration.GetValue<int>("SSL:Port");
-            var privKeyFilename = builder.Configuration.GetValue<string>("SSL:PrivateKey") ?? throw new Exception("Missing SSL:PrivateKey configuration.");
-            var pubKeyFilename = builder.Configuration.GetValue<string>("SSL:PublicKey") ?? throw new Exception("Missing SSL:PublicKey configuration.");
-
-            builder.WebHost.ConfigureKestrel((context, serverOptions) =>
-            {
-                var certPem = File.ReadAllText(pubKeyFilename);
-                var keyPem = File.ReadAllText(privKeyFilename);
-                var x509 = X509Certificate2.CreateFromPem(certPem, keyPem);
-
-                serverOptions.Listen(IPAddress.Any, sslPort, listenOptions =>
-                {
-                    listenOptions.UseHttps(x509);
-                });
-            });
-        }
-        else
-        {
-            builder.WebHost.UseKestrel();
-        }
+            serverOptions.Listen(IPAddress.Any, 5000);
+        });
     }
 
     public static void ConfigureWebServices(IHostApplicationBuilder builder)
     {
         ConfigureDatabase(builder);
+        ConfigureSecurity(builder);
+        ConfigureSmtpServices(builder);
 
-        if (builder.Environment.IsProduction())
-        {
-            builder.Services.AddResponseCompression(options =>
-            {
-                options.EnableForHttps = false;
-            });
-        }
+        builder.Services.AddRazorPages();
+        builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
+    }
 
-        builder.Services.Configure<CookieTempDataProviderOptions>(options =>
+    public static void ConfigureSecurity(IHostApplicationBuilder builder)
+    {
+        builder.Services.Configure<CookieTempDataProviderOptions>(opts =>
         {
-            options.Cookie.Name = Guid.NewGuid().ToString("N");
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            options.Cookie.SameSite = SameSiteMode.Strict;
+            opts.Cookie.Name = "bertrand";// Guid.NewGuid().ToString("N");
+            opts.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            opts.Cookie.SameSite = SameSiteMode.Strict;
         });
         //builder.Services.AddSession();
         builder.Services.AddAntiforgery(opts =>
         {
-            opts.Cookie.Name = Guid.NewGuid().ToString("N");
-            opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            opts.Cookie.Name = "jeanguy";// Guid.NewGuid().ToString("N");
+            opts.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             opts.Cookie.SameSite = SameSiteMode.Strict;
         });
-        builder.Services.AddAuthentication().AddCookie(ConfigureAuthenticationCookie);
+        builder.Services.AddAuthentication().AddCookie(opts =>
+        {
+            opts.LoginPath = "/login";
+            opts.AccessDeniedPath = "/error/";
+            opts.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+            opts.SlidingExpiration = true;
+            opts.Cookie.Name = "ronald"; //Guid.NewGuid().ToString("N");
+            opts.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            opts.Cookie.SameSite = SameSiteMode.Strict;
+        });
         builder.Services.AddHttpContextAccessor();
-        builder.Services.AddAuthorization(opts => {
-            opts.AddPolicy("admin", pol => {
+        builder.Services.AddAuthorization(opts =>
+        {
+            opts.AddPolicy("admin", pol =>
+            {
                 pol.RequireRole("admin");
             });
         });
-        builder.Services.AddRazorPages();
-        builder.Services.AddTransient<IReadableMessageStore, ReadableMessageStore>();
-        ConfigureSmtpServices(builder);
     }
 
     public static void ConfigureSmtpServices(IHostApplicationBuilder builder)
@@ -126,16 +113,6 @@ public static class Startup
         builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
     }
 
-    public static void ConfigureAuthenticationCookie(CookieAuthenticationOptions opts)
-    {
-        opts.LoginPath = "/login";
-        opts.AccessDeniedPath = "/error/";
-        opts.ExpireTimeSpan = TimeSpan.FromMinutes(20);
-        opts.SlidingExpiration = true;
-        opts.Cookie.Name = Guid.NewGuid().ToString("N");
-        opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        opts.Cookie.SameSite = SameSiteMode.Strict;
-    }
 
     public static void ConfigureSecurity(WebApplication app)
     {
@@ -177,10 +154,10 @@ public static class Startup
 
     public static void ConfigureAppPipeline(WebApplication app)
     {
-        if (app.Environment.IsProduction())
-        {
-            app.UseResponseCompression();
-        }
+        // if (app.Environment.IsProduction())
+        // {
+        //     app.UseResponseCompression();
+        // }
 
         //app.UseSession();
         app.UseAntiforgery();
@@ -235,6 +212,6 @@ public static class Startup
         app.MapPost("/api/settings/administration/remove-user-mailbox", MessagesEndpoints.RemoveUserMailbox).RequireAuthorization("admin");
         app.MapPost("/api/settings/administration/add-user-identity", MessagesEndpoints.AddUserIdentity).RequireAuthorization("admin");
         app.MapPost("/api/settings/administration/remove-user-identity", MessagesEndpoints.RemoveUserIdentity).RequireAuthorization("admin");
-        
+
     }
 }

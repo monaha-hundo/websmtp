@@ -1,33 +1,27 @@
-# websmtp
 [websmtp.webm](https://github.com/monaha-hundo/websmtp/assets/139830086/3f4b4234-9442-408c-90d4-ea73ed4ada39)
-###### __Under development.__
-## Description
-Simple combined mail transfer agent and mail user agent with a web UI in C#, meaning the app receive emails from remote SMTP servers on port 25 and send mail directly to remote exchanges without going through relay servers. Purpose is to be simple to setup and use while being somewhat flexible. The app web interface is the sole consumer of the messages store.
+
+# Description
+Standalone SMTP server and web mail application. Purpose is to be simple to setup and use while being somewhat flexible. 
 
 Think of it as self-hosted replacement for email services like gmail, outlook and proton mail.
-
-Spam handling is done through Apache's Spam Assassin (configurable on/off).
-
-It is possible to display HTML emails with their embeded media content. Remote content is blocked by CSP. It is possible to completely disable HTML display (or only media content) to harden the web interface.
-
-The app has a small command line utility to quicly generate a DKIM setup and outgoing emails can then be DKIM signed. It is also possible to import existing DKIM DNS setup in the app through manual configuration.
+Spam handling is done through Apache's Spam Assassin.
 
 Possible uses: mock SMTP server for testing, home emails for LAN devices such as printers and ip cameras, your own web email provider business.
 
-
-## Quick Start
-Setup for `example.com`:
+# Quick Start
+## With Docker
 1. Create a mariadb database named `websmtp` and a login/user with the `websmtp/websmtp` access credentials.
-2. Put your domain SSL certificates in `/websmtp/certificates/`, with the key named `ssl.key` and the cert named `ssl.crt`
-   - Or run `setup_docker_compose.sh` to generate self-signed localhost certs.
-3. `docker run -it -p 443:443 -p 25:25 -v /websmtp/certificates/:/certificates/:ro -e Database__Server=some-database-server yvansolutions/websmtp:latest ./websmtp --migrate-database --enable-admin --username=admin --password=admin --domain=example.com`.
-4. Either visit example.com or localhost and use the default `admin/admin` credentials.
+2. `docker run -it -p 5000:5000 -p 25:25 -e Database__Server=your-database-server yvansolutions/websmtp:latest ./websmtp --migrate-database --enable-admin --username=admin --password=admin`.
+3. Navigate to `http://localhost:5000` and use the default `admin/admin` credentials.
+## With  Docker-Compose
+1. `docker compose up`
+2. Navigate to `http://localhost:5000` and use the default `admin/admin` credentials.
 
-
-## Usage
-### Configuration
-The `appSettings.json` file is empty and contains all the configurable keys. All keys must be configured. Environment decide if `appSettings.Development.json` or `appSettings.Production.json` will be loaded additionaly. Each file must be present to run the app in each respective environment. 
-The `Test` environment use the development configuration and _apply database migrations automatically_. Do not run in test environment if database modifications cannot be applied (e.g. not suitable for production database testing).
+## Running
+### Binary
+By default the app is published as self-contained single file executable. 
+Running the app once configured is done by running the `websmtp` binary.
+You can use the `--migrate-database` command line argument to prepare a database.
 
 Available command line arguments:
 - `--add-user`: quickly add a user by answering a couple of questions. User will have OTP disabled.
@@ -39,84 +33,54 @@ Available command line arguments:
   - `--roles=`
 - `--list--users`: display all the users data in JSON.
 - `--migrate-database`: apply migrations to database up to the lastest available at build time.
+- `--migrate-database-only`: same as previous, but exit the application once done.
 - `--enable-admin`: enable/create an admin user, similar to `--add-user` but if the username is taken, skip.
   - `--username=`
   - `--password=`
   - `--domain=`:
-- `--generate-dkim-config`: generate the pub/priv certs, DNS record data and the configuration file data to enable DKIM signing and DNS configuration. Output contains information to configure a domain records.
+- `--generate-dkim-config`: generate the pub/priv certs, DNS record data and the configuration file data to enable DKIM signing and DNS configuration.
 
-### Running
-
-#### Binary
-By default the app is published as self-contained single file executable. 
-Running the app once configured done by running the `websmtp` binary.
-
-#### Docker
+### Docker
 Available on the docker hub: [yvansolutions/websmtp](https://hub.docker.com/r/yvansolutions/websmtp).
-You must generate all the HTTPS certificates and optionally the DKIM signing certificate and mount their location in the `/certificates/` volume.
-You must then use the required environment variables to configure the app to use them (`SSL__PrivateKey, SSL__PublicKey, DKIM__Domains__X__PrivateKey`).
-If you don't have certs on hand, use the provided `setup_docker_compose.sh` to quicly generate self-signed localhost ones for HTTPS and the `--generage-dkim-config` command line utility to get started with DKIM.
+#### Building
+Use the provided `build_docker.sh` which will: 
+- compile/publish the app in the `build` folder
+- launch docker build
+- add the `build` folder to the container
+- setup spam assassin
+- tag the resulting image as yvansolutions/websmtp.
 
-##### Building
-Use the provided `build_docker.sh`
-##### Launching
-Assuming the certificates to be used are in the `/websmtp/certificates` folder.
+#### Launching
+`docker run -it -p 5000:5000 -p 25:25 -e Database__Server=your-database-server yvansolutions/websmtp:latest ./websmtp --migrate-database --enable-admin --username=admin --password=admin`
 
-Here is a command to run the app for the `example.com` domain:
-`docker run -it -p 443:443 -p 25:25 -v /websmtp/certificates/:/certificates/:ro -e Database__Server=some-database-server yvansolutions/websmtp:latest ./websmtp --migrate-database --enable-admin --username=admin --password=admin --domain=example.com`.
+This would launch the app, which would use `some-database-server` with the default database named `websmtp` with default credentials of `websmtp/websmtp`. It would listen for HTTP connections on port `5000` and SMTP `25`. An admin account with a catch-all mailbox and an identity of `postmaster@localhost`.
 
-This would launch the app, which would use `some-database-server` with the default database named `websmtp` with default credentials of `websmtp/websmtp`. It would listen for HTTPS connection on port `443` and SMTP `25`. An admin account with a catch-all mailbox and an identity of `postmaster@example.com`.
+#### Configuring
+Here are some important environment variables and their default:
 
-If DKIM setup was donne corretly, the app can send and receive email from major providers such as gmail, outlook and proton mail.
-
-Here are the avaiable environment variables and their default:
-
-`AllowedHosts: '*'`
+`Database__Server: localhost`
 `Database__Name: websmtp`
 `Database__Password: websmtp`
-`Database__Server: mariadb`
 `Database__Username: websmtp`
-`DKIM__Enabled: True`
-`DKIM__SigningEnabled: False`
-`DKIM__Domains__0__Name: websmtp.local`
-`DKIM__Domains__0__PrivateKey: dkim_private.dev.pem`
-`DKIM__Domains__0__Selector: dkim`
-`DNS__IP: 192.168.1.1`
-`DNS__Port: 53`
-`Security__EnableHtmlDisplay: True`
-`Security__EnableMediaInHtml: True`
+
 `SMTP__Port: 25`
 `SMTP__RemotePort: 25`
+
 `SpamAssassin__Enabled: True`
+
+`DKIM__SigningEnabled: False`
+
+`DNS__IP: 1.1.1.1`
+`DNS__Port: 53`
+
+`Security__EnableHtmlDisplay: True`
+`Security__EnableMediaInHtml: True`
 `SPF__Enabled: True`
-`SSL__Enabled: True`
-`SSL__Port: 443`
-`SSL__PrivateKey: /certificates/ssl.key`
-`SSL__PublicKey: /certificates/ssl.crt`
 
-#### Docker Compose
-A `compose.yaml` file is available to quicly launch an instance without setting up a database/server. 
-
-Use `docker compose up` in the root folder . 
-Visit `https://localhost/`, use `admin/admin` as the default credentials.
-
-### Testing
-By default the `appSettings.Development.json` will look for a test/dev database on localhost, as such it is recommended to use docker and launch a local MariaDb instance for each test run.
-Each test is responsible for creating a test user, logging in and cleaning up the test user.
-The send mail test depends on running a local DNS server with mock domains and records (done programmatically, no external services are required), make sure to use ports bindable by the test host (e.g. > 1000).
-**Let it be noted that many ISP, corporate firewall and small businesses block all traffic on port 25.**
-
-### Concepts
-
-#### Mailboxes
-Mailboxes are "rules" which dictates to which users incoming emails will be delivered to. Wildcards (*) are used to create catch-all mailboxes. Users can have multiple mailboxes on multiple domains. 
-#### Identity
-Identities are email addresses and display name combinations offered to users as expeditor when sending emails. Users can only send email as identities for which they are assigned.
-
-## Disclaimer
+# Disclaimer
 In active development, partial features, missing features, security issues, not tested, etc.
 
-## Made with
+# Made with
 - [ .Net 8 / Asp.Net / EntityFramework Core](https://dotnet.microsoft.com/)
 - [Bootstrap](https://getbootstrap.com/)
 - [MailKit](https://github.com/jstedfast/MailKit) & [MimeKit](https://github.com/jstedfast/MimeKit) 
@@ -127,7 +91,7 @@ In active development, partial features, missing features, security issues, not 
 - [SmtpServer](https://github.com/cosullivan/SmtpServer)
 - [Apache's Spam Assassin](https://spamassassin.apache.org/)
 
-## Screenshots
+# Screenshots
 ![1](https://github.com/monaha-hundo/websmtp/assets/139830086/cb880b72-db72-428b-a60c-7dfbbe7d8114)
 ![2](https://github.com/monaha-hundo/websmtp/assets/139830086/0e28c450-d3a7-4935-8d99-d8dd52594f89)
 ![Screenshot from 2024-03-28 07-53-21](https://github.com/monaha-hundo/websmtp/assets/139830086/317654d2-cd1b-40a4-9453-f01ab9669c2f)
