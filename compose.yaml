@@ -10,8 +10,8 @@ services:
       MARIADB_PASSWORD: websmtp
       MARIADB_DATABASE: websmtp
       MARIADB_RANDOM_ROOT_PASSWORD: 1
-    # ports:
-    #   - 3306:3306
+    ports:
+      - 3306:3306
     healthcheck:
       interval: 5s
       retries: 3
@@ -36,10 +36,10 @@ services:
   websmtp:
     image: yvansolutions/websmtp:latest
     restart: always
-    volumes:
-      - /websmtp/certificates/:/certificates/:ro
     ports:
-      - 443:443
+      - 5000:5000
       - 25:25
     depends_on:
       - mariadb
+    environment:
+      - Database__Server=mariadb
