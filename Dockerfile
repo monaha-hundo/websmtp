@@ -14,4 +14,4 @@ EXPOSE 25
 EXPOSE 5000
 
 # launch
-CMD ["./websmtp", "--migrate-database", "--enable-admin", "--username=admin", "--password=admin"]
+CMD ["./websmtp", "--migrate-database"]
