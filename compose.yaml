@@ -1,5 +1,3 @@
-version: '3.1'
-
 services:
 
   mariadb:
@@ -13,16 +11,10 @@ services:
     ports:
       - 3306:3306
     healthcheck:
-      interval: 5s
-      retries: 3
+      interval: 10s
+      retries: 5
       test:
-        [
-          "CMD",
-          "healthcheck.sh",
-          "--su-mysql",
-          "--connect",
-          "--innodb_initialized"
-        ]
+        [ "CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized" ]
       timeout: 30s
 
   adminer:
@@ -31,7 +23,8 @@ services:
     ports:
       - 8080:8080
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
 
   websmtp:
     image: yvansolutions/websmtp:latest
@@ -40,6 +33,7 @@ services:
       - 5000:5000
       - 25:25
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     environment:
       - Database__Server=mariadb

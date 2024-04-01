@@ -1,14 +1,10 @@
 # syntax=docker/dockerfile:1
-FROM debian:bookworm
+FROM yvansolutions/spamassassin:latest
 
 # filesystem
 ADD ./build/ /
 RUN mkdir -p /certificates/
 VOLUME /certificates/
-
-# apt dependencies
-RUN apt update -y && apt upgrade -y
-RUN apt install -y spamassassin
 
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1

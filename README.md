@@ -75,7 +75,6 @@ Here are some important environment variables and their default:
 
 `Security__EnableHtmlDisplay: True`
 `Security__EnableMediaInHtml: True`
-`SPF__Enabled: True`
 
 # Disclaimer
 In active development, partial features, missing features, security issues, not tested, etc.
