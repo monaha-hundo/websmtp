@@ -1,4 +1,5 @@
 using MailKit.Security;
+using Microsoft.EntityFrameworkCore;
 using MimeKit;
 using SmtpServer;
 using SmtpServer.Mail;
@@ -36,82 +37,41 @@ public class MessageStore : IMessageStore
     {
         try
         {
-            var checkSpam = _config.GetValue<bool>("SpamAssassin:Enabled");
             using var scope = _services.CreateScope();
             using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
-            _logger.LogInformation("Received message, saving raw data...");
-            var raw = buffer.ToArray<byte>();
-
-            var newRawMsg = new RawMessage
-            {
-                Content = raw
-            };
-
-            _dataContext.RawMessages.Add(newRawMsg);
-            _dataContext.SaveChanges();
-            _logger.LogDebug("Saved raw message id #{}.", newRawMsg.Id);
-
-            byte[] msgBytes;
-
-            if (checkSpam)
-            {
-                var rawMsg = System.Text.Encoding.UTF8.GetString(raw);
-                var processedMsg = await _assassin.Scan(rawMsg);
-                msgBytes = System.Text.Encoding.UTF8.GetBytes(processedMsg);
-            }
-            else
-            {
-                msgBytes = raw;
-            };
-
-            _logger.LogInformation("Parsing message & saving data...");
-            using var memory = new MemoryStream(msgBytes);
-            using var mimeMessage = MimeMessage.Load(memory, cancellationToken) ?? throw new Exception("Could not parse message.");
-
-            // var saStatus = mimeMessage.Headers["X-Spam-Status"];
-            // var saRegEx = new Regex("(score=[0-9.]+) (required=[0-9.]+)");
-            // var saRegExResult = saRegEx.Matches(saStatus);
-            // var score = double.Parse(saRegExResult[0].Groups[1].Value.Split('=')[1]);
-            // var required = double.Parse(saRegExResult[0].Groups[2].Value.Split('=')[1]);
-            // var isSpam = score >= required;
-
-            var headers = mimeMessage.Headers.Select(h => $"{h.Field}: {h.Value}").Aggregate((a, b) => $"{a}\r\n{b}");
-            headers = headers.Replace("	", " ");
-
-            var isSpam = checkSpam && mimeMessage.Headers.Contains("X-Spam-Flag")
-                ? mimeMessage.Headers["X-Spam-Flag"] == "YES"
-                : false;
+            _logger.LogInformation("Receiving email, checking destinations.");
 
             var usersMailboxes = new Dictionary<int, UserMailbox>();
+
+            var allMailboxes = await _dataContext.Mailboxes.ToListAsync();
 
             foreach (var to in transaction.To)
             {
                 var toHost = to.Host;
                 var toUser = to.User;
 
+                _logger.LogTrace($"No specific mailbox found, trying '*@{toHost}'.");
                 // specific mailbox
-                var userMailbox = _dataContext.Mailboxes.SingleOrDefault(mb => mb.Identity == toUser && mb.Host == toHost);
+                var userMailbox = allMailboxes.SingleOrDefault(mb => mb.Identity == toUser && mb.Host == toHost);
 
                 if (userMailbox == null)
                 {
+                    _logger.LogTrace($"No specific mailbox found, trying '*@{toHost}'.");
                     // catch-all@domain mailbox
-                    userMailbox = _dataContext.Mailboxes.SingleOrDefault(mb => mb.Identity == "*" && mb.Host == toHost);
+                    userMailbox = allMailboxes.SingleOrDefault(mb => mb.Identity == "*" && mb.Host == toHost);
                 }
 
                 if (userMailbox == null)
                 {
+                    _logger.LogTrace($"No *@{toHost} mailbox found, trying '*@*'");
                     // CATCH-ALL from ALL domains
-                    userMailbox = _dataContext.Mailboxes.SingleOrDefault(mb => mb.Identity == "*" && mb.Host == "*");
+                    userMailbox = allMailboxes.SingleOrDefault(mb => mb.Identity == "*" && mb.Host == "*");
                 }
 
                 if (userMailbox == null)
                 {
-                    // no mailbox configured for recipient,
-                    // domain catch-all was unconfigured,
-                    // catch-all mailbox was unconfigured
-                    // reject transaction
-                    //return Task.FromResult(SmtpResponse.NoValidRecipientsGiven); // should we?
+                    _logger.LogTrace($"No *@* mailbox found, '{toUser}@{toHost}' bogus destination.");
                     continue;
                 }
 
@@ -122,8 +82,46 @@ public class MessageStore : IMessageStore
 
             if (usersMailboxes.Count == 0)
             {
+                _logger.LogTrace($"No mailbox found for any destinations, bogus message.");
                 return SmtpResponse.NoValidRecipientsGiven;
             }
+
+            _logger.LogInformation($"Found {usersMailboxes.Count} destination(s), saving raw data...");
+            var raw = buffer.ToArray();
+
+            var newRawMsg = new RawMessage
+            {
+                Content = raw
+            };
+
+            _dataContext.RawMessages.Add(newRawMsg);
+            await _dataContext.SaveChangesAsync();
+            _logger.LogDebug("Saved raw message id #{}.", newRawMsg.Id);
+
+            byte[] msgBytes;
+
+            var checkSpam = _config.GetValue<bool>("SpamAssassin:Enabled");
+            if (checkSpam)
+            {
+                var rawMsg = System.Text.Encoding.UTF8.GetString(raw);
+                var processedMsg = await _assassin.ScanAsync(rawMsg);
+                msgBytes = System.Text.Encoding.UTF8.GetBytes(processedMsg);
+            }
+            else
+            {
+                msgBytes = raw;
+            };
+
+            _logger.LogInformation("Parsing message & saving data...");
+            using var memory = new MemoryStream(msgBytes);
+            using var mimeMessage = await MimeMessage.LoadAsync(memory, cancellationToken) ?? throw new Exception("Could not parse message.");
+
+            var isSpam = checkSpam && mimeMessage.Headers.Contains("X-Spam-Flag")
+                ? mimeMessage.Headers["X-Spam-Flag"] == "YES"
+                : false;
+
+            var headers = mimeMessage.Headers.Select(h => $"{h.Field}: {h.Value}").Aggregate((a, b) => $"{a}\r\n{b}");
+            headers = headers.Replace("	", " ");
 
             foreach (var userMailbox in usersMailboxes.Values)
             {
@@ -136,7 +134,7 @@ public class MessageStore : IMessageStore
                 };
 
                 _dataContext.Messages.Add(newMessage);
-                _dataContext.SaveChanges();
+                await _dataContext.SaveChangesAsync();
 
                 _logger.LogDebug($"Saved message id #{newMessage.Id}.");
             }

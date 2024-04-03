@@ -4,18 +4,31 @@ namespace websmtp;
 
 public class SpamAssassin
 {
-    public async Task<string> Scan(string message)
+    public async Task<string> ScanAsync(string message)
     {
         var spamAss = Start();
 
         try
         {
-            spamAss.StandardInput.Write(message);
+            var buffer = string.Empty;
+            spamAss.StandardInput.WriteLine(message);
+            spamAss.StandardInput.Flush();
             spamAss.StandardInput.Close();
-            await spamAss.WaitForExitAsync();
-            var processedMsg = await spamAss.StandardOutput.ReadToEndAsync()
+
+            var readA = spamAss.StandardOutput.ReadToEnd();
+
+            spamAss.WaitForExit();
+
+            var readB =  spamAss.StandardOutput.ReadToEnd()
                 ?? throw new Exception("Could not read spamAssassin's process output.");
+
             spamAss.Close();
+
+            // reason for this readA + readB hack is:
+            // WaitForExit() hangs if you didn't Read() 
+            // the StandardOutput once before calling it...
+            var processedMsg = readA + readB;
+            
             return processedMsg;
         }
         finally
@@ -25,7 +38,7 @@ public class SpamAssassin
 
         throw new Exception("Could not run spam assassin.");
     }
-    
+
     public async Task<string> Train(string message, bool isSpam)
     {
         var saReportOrRevoke = isSpam ? "-r" : "-k";

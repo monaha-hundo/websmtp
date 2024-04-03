@@ -25,6 +25,9 @@ body {
     background-color: #16141c;
     position: absolute;
     border: var(--bs-border-width) solid var(--bs-border-color);
+    height: 100vh;
+    min-width: 200px;
+    overflow-y: scroll;
 }
 
 .content {
@@ -33,14 +36,6 @@ body {
     flex-direction: column;
     max-height: 100%;
 }
-
-.max-height-100p {
-    max-height: 100%;
-}
-
-/* #messages--list {
-    max-height: calc(100% - 410px - 70px);
-} */
 
 @media (min-width: 1150px) {
     html {}
@@ -332,6 +327,10 @@ table td {
     --bs-btn-font-size: 1.125rem;
 }
 
+.vert-spacer {
+    flex: 1 1 auto;
+}
+
 .flex-1-1-auto {
     flex: 1 1 auto;
 }
@@ -379,14 +378,14 @@ table td {
     flex: 1 1 auto;
     top: 2px;
     right: 2px;
-    z-index: 1;
+    z-index: 4;
 }
 
 .hamburger--btn {
     flex: 1 1 auto;
     top: 2px;
     right: 50px;
-    z-index: 1;
+    z-index: 4;
 }
 
 #search--form {
@@ -397,7 +396,6 @@ table td {
     flex: 1 1 auto;
     resize: vertical;
     overflow-y: auto;
-    border-left: 1pt solid var(--bs-border-color);
 }
 
 #new--message {
@@ -520,6 +518,6 @@ div:where(.swal2-container).swal2-noanimation {
     margin-bottom: 8px;
 }
 
-.whitespace--brsp{
+.whitespace--brsp {
     white-space: break-spaces;
 }
