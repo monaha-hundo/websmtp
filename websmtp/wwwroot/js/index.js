@@ -1,4 +1,5 @@
 "use strict";
+var newMessageDirty = false;
 
 function updateSelectedMessages() {
     let multiSelectActionsEl = document.getElementById('multiple--selection');
@@ -152,12 +153,13 @@ function closeMsgView(pushState) {
     } catch (ex) {
         console.info("Tried to close msg view, but no msg view found.");
     }
-    if(pushState){
+    if (pushState) {
         history.pushState({ page: 'index' }, '');
     }
 }
 
 async function markMessagesAsRead(msgsIds) {
+    var success = false;
     const response = await fetch(`/api/messages/mark-as-read/`, {
         method: 'post',
         headers: {
@@ -165,7 +167,7 @@ async function markMessagesAsRead(msgsIds) {
         },
         body: JSON.stringify(msgsIds)
     });
-    const success = response.status == 200;
+    success = response.status == 200;
     if (success) {
         for (let i = 0; i < msgsIds.length; i++) {
             const msgId = msgsIds[i];
@@ -174,9 +176,11 @@ async function markMessagesAsRead(msgsIds) {
             checkMarkEl.classList.remove('unread');
         }
     }
+    return { marked: success };
 }
 
 async function markMessagesAsUnread(msgsIds) {
+    var success = false;
     const response = await fetch(`/api/messages/mark-as-unread/`, {
         method: 'post',
         headers: {
@@ -184,7 +188,7 @@ async function markMessagesAsUnread(msgsIds) {
         },
         body: JSON.stringify(msgsIds)
     });
-    const success = response.status == 200;
+    success = response.status == 200;
     if (success) {
         for (let i = 0; i < msgsIds.length; i++) {
             const msgId = msgsIds[i];
@@ -193,6 +197,7 @@ async function markMessagesAsUnread(msgsIds) {
             checkMarkEl.classList.add('unread');
         }
     }
+    return { marked: success };
 }
 
 //
@@ -223,6 +228,8 @@ async function unstarMessages(msgsIds) {
 }
 
 async function undeleteMessages(msgsIds) {
+    var success = false;
+
     const call = async () => {
         const response = await fetch(`/api/messages/undelete/`, {
             method: 'post',
@@ -231,7 +238,7 @@ async function undeleteMessages(msgsIds) {
             },
             body: JSON.stringify(msgsIds)
         });
-        const success = response.status == 200;
+        success = response.status == 200;
         if (success) {
             for (let i = 0; i < msgsIds.length; i++) {
                 const msgId = msgsIds[i];
@@ -258,9 +265,12 @@ async function undeleteMessages(msgsIds) {
         allowOutsideClick: () => !Swal.isLoading()
     });
 
+    return { undeleted: success };
 }
 
 async function deleteMessages(msgsIds) {
+    var success = false;
+
     const call = async () => {
         const response = await fetch(`/api/messages/delete/`, {
             method: 'post',
@@ -269,7 +279,7 @@ async function deleteMessages(msgsIds) {
             },
             body: JSON.stringify(msgsIds)
         });
-        const success = response.status == 200;
+        success = response.status == 200;
         if (success) {
             for (let i = 0; i < msgsIds.length; i++) {
                 const msgId = msgsIds[i];
@@ -296,6 +306,7 @@ async function deleteMessages(msgsIds) {
         allowOutsideClick: () => !Swal.isLoading()
     });
 
+    return { deleted: success };
 }
 
 
@@ -353,7 +364,15 @@ function openRawMsg(msgId) {
     openwMsgView(prevMsgId, true, false);
 }
 
-function newMessage(to) {
+async function newMessage(to) {
+    let cancel = false;
+    try {
+        cancel = await closeNewMsgWindow();
+    } catch (error) {
+        
+    }
+    if (cancel) return;
+
     let sectionEl = window.parent.document.getElementById('new--message');
     let iframeEl = document.createElement('iframe');
     iframeEl.id = 'new--message-frame';
@@ -367,10 +386,42 @@ function newMessage(to) {
     sectionEl.classList.remove('expanded');
     sectionEl.classList.remove('d-none');
 }
-function closeNewMsgWindow() {
-    let sectionEl = document.getElementById('new--message');
-    sectionEl.innerHTML = '';
-    sectionEl.classList.add('d-none');
+
+function setNewMessageDirtyState() {
+    newMessageDirty = true;
+    console.log('setNewMessageDirtyState');
+}
+
+///
+/// If new message windows has changed (e.g. is dirty), 
+/// then prompt the user before closing it.
+///
+/// Return false if the user chose to keep the current message.
+async function closeNewMsgWindow() {
+    let closeIt = () => {
+        let sectionEl = document.getElementById('new--message');
+        if (sectionEl?.firstChild != null) {
+            sectionEl.removeChild(sectionEl.firstChild);
+            sectionEl.classList.add('d-none');
+        }
+        newMessageDirty = false;
+        Swal.close();
+        return true;
+    };
+    if (!newMessageDirty) {
+        closeIt();
+        return false;
+    }
+    const result = await Swal.fire({
+        text: "You will loose the currently unsent message, proceed?",
+        showCancelButton: true,
+        confirmButtonText: "Close",
+        cancelButtonText: "Keep",
+        showLoaderOnConfirm: false,
+        preConfirm: closeIt,
+        allowOutsideClick: () => !Swal.isLoading()
+    });
+    return result.isDismissed;
 }
 
 const handleMarkSelectedAsRead = async () => {
@@ -441,7 +492,7 @@ document.querySelectorAll('[open-msg-view]')
 
 document.querySelectorAll('[delete-msg-id]')
     .forEach(btn => {
-        btn.addEventListener("click", (event) => {
+        btn.addEventListener("click", async (event) => {
             let msgId = btn.getAttribute('delete-msg-id');
             deleteMessages([msgId]);
         });
@@ -478,8 +529,7 @@ document.querySelectorAll('[unread-msg-id]')
     });
 
 document.getElementById('new--msg--btn')
-    ?.addEventListener("click", () => {
-        closeNewMsgWindow();
+    ?.addEventListener("click", async () => {
         newMessage();
     });
 

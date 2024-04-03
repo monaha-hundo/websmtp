@@ -15,7 +15,7 @@
             New Message
         </button>
     </div>
-    <nav class="nav nav-pills d-flex flex-column ">
+    <nav class="nav nav-pills d-flex flex-column">
         <div class="nav-item mb-2 d-flex">
             <a class="btn btn-md d-flex align-items-center rounded border-0 btn-transparent-primary flex-1-1-auto"
                 id="btn-mailbox-inbox" href="/inbox">
@@ -65,6 +65,7 @@
                     class='badge ms-auto text-bg-@(Model.TrashHasNew ? "primary":"dark")'>@Model.Deleted</span>
             </a>
         </div>
+        <hr>
         <div class="nav-item mb-2 d-flex">
             <a class="btn btn-md d-flex align-items-center rounded border-0 btn-transparent-primary flex-1-1-auto"
                 id="btn-mailbox-account" href="/account">
@@ -82,5 +83,13 @@
                 </a>
             </div>
         }
+        <hr>
+        <div class="nav-item mb-2 d-flex">
+            <a class="btn btn-md d-flex align-items-center rounded border-0 btn-transparent-primary flex-1-1-auto"
+                id="btn-mailbox-logout" href="/logout">
+                <i class="bi bi-door-open"></i>
+                <span class="ms-2">Logout</span>
+            </a>
+        </div>
     </nav>
 </nav>
