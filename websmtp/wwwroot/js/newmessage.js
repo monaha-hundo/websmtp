@@ -22,12 +22,14 @@ document.getElementById('show--bcc')
     ?.addEventListener("click", () => {
         showBCC();
     });
+
 document.getElementById('new--msg--close')
     ?.addEventListener("click", () => {
         deleteMessageBackup();
         window.parent.setNewMessageCleanState();
         window.parent.closeNewMsgWindow();
     });
+
 document.querySelectorAll('.identity--dropdown--value')
     .forEach(el => {
         el.addEventListener("click", (event) => {
@@ -110,11 +112,7 @@ function closeWindow() {
     window.parent.closeNewMsgWindow();
 }
 function saveAndCloseDraft() {
-    event.preventDefault();
-    let sectionEl = window.parent.document.getElementById('new--message');
-    let iframeEl = window.parent.document.getElementById('new--message-frame');
-    sectionEl.classList.add('d-none');
-    iframeEl.src = 'about:blank';
+    window.parent.closeNewMsgWindow();
 }
 function onFormSubmit(event) {
     let composerEl = document.getElementById('new--message-body');
@@ -188,8 +186,8 @@ async function resizeIframe() {
 
 requestAnimationFrame(resizeIframe);
 
-const isResultDisplay = document.querySelectorAll('.new--message--dialog').length > 0;
-if(!isResultDisplay){
-    restoreDraft();
-}
+// const isResultDisplay = document.querySelectorAll('.new--message--dialog').length > 0;
+// if(!isResultDisplay){
+//     restoreDraft();
+// }
 //setInterval(resizeIframe, 10);

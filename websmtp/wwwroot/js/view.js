@@ -50,7 +50,7 @@ document.getElementById('btn--unreport--spam')
         trainSpam(false);
     });
 document.getElementById('btn--reply')
-    ?.addEventListener("click", (event) => {
+    ?.addEventListener("click", async (event) => {
         const to = event.currentTarget.getAttribute('reply-to');
         window.parent.newMessage(to);
     });
@@ -72,22 +72,26 @@ function closeMsg() {
     window.parent.closeMsgView(true);
 }
 async function deleteMsg() {
-    await window.parent.deleteMessages([msgId]);
+    let { deleted } = await window.parent.deleteMessages([msgId]);
+    if (!deleted) return;
     document.getElementById('btn--undelete').classList.remove('d-none');
     document.getElementById('btn--delete').classList.add('d-none');
 }
 async function undeleteMsg() {
-    await window.parent.undeleteMessages([msgId]);
+    let { undeleted } = await window.parent.undeleteMessages([msgId]);
+    if (!undeleted) return;
     document.getElementById('btn--undelete').classList.add('d-none');
     document.getElementById('btn--delete').classList.remove('d-none');
 }
 async function markAsRead() {
-    await window.parent.markMessagesAsRead([msgId]);
+    let { marked } = await window.parent.markMessagesAsRead([msgId]);
+    if (!marked) return;
     document.getElementById('btn--unread').classList.remove('d-none');
     document.getElementById('btn--read').classList.add('d-none');
 }
 async function markAsUnread() {
-    await window.parent.markMessagesAsUnread([msgId]);
+    let { marked } = await window.parent.markMessagesAsUnread([msgId]);
+    if (!marked) return;
     document.getElementById('btn--unread').classList.add('d-none');
     document.getElementById('btn--read').classList.remove('d-none');
 }
