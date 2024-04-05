@@ -1,0 +1,37 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    # Checkout & Restore/Build/Publish
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build websmtp --no-restore
+    - name: Publish
+      run: dotnet publish websmtp -o ./build/
+
+    - name: docker login
+      run: docker login -u ${{ secrets.DockerLogin }} -p ${{ secrets.DockerPassword }} 
+      
+    - name: Build Spam Assassin Docker image
+      working-directory: ./spamassassin
+      run: docker build -t yvansolutions/spamassassin:latest .
+ 
+    - name: Push Assassin Docker image
+      working-directory: ./spamassassin
+      run: docker push yvansolutions/spamassassin:latest
+
+    - name: Build Websmtp Docker image
+      run: docker build -t yvansolutions/websmtp:latest .
+
