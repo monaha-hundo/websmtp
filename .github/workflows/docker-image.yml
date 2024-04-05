@@ -40,3 +40,6 @@ jobs:
     - name: Build Websmtp Docker image
       run: docker build -t yvansolutions/websmtp:latest .
 
+    - name: Push Websmtp Docker image
+      working-directory: ./spamassassin
+      run: docker push yvansolutions/websmtp:latest
