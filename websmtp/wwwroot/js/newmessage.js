@@ -6,7 +6,7 @@ document.getElementById('new--message-expand-btn')
     });
 document.getElementById('new--message-close-btn')
     ?.addEventListener("click", () => {
-        saveAndCloseDraft();
+        window.parent.closeNewMsgWindow();
     });
 document.getElementById('new--message-form')
     ?.addEventListener("submit", (event) => {
@@ -22,6 +22,14 @@ document.getElementById('show--bcc')
     ?.addEventListener("click", () => {
         showBCC();
     });
+
+document.getElementById('new--msg--close')
+    ?.addEventListener("click", () => {
+        deleteMessageBackup();
+        window.parent.setNewMessageCleanState();
+        window.parent.closeNewMsgWindow();
+    });
+
 document.querySelectorAll('.identity--dropdown--value')
     .forEach(el => {
         el.addEventListener("click", (event) => {
@@ -33,7 +41,7 @@ document.querySelectorAll('.identity--dropdown--value')
     });
 
 document.querySelectorAll('#to, #subject, #body')
-    .forEach(el => el.addEventListener('change', (event)=>{
+    .forEach(el => el.addEventListener('change', (event) => {
         console.log('change', event);
         window.parent.setNewMessageDirtyState();
     }));
@@ -74,8 +82,8 @@ document.getElementById('html')
                     toolbar: toolbarOptions
                 }
             });
-            quill.on('text-change', function(delta, oldDelta, source) {
-               document.getElementById('body').value = quill.container.firstChild.innerHTML;
+            quill.on('text-change', function (delta, oldDelta, source) {
+                document.getElementById('body').value = quill.container.firstChild.innerHTML;
             });
         } else {
             destroy_quill(quill);
@@ -130,7 +138,7 @@ function restoreDraft() {
     let formEls = document.querySelectorAll("#to, #cc, #bcc, #subject, #body");
     let rawStorage = localStorage.getItem('previous-draft');
     let data = JSON.parse(rawStorage);
-    console.log('rawStorage:'+rawStorage);
+    console.log('rawStorage:' + rawStorage);
 
     const changeEvent = new Event("change");
     if (data != null) {
