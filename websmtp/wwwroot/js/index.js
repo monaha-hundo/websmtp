@@ -361,7 +361,7 @@ function nextMessage(msgId) {
 
 function openRawMsg(msgId) {
     closeMsgView();
-    openwMsgView(prevMsgId, true, false);
+    openwMsgView(msgId, true, false);
 }
 
 async function newMessage(to) {
@@ -389,8 +389,11 @@ async function newMessage(to) {
 
 function setNewMessageDirtyState() {
     newMessageDirty = true;
-    console.log('setNewMessageDirtyState');
 }
+function setNewMessageCleanState() {
+    newMessageDirty = false;
+}
+
 
 ///
 /// If new message windows has changed (e.g. is dirty), 

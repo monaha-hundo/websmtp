@@ -315,6 +315,10 @@ table td {
     min-width: 50px;
 }
 
+.mw-75px {
+    min-width: 75px;
+}
+
 .fs-12px {
     font-size: 12px;
 }
@@ -384,7 +388,7 @@ table td {
 .hamburger--btn {
     flex: 1 1 auto;
     top: 2px;
-    right: 50px;
+    right: 2px;
     z-index: 4;
 }
 
