@@ -69,12 +69,12 @@
                         @if (Model.Users.Page > 1)
                         {
                             <li class="page-item"><a class="page-link"
-                                    href="/admin?currentPage=@(Model.Users.Page-1)">Previous</a>
+                                    href="/users?currentPage=@(Model.Users.Page-1)">Previous</a>
                             </li>
                         }
                         @if (Model.Users.Page < Model.Users.Total / Model.Users.Users.Count)
                         {
-                            <li class="page-item"><a class="page-link" href="/admin?currentPage=@(Model.Users.Page+1)">Next</a>
+                            <li class="page-item"><a class="page-link" href="/users?currentPage=@(Model.Users.Page+1)">Next</a>
                             </li>
                         }
                     </ul>
