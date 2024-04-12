@@ -23,6 +23,11 @@ public static class HttpContextExtentions
         {
             throw new Exception("Could not get user guid: ", ex);
         }
+    }    
+    
+    public static bool IsUserAdmin(this IHttpContextAccessor httpContextAccessor)
+    {
+        return httpContextAccessor?.HttpContext?.User?.IsInRole("admin") ?? false;
     }
 
     public static async Task SignInAsync(this IHttpContextAccessor httpContextAccessor, User user)

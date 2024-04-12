@@ -21,6 +21,9 @@ namespace MyApp.Namespace
 
         public User Profile { get; set; } = null!;
 
+        [FromQuery] public int UserId { get; set; }
+        public int CurrentUserId { get; set; }
+
         public AccountModel(IReadableMessageStore messageStore, IHttpContextAccessor httpContextAccessor, DataContext data)
         {
             _messageStore = messageStore;
@@ -30,8 +33,18 @@ namespace MyApp.Namespace
 
         public void OnGet()
         {
-            var userId = _httpContextAccessor.GetUserId();
-            Profile = _data.Users.Include(u => u.Identities).Include(u => u.Mailboxes).Single(u => u.Id == userId);
+            CurrentUserId = _httpContextAccessor.GetUserId();
+            if (UserId == 0)
+            {
+                UserId = CurrentUserId;
+            }
+            var isAdmin = User?.IsInRole("admin") ?? false;
+            var userIdToFetch = isAdmin
+             ? UserId
+             : _httpContextAccessor.GetUserId();
+            UserId = userIdToFetch;
+
+            Profile = _data.Users.Include(u => u.Identities).Include(u => u.Mailboxes).Single(u => u.Id == userIdToFetch);
             Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
         }
     }

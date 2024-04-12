@@ -26,7 +26,7 @@ function initNavbar() {
         const selector = `#btn-mailbox-trash`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
-        mailboxEl.classList.add('btn-dark', 'active');
+        mailboxEl.classList.add('btn-proton', 'active');
         return;
     }
 
@@ -34,7 +34,7 @@ function initNavbar() {
         const selector = `#btn-mailbox-users`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
-        mailboxEl.classList.add('btn-dark', 'active');
+        mailboxEl.classList.add('btn-proton', 'active');
         return;
     }
 
@@ -42,7 +42,7 @@ function initNavbar() {
         const selector = `#btn-mailbox-account`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
-        mailboxEl.classList.add('btn-dark', 'active');
+        mailboxEl.classList.add('btn-proton', 'active');
         return;
     }
 
@@ -50,35 +50,35 @@ function initNavbar() {
         const selector = `#btn-mailbox-fav`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
-        mailboxEl.classList.add('btn-dark', 'active');
+        mailboxEl.classList.add('btn-proton', 'active');
     }
 
     if (sent) {
         const selector = `#btn-mailbox-sent`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
-        mailboxEl.classList.add('btn-dark', 'active');
+        mailboxEl.classList.add('btn-proton', 'active');
     }
 
     if (inbox) {
         const selector = `#btn-mailbox-inbox`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
-        mailboxEl.classList.add('btn-dark', 'active');
+        mailboxEl.classList.add('btn-proton', 'active');
     }
 
     if (all) {
         const selector = `#btn-mailbox-all`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
-        mailboxEl.classList.add('btn-dark', 'active');
+        mailboxEl.classList.add('btn-proton', 'active');
     }
 
     if (spam) {
         const selector = `#btn-mailbox-spam`;
         const mailboxEl = document.querySelector(selector);
         mailboxEl.classList.remove('btn-transparent-primary');
-        mailboxEl.classList.add('btn-dark', 'active');
+        mailboxEl.classList.add('btn-proton', 'active');
     }
 }
 window.addEventListener("popstate", (event) => {

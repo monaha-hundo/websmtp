@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MimeKit;
 using OtpNet;
@@ -188,8 +189,15 @@ public static partial class MessagesEndpoints
         [FromServices] IHttpContextAccessor httpContextAccessor
     )
     {
+        var isAdmin = httpContextAccessor.IsUserAdmin();
         var userId = httpContextAccessor.GetUserId();
-        var user = data.Users.Single(u => u.Id == userId);
+
+        if (!isAdmin && userId != pwdData.UserId)
+        {
+            throw new SecurityException("Trying to modify a different user from the current user, but not admin.");
+        }
+
+        var user = data.Users.Single(u => u.Id == pwdData.UserId);
 
         var passwordHasher = new PasswordHasher();
         var canChange = pwdData.NewPassword == pwdData.ConfirmPassword
@@ -217,8 +225,15 @@ public static partial class MessagesEndpoints
             addMailboxReq.Email
         );
 
+        var isAdmin = httpContextAccessor.IsUserAdmin();
         var userId = httpContextAccessor.GetUserId();
-        var user = data.Users.Single(u => u.Id == userId);
+
+        if (!isAdmin && userId != addMailboxReq.UserId)
+        {
+            throw new SecurityException("Trying to modify a different user from the current user, but not admin.");
+        }
+
+        var user = data.Users.Single(u => u.Id == addMailboxReq.UserId);
 
         var newMailbox = new UserMailbox
         {
@@ -244,8 +259,15 @@ public static partial class MessagesEndpoints
             addMailboxReq.Email
         );
 
+        var isAdmin = httpContextAccessor.IsUserAdmin();
         var userId = httpContextAccessor.GetUserId();
-        var user = data.Users.Single(u => u.Id == userId);
+
+        if (!isAdmin && userId != addMailboxReq.UserId)
+        {
+            throw new SecurityException("Trying to modify a different user from the current user, but not admin.");
+        }
+
+        var user = data.Users.Single(u => u.Id == addMailboxReq.UserId);
 
         var newIdentity = new UserIdentity
         {
@@ -272,6 +294,14 @@ public static partial class MessagesEndpoints
         [FromServices] IHttpContextAccessor httpContextAccessor
     )
     {
+        var isAdmin = httpContextAccessor.IsUserAdmin();
+        var userId = httpContextAccessor.GetUserId();
+
+        if (!isAdmin && userId != changePwdReq.UserId)
+        {
+            throw new SecurityException("Trying to modify a different user from the current user, but not admin.");
+        }
+
         var user = data.Users.Single(u => u.Id == changePwdReq.UserId);
         var passwordHasher = new PasswordHasher();
         var canChange = changePwdReq.NewPassword == changePwdReq.ConfirmPassword;

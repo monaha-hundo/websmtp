@@ -26,7 +26,7 @@ body {
     position: absolute;
     border: var(--bs-border-width) solid var(--bs-border-color);
     height: 100vh;
-    min-width: 200px;
+    min-width: 220px;
     overflow-y: scroll;
 }
 
@@ -109,6 +109,22 @@ table td {
     --bs-btn-color: #fff;
     --bs-btn-bg: var(--proton-pink);
     --bs-btn-border-color: var(--proton-pink);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--proton-pink-hover);
+    --bs-btn-hover-border-color: var(--proton-pink-hover);
+    --bs-btn-focus-shadow-rgb: 49, 132, 253;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--proton-pink-active);
+    --bs-btn-active-border-color: var(--proton-pink-active);
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--proton-pink-disabled);
+    --bs-btn-disabled-border-color: var(--proton-pink-disabled);
+}
+.btn-proton {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #342562;
+    --bs-btn-border-color: #342562;
     --bs-btn-hover-color: #fff;
     --bs-btn-hover-bg: var(--proton-pink-hover);
     --bs-btn-hover-border-color: var(--proton-pink-hover);
