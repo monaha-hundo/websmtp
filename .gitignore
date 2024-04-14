@@ -9,3 +9,6 @@ openssl.exe
 libcrypto-3-x64.dll
 libssl-3-x64.dll
 /.vs
+/websmtp/websmtp.sql
+/websmtp/websmtp.sql-shm
+/websmtp/websmtp.sql-wal
