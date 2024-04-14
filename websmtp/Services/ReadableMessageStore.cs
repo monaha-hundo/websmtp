@@ -2,18 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
+using websmtp.Services.Models;
 
 namespace websmtp.services;
 
 public class ReadableMessageStore : IReadableMessageStore
 {
-    private readonly ILogger<MessageStore> _logger;
+    private readonly ILogger<WritableMessageStore> _logger;
     private readonly IServiceProvider _services;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly SpamAssassin _sa;
 
 
-    public ReadableMessageStore(ILogger<MessageStore> logger, IServiceProvider services, IHttpContextAccessor httpContextAccessor, SpamAssassin sa)
+    public ReadableMessageStore(ILogger<WritableMessageStore> logger, IServiceProvider services, IHttpContextAccessor httpContextAccessor, SpamAssassin sa)
     {
         _logger = logger;
         _services = services;

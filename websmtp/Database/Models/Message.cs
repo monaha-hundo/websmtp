@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MimeKit;
-using websmtp.services;
+using websmtp.Services.Models;
 
 namespace websmtp.Database.Models;
 
@@ -14,7 +14,6 @@ public class Message : IMessage
     public Guid RawMessageId { get; set; } = Guid.Empty;
     [ForeignKey("RawMessageId")] public RawMessage RawMessage { get; set; } = null!; // A message will always have an associated raw message.
     public DateTimeOffset ReceivedOn { get; set; } = DateTimeOffset.MinValue;
-    //public long Size { get; set; }
     [StringLength(1000)] public string Subject { get; set; } = string.Empty;
     [StringLength(1000)] public string From { get; set; } = string.Empty;
     [StringLength(1000)] public string To { get; set; } = string.Empty;

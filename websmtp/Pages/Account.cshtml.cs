@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
-using websmtp.services;
+using websmtp.Services.Models;
 
 namespace MyApp.Namespace
 {

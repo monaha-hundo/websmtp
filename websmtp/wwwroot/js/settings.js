@@ -216,7 +216,7 @@ document.querySelectorAll('.btn--remove--identity')
 
             swalLoadingModal("Removing Identity");
 
-            const response = await fetch(`/api/settings/administration/remove-user-identity`, {
+            const response = await fetch(`/api/settings/identities/remove`, {
                 method: 'post',
                 headers: {
                     "Content-Type": "application/json",
@@ -251,7 +251,7 @@ document.querySelectorAll('.btn--remove--mailbox')
 
         swalLoadingModal("Removing Mailbox");
 
-        const response = await fetch(`/api/settings/administration/remove-user-mailbox`, {
+        const response = await fetch(`/api/settings/mailboxes/remove`, {
             method: 'post',
             headers: {
                 "Content-Type": "application/json",

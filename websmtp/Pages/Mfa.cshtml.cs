@@ -11,18 +11,16 @@ namespace MyApp.Namespace;
 [ValidateAntiForgeryToken]
 public class MfaModel : PageModel
 {
-    public IHttpContextAccessor _http { get; set; }
-    public IConfiguration _conf { get; set; }
-    public ILogger<MfaModel> _logger;
+    private readonly IHttpContextAccessor _http;
+    private readonly ILogger<MfaModel> _logger;
     private readonly DataContext _data;
     [FromForm] public string OTP { get; set; } = string.Empty;
     [FromQuery] public string? ReturnUrl { get; set; }
     public bool Error { get; set; }
 
-    public MfaModel(IHttpContextAccessor http, IConfiguration conf, DataContext data, ILogger<MfaModel> logger)
+    public MfaModel(IHttpContextAccessor http, DataContext data, ILogger<MfaModel> logger)
     {
         _http = http;
-        _conf = conf;
         _data = data;
         _logger = logger;
     }
@@ -69,7 +67,7 @@ public class MfaModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogCritical("Exception during OTP validation: " + ex.Message);
+            _logger.LogCritical($"Exception during OTP validation: '{ex.Message}'.");
             Error = true;
             TempData.Keep("userId");
             return Page();
