@@ -13,53 +13,53 @@
 <div class="w-100 text-white">
     <div id="view--msg--header" class="p-2 mb-2 border-bottom d-flex align-items-center" role="group"
         aria-label="Basic example">
-        <button id="btn--close" type="button" class="btn btn-outlined me-2" title="Close message">
-            <i class="bi bi-x-circle fs-4"></i>
+        <button id="btn--close" type="button" class="btn btn-sm btn-outlined me-2" title="Close message">
+            <i class="bi bi-x-circle fs-5"></i>
         </button>
-        <button id="btn--previous" type="button" class="btn btn-outlined me-2" title="Previous message">
-            <i class="bi bi-arrow-up fs-4"></i>
+        <button id="btn--previous" type="button" class="btn btn-sm btn-outlined me-2" title="Previous message">
+            <i class="bi bi-arrow-up fs-5"></i>
         </button>
-        <button id="btn--next" type="button" class="btn btn-outlined me-2" title="Next message">
-            <i class="bi bi-arrow-down fs-4"></i>
+        <button id="btn--next" type="button" class="btn btn-sm btn-outlined me-2" title="Next message">
+            <i class="bi bi-arrow-down fs-5"></i>
         </button>
-        <button id="btn--raw" type="button fs-4" class="btn btn-outlined me-2" title="Show raw message">
-            <i class="bi bi-file-earmark-code fs-4"></i>
+        <button id="btn--raw" type="button fs-5" class="btn btn-sm btn-outlined me-2" title="Show raw message">
+            <i class="bi bi-file-earmark-code fs-5"></i>
         </button>
         @if (!Model.Message.Sent)
         {
             <div class="me-2">
-                <button id="btn--undelete" type="button" class='btn btn-outlined @(Model.Message.Deleted?"":"d-none")'
+                <button id="btn--undelete" type="button" class='btn btn-sm btn-outlined @(Model.Message.Deleted?"":"d-none")'
                     title="Remove from trash">
-                    <i class="bi bi-recycle fs-4"></i>
+                    <i class="bi bi-recycle fs-5"></i>
                 </button>
-                <button id="btn--delete" type="button" class='btn btn-outlined @(Model.Message.Deleted?"d-none":"")'
+                <button id="btn--delete" type="button" class='btn btn-sm btn-outlined @(Model.Message.Deleted?"d-none":"")'
                     title="Put in trash">
-                    <i class="bi bi-trash fs-4"></i>
+                    <i class="bi bi-trash fs-5"></i>
                 </button>
             </div>
         }
         <div class="me-2">
-            <button id="btn--unread" type="button" class='btn btn-outlined @(Model.Message.Read?"":"d-none")'
+            <button id="btn--unread" type="button" class='btn btn-sm btn-outlined @(Model.Message.Read?"":"d-none")'
                 title="Mark as unread">
-                <i class="bi bi-envelope fs-4"></i>
+                <i class="bi bi-envelope fs-5"></i>
             </button>
-            <button id="btn--read" type="button" class='btn btn-outlined @(Model.Message.Read?"d-none":"")'
+            <button id="btn--read" type="button" class='btn btn-sm btn-outlined @(Model.Message.Read?"d-none":"")'
                 title="Mark as read">
-                <i class="bi bi-envelope-open fs-4"></i>
+                <i class="bi bi-envelope-open fs-5"></i>
             </button>
         </div>
         @if (!Model.Message.Sent)
         {
-            <button id="btn--report--spam" class='btn btn-outlined me-2 @(Model.Message.IsSpam ? "d-none":"")'
+            <button id="btn--report--spam" class='btn btn-sm btn-outlined me-2 @(Model.Message.IsSpam ? "d-none":"")'
                 title="Report spam">
-                <i class="bi bi-virus2 fs-4"></i>
+                <i class="bi bi-virus2 fs-5"></i>
             </button>
-            <button id="btn--unreport--spam" class='btn btn-outlined me-2 @(Model.Message.IsSpam ? "":"d-none")'
+            <button id="btn--unreport--spam" class='btn btn-sm btn-outlined me-2 @(Model.Message.IsSpam ? "":"d-none")'
                 title="Revoke spam">
-                <i class="bi bi-virus2 fs-4"></i>
+                <i class="bi bi-virus2 fs-5"></i>
             </button>
-            <button id="btn--reply" reply-to="@Model.Message.From" class="btn btn-outlined me-2" title="Reply">
-                <i class="bi bi-reply fs-4"></i>
+            <button id="btn--reply" reply-to="@Model.Message.From" class="btn btn-sm btn-outlined me-2" title="Reply">
+                <i class="bi bi-reply fs-5"></i>
             </button>
         }
     </div>
