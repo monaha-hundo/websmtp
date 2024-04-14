@@ -50,7 +50,9 @@ public static class Startup
 
     public static void ConfigureWebServices(IHostApplicationBuilder builder)
     {
-        ConfigureDatabase(builder);
+        //ConfigureMariaDb(builder);
+        ConfigureSqlite(builder);
+
         ConfigureSecurity(builder);
         ConfigureSmtpServices(builder);
 
@@ -101,17 +103,24 @@ public static class Startup
         builder.Services.AddHostedService<services.BackgroundSmtpServer>();
     }
 
-    public static void ConfigureDatabase(IHostApplicationBuilder builder)
+    //public static void ConfigureMariaDb(IHostApplicationBuilder builder)
+    //{
+    //    var dbServer = builder.Configuration.GetValue<string>("Database:Server");
+    //    var dbName = builder.Configuration.GetValue<string>("Database:Name");
+    //    var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
+    //    var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
+    //    var csWithoutPassword = $"server={dbServer};database={dbName};user={dbUsername};";
+    //    Console.WriteLine($"Connection string: '{csWithoutPassword}'.");
+    //    var cs = csWithoutPassword + $"password={dbPassword}";
+    //    var srvVer = ServerVersion.AutoDetect(cs);
+    //    builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
+    //}
+    public static void ConfigureSqlite(IHostApplicationBuilder builder)
     {
-        var dbServer = builder.Configuration.GetValue<string>("Database:Server");
         var dbName = builder.Configuration.GetValue<string>("Database:Name");
-        var dbUsername = builder.Configuration.GetValue<string>("Database:Username");
-        var dbPassword = builder.Configuration.GetValue<string>("Database:Password");
-        var csWithoutPassword = $"server={dbServer};database={dbName};user={dbUsername};";
-        Console.WriteLine($"Connection string: '{csWithoutPassword}'.");
-        var cs = csWithoutPassword + $"password={dbPassword}";
-        var srvVer = ServerVersion.AutoDetect(cs);
-        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseMySql(cs, srvVer), ServiceLifetime.Transient, ServiceLifetime.Transient);
+        var cs = $"Data Source=websmtp.sql";
+        Console.WriteLine($"Connection string: '{cs}'.");
+        builder.Services.AddDbContext<DataContext>(dbOpts => dbOpts.UseSqlite(cs), ServiceLifetime.Transient, ServiceLifetime.Transient);
     }
 
 

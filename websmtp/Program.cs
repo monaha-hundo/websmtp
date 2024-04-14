@@ -6,7 +6,7 @@ if (smtpServerOnly)
 {
     var cliBuilder = Host.CreateApplicationBuilder(args);
     Startup.InitAppConfig(cliBuilder);
-    Startup.ConfigureDatabase(cliBuilder);
+    Startup.ConfigureSqlite(cliBuilder);
     Startup.ConfigureSmtpServices(cliBuilder);
     var cliApp = cliBuilder.Build();
     cliApp.Run();
