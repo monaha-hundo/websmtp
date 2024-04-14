@@ -11,15 +11,15 @@ public class SpamAssassin
         try
         {
             var buffer = string.Empty;
-            spamAss.StandardInput.WriteLine(message);
-            spamAss.StandardInput.Flush();
+            await spamAss.StandardInput.WriteLineAsync(message);
+            await spamAss.StandardInput.FlushAsync();
             spamAss.StandardInput.Close();
 
-            var readA = spamAss.StandardOutput.ReadToEnd();
+            var readA = await spamAss.StandardOutput.ReadToEndAsync();
 
-            spamAss.WaitForExit();
+            await spamAss.WaitForExitAsync();
 
-            var readB =  spamAss.StandardOutput.ReadToEnd()
+            var readB = await spamAss.StandardOutput.ReadToEndAsync()
                 ?? throw new Exception("Could not read spamAssassin's process output.");
 
             spamAss.Close();

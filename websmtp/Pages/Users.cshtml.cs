@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
-using websmtp.services;
+using websmtp.Services.Models;
 
 namespace MyApp.Namespace;
 
@@ -44,8 +44,8 @@ public class UsersModel : PageModel
 
     public void OnGet()
     {
-        CurrentPage = CurrentPage.HasValue ? CurrentPage.Value : 1;
-        PerPage = PerPage.HasValue ? PerPage.Value : 25;
+        CurrentPage ??= 1;
+        PerPage ??= 25;
         var userId = _httpContextAccessor.GetUserId();
         Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
         

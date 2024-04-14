@@ -1,12 +1,11 @@
 using websmtp.Database.Models;
 
-namespace websmtp.services;
+namespace websmtp.Services.Models;
 
 public class MessageInfo : IMessage
 {
     public Guid Id { get; set; }
     public DateTimeOffset ReceivedOn { get; set; }
-    //public long Size { get; set;  }
     public string Subject { get; set; } = string.Empty;
     public string From { get; set; } = string.Empty;
     public string To { get; set; } = string.Empty;

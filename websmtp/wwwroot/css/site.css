@@ -1,7 +1,6 @@
 html {
     font-size: 14px;
-
-    height: 100vh;
+    height: 100svh;
     position: relative;
     min-height: 100%;
 }
@@ -25,9 +24,9 @@ body {
     background-color: #16141c;
     position: absolute;
     border: var(--bs-border-width) solid var(--bs-border-color);
-    height: 100vh;
+    height: 100svh;
     min-width: 220px;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .content {
@@ -52,7 +51,10 @@ body {
         border-right: var(--bs-border-width) solid var(--bs-border-color);
     }
 }
-
+#messages--list{
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 #messages--list--header {
     top: 0;
     background-color: #16141c;

@@ -1,6 +1,4 @@
-using websmtp.Database.Models;
-
-namespace websmtp.services;
+namespace websmtp.Services.Models;
 
 public class ListResult
 {
@@ -13,5 +11,5 @@ public class ListResult
     public bool AllHasNew { get; set; }
     public bool SpamHasNew { get; set; }
     public bool TrashHasNew { get; set; }
-    public List<MessageInfo> Messages { get; set; } = new List<MessageInfo>(0);
+    public List<MessageInfo> Messages { get; set; } = [];
 }

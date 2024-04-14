@@ -9,7 +9,7 @@ namespace MyApp.Namespace
     [Authorize]
     public class LogoutModel : PageModel
     {
-        public IHttpContextAccessor _http { get; set; }
+        private readonly IHttpContextAccessor _http;
 
         public LogoutModel(IHttpContextAccessor http)
         {
