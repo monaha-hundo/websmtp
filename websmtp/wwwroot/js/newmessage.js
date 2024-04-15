@@ -93,19 +93,17 @@ document.getElementById('html')
 function destroy_quill() {
     quill.theme.modules.toolbar.container.parentElement.removeChild(quill.theme.modules.toolbar.container);
     let bodyEl = document.getElementById('body');
-    let oldValue = bodyEl.textContent;
-    console.log(oldValue);
+    let qlEdEl = document.querySelector('.ql-editor');
+    let oldValue = qlEdEl.textContent;
+    let quillEL = document.getElementById('quill');
+    quillEL.parentElement.removeChild(quillEL);
     bodyEl.parentElement.removeChild(bodyEl);
-    // set inner html
-    let subjectRowEl = document.getElementById('subject-row');
-    // let newBodyEl = document.createElement('textarea');
-    // newBodyEl.id = 'body';
-    // newBodyEl.name = 'body';
-    // newBodyEl.className = 'form-control my-2 flex-1-1-100p';
-    // newBodyEl.setAttribute('rows', '6');
-    let textAreaHtml = `<textarea id="body" name="body" class="form-control my-2 flex-1-1-100p" rows="6">${oldValue}</textarea>`;
-    subjectRowEl.insertAdjacentHTML('afterend', textAreaHtml);
 
+    let subjectRowEl = document.getElementById('subject-row');
+    let textAreaHtml = '<textarea id="body" name="body" class="form-control my-2 flex-1-1-100p" rows="6"></textarea>';
+    subjectRowEl.insertAdjacentHTML('afterend', textAreaHtml);
+    let newBodyEl = document.getElementById('body');
+    newBodyEl.value = oldValue;
 }
 
 function closeWindow() {
