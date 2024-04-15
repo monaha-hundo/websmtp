@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
+[assembly: SuppressMessage("Usage", "CA2254:Template should be a static expression", Justification = "<Pending>", Scope = "member", Target = "~M:websmtp.services.WritableMessageStore.SaveAsync(SmtpServer.ISessionContext,SmtpServer.IMessageTransaction,System.Buffers.ReadOnlySequence{System.Byte},System.Threading.CancellationToken)~System.Threading.Tasks.Task{SmtpServer.Protocol.SmtpResponse}")]

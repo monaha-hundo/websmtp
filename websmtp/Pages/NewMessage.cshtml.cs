@@ -16,10 +16,10 @@ namespace MyApp.Namespace
     {
         private readonly Regex emailWithNameRegEx = EmailWithNameRegEx();
 
-        private readonly ILogger<SendMailService> _logger;
+        private readonly ILogger<SendMail> _logger;
         private readonly DataContext _data;
 
-        readonly SendMailService _sendMail;
+        readonly SendMail _sendMail;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         [FromQuery] public string? InitialTo { get; set; }
@@ -40,7 +40,7 @@ namespace MyApp.Namespace
         public List<UserIdentity> Identities { get; set; } = [];
 
 
-        public NewMessageModel(SendMailService sendMail, ILogger<SendMailService> logger, DataContext data, IHttpContextAccessor httpContextAccessor)
+        public NewMessageModel(SendMail sendMail, ILogger<SendMail> logger, DataContext data, IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
             _sendMail = sendMail;
@@ -178,7 +178,7 @@ namespace MyApp.Namespace
                 _data.Messages.Add(sentMessage);
                 _data.SaveChanges();
 
-                _sendMail.SendMail(mimeMessage);
+                _sendMail.Send(mimeMessage);
                 Sent = true;
                 transaction.Commit();
             }

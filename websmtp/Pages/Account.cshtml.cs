@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using websmtp;
 using websmtp.Database;
 using websmtp.Database.Models;
-using websmtp.services;
+using websmtp.Services.Models;
 
 namespace MyApp.Namespace
 {
@@ -17,9 +17,10 @@ namespace MyApp.Namespace
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly DataContext _data;
 
-        public ListResult Listing { get; set; } = new ListResult();
-
         public User Profile { get; set; } = null!;
+
+        [FromQuery] public int UserId { get; set; }
+        public int CurrentUserId { get; set; }
 
         public AccountModel(IReadableMessageStore messageStore, IHttpContextAccessor httpContextAccessor, DataContext data)
         {
@@ -30,9 +31,18 @@ namespace MyApp.Namespace
 
         public void OnGet()
         {
-            var userId = _httpContextAccessor.GetUserId();
-            Profile = _data.Users.Include(u => u.Identities).Include(u => u.Mailboxes).Single(u => u.Id == userId);
-            Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
+            CurrentUserId = _httpContextAccessor.GetUserId();
+            if (UserId == 0)
+            {
+                UserId = CurrentUserId;
+            }
+            var isAdmin = User?.IsInRole("admin") ?? false;
+            var userIdToFetch = isAdmin
+             ? UserId
+             : _httpContextAccessor.GetUserId();
+            UserId = userIdToFetch;
+
+            Profile = _data.Users.Include(u => u.Identities).Include(u => u.Mailboxes).Single(u => u.Id == userIdToFetch);
         }
     }
 }

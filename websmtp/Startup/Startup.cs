@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmtpServer.Storage;
 using websmtp.Database;
+using websmtp.Endpoints;
 using websmtp.services;
 
 namespace websmtp.Startup;
@@ -94,10 +95,10 @@ public static class Startup
 
     public static void ConfigureSmtpServices(IHostApplicationBuilder builder)
     {
-        builder.Services.AddTransient<SendMailService>();
+        builder.Services.AddTransient<SendMail>();
         builder.Services.AddTransient<SpamAssassin>();
-        builder.Services.AddSingleton<IMessageStore, websmtp.services.MessageStore>();
-        builder.Services.AddHostedService<SmtpServerService>();
+        builder.Services.AddSingleton<IMessageStore, WritableMessageStore>();
+        builder.Services.AddHostedService<services.BackgroundSmtpServer>();
     }
 
     public static void ConfigureDatabase(IHostApplicationBuilder builder)
@@ -181,6 +182,8 @@ public static class Startup
 
     public static void MapEndpoints(WebApplication app)
     {
+        app.MapPost("/api/messages/stats/", MessagesEndpoints.Stats).RequireAuthorization();
+        
         // Messages actions
         app.MapPost("/api/messages/train/", MessagesEndpoints.Train).RequireAuthorization();
 
@@ -197,21 +200,14 @@ public static class Startup
         app.MapGet("/api/messages/{msgId}/attachements/{filename}", MessagesEndpoints.GetMessageAttachement).RequireAuthorization();
         app.MapGet("/api/messages/{msgId}.html", MessagesEndpoints.GetMessage).RequireAuthorization();
 
-        // Self Administration for users
-        app.MapGet("/api/settings/otp/initiate", MessagesEndpoints.OtpInitiate).RequireAuthorization();
-        app.MapPost("/api/settings/otp/validate", MessagesEndpoints.OtpValidateAndEnable).RequireAuthorization();
-        app.MapPost("/api/settings/pwd/change", MessagesEndpoints.ChangePassword).RequireAuthorization();
-        app.MapPost("/api/settings/mailboxes/add", MessagesEndpoints.AddMailbox).RequireAuthorization();
-        app.MapPost("/api/settings/identities/add", MessagesEndpoints.AddIdentity).RequireAuthorization();
-
-        // Administration actions for adminsitrators
-        app.MapPost("/api/settings/administration/add-user", MessagesEndpoints.AddUser).RequireAuthorization("admin");
-        app.MapPost("/api/settings/administration/change-user-name", MessagesEndpoints.ChangeUsername).RequireAuthorization("admin");
-        app.MapPost("/api/settings/administration/change-user-password", MessagesEndpoints.ChangeUserPassword).RequireAuthorization("admin");
-        app.MapPost("/api/settings/administration/add-user-mailbox", MessagesEndpoints.AddUserMailbox).RequireAuthorization("admin");
-        app.MapPost("/api/settings/administration/remove-user-mailbox", MessagesEndpoints.RemoveUserMailbox).RequireAuthorization("admin");
-        app.MapPost("/api/settings/administration/add-user-identity", MessagesEndpoints.AddUserIdentity).RequireAuthorization("admin");
-        app.MapPost("/api/settings/administration/remove-user-identity", MessagesEndpoints.RemoveUserIdentity).RequireAuthorization("admin");
-
+        // Users accounts
+        app.MapPost("/api/settings/administration/add-user", AccountEndpoints.AddUser).RequireAuthorization("admin");
+        app.MapGet("/api/settings/otp/initiate", AccountEndpoints.OtpInitiate).RequireAuthorization();
+        app.MapPost("/api/settings/otp/validate", AccountEndpoints.OtpValidateAndEnable).RequireAuthorization();
+        app.MapPost("/api/settings/pwd/change", AccountEndpoints.ChangePassword).RequireAuthorization();
+        app.MapPost("/api/settings/mailboxes/add", AccountEndpoints.AddMailbox).RequireAuthorization();
+        app.MapPost("/api/settings/identities/add", AccountEndpoints.AddIdentity).RequireAuthorization();
+        app.MapPost("/api/settings/mailboxes/remove", AccountEndpoints.RemoveMailbox).RequireAuthorization("admin");
+        app.MapPost("/api/settings/identities/remove", AccountEndpoints.RemoveIdentity).RequireAuthorization("admin");
     }
 }

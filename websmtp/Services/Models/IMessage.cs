@@ -1,4 +1,4 @@
-namespace websmtp.services;
+namespace websmtp.Services.Models;
 
 public interface IMessage
 {

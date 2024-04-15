@@ -1,12 +1,11 @@
 using websmtp.Database.Models;
 
-namespace websmtp.services;
+namespace websmtp.Services.Models;
 
 public class MessageInfo : IMessage
 {
     public Guid Id { get; set; }
     public DateTimeOffset ReceivedOn { get; set; }
-    //public long Size { get; set;  }
     public string Subject { get; set; } = string.Empty;
     public string From { get; set; } = string.Empty;
     public string To { get; set; } = string.Empty;
@@ -23,18 +22,17 @@ public class MessageInfo : IMessage
     public MessageInfo(Message message)
     {
         Id = message.Id;
+        AttachementsCount = message.AttachementsCount;
+        From = message.From;
+        Stared = message.Stared;
+        Read = message.Read;
+        Deleted = message.Deleted;
+        IsSpam = message.IsSpam;
         ReceivedOn = message.ReceivedOn;
         Subject = message.Subject;
-        From = message.From;
         To = message.To;
         Cc = message.Cc;
         Bcc = message.Bcc;
         Importance = message.Importance;
-        AttachementsCount = message.AttachementsCount;
-        Read = message.Read;
-        Deleted = message.Deleted;
-        Stared = message.Stared;
-        IsSpam = message.IsSpam;
-        Headers = message.Headers;
     }
 }

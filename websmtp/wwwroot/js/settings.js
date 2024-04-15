@@ -1,5 +1,14 @@
 "use strict";
 
+async function swalLoadingModal(title) {
+    Swal.fire({
+        title,
+        didOpen: () => {
+            Swal.showLoading();
+        },
+    });
+}
+
 document.getElementById('otp--form')
     ?.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -40,12 +49,13 @@ document.getElementById('otp--qrcode')
 
 document.getElementById('btn--change--pwd')
     ?.addEventListener('click', async (event) => {
+        let userId = event.currentTarget.getAttribute('user-id');
         event.preventDefault();
         let currentPassword = document.getElementById('currentPassword').value;
         let newPassword = document.getElementById('newPassword').value;
         let confirmPassword = document.getElementById('confirmPassword').value;
         let reqData = JSON.stringify({
-            currentPassword, newPassword, confirmPassword
+            currentPassword, newPassword, confirmPassword, userId
         });
 
         Swal.fire({
@@ -77,6 +87,7 @@ document.getElementById('btn--change--pwd')
 
 document.getElementById('btn--add--mailbox')
     ?.addEventListener('click', async (event) => {
+        let userId = event.currentTarget.getAttribute('user-id');
         let result = await Swal.fire({
             title: 'Add Mailbox',
             html: `
@@ -96,7 +107,7 @@ document.getElementById('btn--add--mailbox')
                 if (!displayName || !email) {
                     Swal.showValidationMessage(`Please enter a display name and an email address.`);
                 }
-                return { displayName, email }
+                return { displayName, email, userId }
             },
         });
 
@@ -136,6 +147,7 @@ document.getElementById('btn--add--mailbox')
 
 document.getElementById('btn--add--identity')
     ?.addEventListener('click', async (event) => {
+        let userId = event.currentTarget.getAttribute('user-id');
         let result = await Swal.fire({
             title: 'Add Identity',
             html: `
@@ -155,7 +167,7 @@ document.getElementById('btn--add--identity')
                 if (!displayName || !email) {
                     Swal.showValidationMessage(`Please enter a display name and an email address.`);
                 }
-                return { displayName, email }
+                return { displayName, email, userId }
             },
         });
 
@@ -191,3 +203,73 @@ document.getElementById('btn--add--identity')
         }
 
     });
+
+
+document.querySelectorAll('.btn--remove--identity')
+    .forEach(el => {
+        el.addEventListener('click', async (event) => {
+
+            const userId = event.currentTarget.getAttribute('user-id');
+            const mailboxId = event.currentTarget.getAttribute('identity-id');
+            const req = { userId, mailboxId };
+            const reqData = JSON.stringify(req);
+
+            swalLoadingModal("Removing Identity");
+
+            const response = await fetch(`/api/settings/identities/remove`, {
+                method: 'post',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: reqData
+            });
+
+            Swal.close();
+
+            let success = response.status == 200;
+
+            if (success) {
+                await Swal.fire({
+                    title: "Identity removed"
+                });
+                window.location.href = window.location.href;
+            } else {
+                alert('OTP validation failed, try again.');
+            }
+        });
+    });
+
+
+document.querySelectorAll('.btn--remove--mailbox')
+.forEach(el => {
+    el.addEventListener('click', async (event) => {
+
+        const userId = event.currentTarget.getAttribute('user-id');
+        const mailboxId = event.currentTarget.getAttribute('mailbox-id');
+        const req = { userId, mailboxId };
+        const reqData = JSON.stringify(req);
+
+        swalLoadingModal("Removing Mailbox");
+
+        const response = await fetch(`/api/settings/mailboxes/remove`, {
+            method: 'post',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: reqData
+        });
+
+        Swal.close();
+
+        let success = response.status == 200;
+
+        if (success) {
+            await Swal.fire({
+                title: "Mailboxs removed"
+            });
+            window.location.href = window.location.href;
+        } else {
+            alert('OTP validation failed, try again.');
+        }
+    });
+});

@@ -161,7 +161,7 @@ public class Basic
         using var scope = _factory.Services.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         using var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var sendMailService = scope.ServiceProvider.GetRequiredService<SendMailService>();
+        var sendMailService = scope.ServiceProvider.GetRequiredService<SendMail>();
         var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
         Console.WriteLine("Generating test data...");
@@ -249,7 +249,7 @@ public class Basic
         {
             Console.WriteLine($"Sending {testEmailCount} emails...");
 
-            mimeMessages.ForEach(sendMailService.SendMail);
+            mimeMessages.ForEach(sendMailService.Send);
 
             var savedMessageCount = db.Messages.Count(msg => msg.Subject.Contains(testRunId));
 
@@ -278,7 +278,7 @@ public class Basic
         using var scope = _factory.Services.CreateScope();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         using var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-        var sendMailService = scope.ServiceProvider.GetRequiredService<SendMailService>();
+        var sendMailService = scope.ServiceProvider.GetRequiredService<SendMail>();
         var msgStore = scope.ServiceProvider.GetRequiredService<IReadableMessageStore>();
         var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
@@ -371,7 +371,7 @@ public class Basic
         {
             Console.WriteLine($"Sending {testEmailCount} emails...");
 
-            mimeMessages.ForEach(sendMailService.SendMail);
+            mimeMessages.ForEach(sendMailService.Send);
 
             var savedMessageCount = db.Messages.Count(msg => msg.Subject.Contains(testRunId));
             //var filterResult = msgStore.Latest(1, 1000, false, false, true, false, false, msgGuidToFind);

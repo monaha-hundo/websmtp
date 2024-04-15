@@ -1,9 +1,11 @@
 using websmtp.Database.Models;
 using websmtp.services;
+using websmtp.Services.Models;
 
 public interface IReadableMessageStore
 {
-    public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, bool showSpam, bool onlyFavs, bool showSent, string filter);
+    public StatsResult Stats();
+    public ListResult List(int page, int perPage, string filter, ListType listType);
     public Message Single(Guid msgId, bool includeRaw = false);
     public void MarkAsRead(List<Guid> messagesIds);
     public void MarkAsUnread(List<Guid> messagesIds);

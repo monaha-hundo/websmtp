@@ -2,14 +2,14 @@ using SmtpServer;
 
 namespace websmtp.services;
 
-public class SmtpServerService : IHostedService, IDisposable
+public class BackgroundSmtpServer : IHostedService, IDisposable
 {
-    private readonly ILogger<SmtpServerService> _logger;
+    private readonly ILogger<BackgroundSmtpServer> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly SmtpServer.SmtpServer _smtpServer;
     private readonly IConfiguration _config;
 
-    public SmtpServerService(ILogger<SmtpServerService> logger,
+    public BackgroundSmtpServer(ILogger<BackgroundSmtpServer> logger,
         IServiceProvider serviceProvider,
         IConfiguration config)
     {

@@ -12,17 +12,15 @@ namespace MyApp.Namespace;
 public class LoginModel : PageModel
 {
 
-    public IHttpContextAccessor _http { get; set; }
-    public IConfiguration _conf { get; set; }
+    private readonly IHttpContextAccessor _http;
     private readonly DataContext _data;
     [FromForm] public string Username { get; set; } = string.Empty;
     [FromForm] public string Password { get; set; } = string.Empty;
     public bool Error { get; set; }
 
-    public LoginModel(IHttpContextAccessor http, IConfiguration conf, DataContext data)
+    public LoginModel(IHttpContextAccessor http, DataContext data)
     {
         _http = http;
-        _conf = conf;
         _data = data;
     }
 

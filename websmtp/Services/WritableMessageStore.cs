@@ -1,27 +1,22 @@
-using MailKit.Security;
 using Microsoft.EntityFrameworkCore;
 using MimeKit;
 using SmtpServer;
-using SmtpServer.Mail;
-using SmtpServer.Net;
 using SmtpServer.Protocol;
 using SmtpServer.Storage;
 using System.Buffers;
-using System.Net;
-using System.Text.RegularExpressions;
 using websmtp.Database;
 using websmtp.Database.Models;
 
 namespace websmtp.services;
 
-public class MessageStore : IMessageStore
+public class WritableMessageStore : IMessageStore
 {
-    private readonly ILogger<MessageStore> _logger;
+    private readonly ILogger<WritableMessageStore> _logger;
     private readonly IServiceProvider _services;
     private readonly IConfiguration _config;
     private readonly SpamAssassin _assassin;
 
-    public MessageStore(ILogger<MessageStore> logger, IServiceProvider services, IConfiguration config, SpamAssassin assassin)
+    public WritableMessageStore(ILogger<WritableMessageStore> logger, IServiceProvider services, IConfiguration config, SpamAssassin assassin)
     {
         _logger = logger;
         _services = services;
@@ -40,11 +35,11 @@ public class MessageStore : IMessageStore
             using var scope = _services.CreateScope();
             using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
-            _logger.LogInformation("Receiving email, checking destinations.");
+            _logger.LogInformation($"Receiving email, checking destinations.");
 
             var usersMailboxes = new Dictionary<int, UserMailbox>();
 
-            var allMailboxes = await _dataContext.Mailboxes.ToListAsync();
+            var allMailboxes = await _dataContext.Mailboxes.ToListAsync(cancellationToken);
 
             foreach (var to in transaction.To)
             {
@@ -95,8 +90,8 @@ public class MessageStore : IMessageStore
             };
 
             _dataContext.RawMessages.Add(newRawMsg);
-            await _dataContext.SaveChangesAsync();
-            _logger.LogDebug("Saved raw message id #{}.", newRawMsg.Id);
+            await _dataContext.SaveChangesAsync(cancellationToken);
+            _logger.LogDebug($"Saved raw message id #{newRawMsg.Id}.");
 
             byte[] msgBytes;
 
@@ -112,13 +107,12 @@ public class MessageStore : IMessageStore
                 msgBytes = raw;
             };
 
-            _logger.LogInformation("Parsing message & saving data...");
+            _logger.LogInformation($"Parsing message & saving data...");
             using var memory = new MemoryStream(msgBytes);
             using var mimeMessage = await MimeMessage.LoadAsync(memory, cancellationToken) ?? throw new Exception("Could not parse message.");
 
             var isSpam = checkSpam && mimeMessage.Headers.Contains("X-Spam-Flag")
-                ? mimeMessage.Headers["X-Spam-Flag"] == "YES"
-                : false;
+                && mimeMessage.Headers["X-Spam-Flag"] == "YES";
 
             var headers = mimeMessage.Headers.Select(h => $"{h.Field}: {h.Value}").Aggregate((a, b) => $"{a}\r\n{b}");
             headers = headers.Replace("	", " ");
@@ -134,7 +128,7 @@ public class MessageStore : IMessageStore
                 };
 
                 _dataContext.Messages.Add(newMessage);
-                await _dataContext.SaveChangesAsync();
+                await _dataContext.SaveChangesAsync(cancellationToken);
 
                 _logger.LogDebug($"Saved message id #{newMessage.Id}.");
             }
@@ -143,7 +137,7 @@ public class MessageStore : IMessageStore
         }
         catch (Exception ex)
         {
-            _logger.LogCritical("Could not save incoming message: {0}", ex.Message);
+            _logger.LogCritical($"Could not save incoming message: {ex.Message}");
             return SmtpResponse.TransactionFailed;
         }
     }
