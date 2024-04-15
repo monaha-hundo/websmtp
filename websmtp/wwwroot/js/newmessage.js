@@ -74,8 +74,12 @@ document.getElementById('html')
             let oldValue = bodyEl.value;
             bodyEl.parentElement.removeChild(bodyEl);
             let subjectRowEl = document.getElementById('subject-row');
-            subjectRowEl.insertAdjacentHTML('afterend', `<div id="quill">${oldValue}</div>`);
-            subjectRowEl.insertAdjacentHTML('afterend', `<input type="hidden" id="body" name="body" value="${oldValue}" />`);
+            subjectRowEl.insertAdjacentHTML('afterend', `<div id="quill"></div>`);
+            subjectRowEl.insertAdjacentHTML('afterend', `<input type="hidden" id="body" name="body" value="" />`);
+
+            document.getElementById('quill').textContent = oldValue;
+            document.getElementById('body').value = oldValue;
+
             quill = new Quill("#quill", {
                 theme: "snow",
                 modules: {
