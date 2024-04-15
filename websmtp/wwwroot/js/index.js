@@ -81,19 +81,21 @@ function initNavbar() {
         mailboxEl.classList.add('btn-proton', 'active');
     }
 }
-window.addEventListener("popstate", (event) => {
-    switch (event.state?.page) {
-        case "view-message":
-            closeMsgView();
-            openwMsgView(event.state.msgId, false, false);
-            break;
-
-        case "index":
-            closeMsgView();
-            break;
-
-        default:
-            history.back();
+window.addEventListener('hashchange', (event) => {
+    const { oldURL, newURL } = event;
+    console.log({ oldUrl: oldURL, newURL, hash: window.location.hash });
+    if (window.location.hash == "#index") {
+        console.log('hash: index, closing message view');
+        closeMsgView();
+        return;
+    } else if (window.location.hash.startsWith("#view-msg")) {
+        let msgId = window.location.hash.split(':')[1];
+        let raw = window.location.hash.split(':')[2] == 'raw';
+        console.log('hash: view-msg, opening message view, raw:' + raw);
+        closeMsgView();
+        openwMsgView(msgId, raw, true);
+    } else {
+        console.log('hash: doing nothing');
     }
 });
 var previousListingScrollPos = 0;
@@ -122,9 +124,7 @@ async function openwMsgView(msgId, showRaw, pushState) {
         url = url + '&showRaw=true';
     }
 
-    if (pushState) {
-        history.pushState({ page: 'view-message', msgId }, '');
-    }
+
     msgViewEl.setAttribute('src', url);
     sectionEl.classList.remove('d-none');
     containerEl.classList.remove('d-none');
@@ -154,7 +154,8 @@ function closeMsgView(pushState) {
         console.info("Tried to close msg view, but no msg view found.");
     }
     if (pushState) {
-        history.pushState({ page: 'index' }, '');
+        //history.pushState({ page: 'index' }, '');
+        window.location.hash = "index";
     }
 }
 
@@ -348,7 +349,8 @@ function previousMessage(msgId) {
     const prevMsgId = checkMarkEl.previousElementSibling.getAttribute('msg-id');
     if (prevMsgId == null) return;
     closeMsgView();
-    openwMsgView(prevMsgId, false, true);
+    //openwMsgView(prevMsgId, false, true);
+    window.location.hash = "#view-msg:" + prevMsgId;
 }
 
 function nextMessage(msgId) {
@@ -356,12 +358,14 @@ function nextMessage(msgId) {
     const checkMarkEl = document.querySelector(selector);
     const prevMsgId = checkMarkEl.nextElementSibling.getAttribute('msg-id');
     closeMsgView();
-    openwMsgView(prevMsgId, false, true);
+    //openwMsgView(prevMsgId, false, true);
+    window.location.hash = "#view-msg:" + prevMsgId;
 }
 
 function openRawMsg(msgId) {
     closeMsgView();
-    openwMsgView(msgId, true, false);
+    //openwMsgView(msgId, true, false);
+    window.location.hash = "#view-msg:" + msgId + ':raw';
 }
 
 async function newMessage(to) {
@@ -504,19 +508,19 @@ async function loadSidebarStats() {
         document.getElementById('mailbox-spam-count').classList.remove('d-none');
         document.getElementById('mailbox-trash-count').classList.remove('d-none');
 
-        if(parseInt(data.inbox)>0){
+        if (parseInt(data.inbox) > 0) {
             document.getElementById('mailbox-inbox-count').classList.add('text-bg-primary');
             document.getElementById('mailbox-inbox-count').classList.remove('text-bg-dark');
         }
-        if(data.allHasNew){
+        if (data.allHasNew) {
             document.getElementById('mailbox-all-count').classList.add('text-bg-primary');
             document.getElementById('mailbox-all-count').classList.remove('text-bg-dark');
         }
-        if(data.spamHasNew){
+        if (data.spamHasNew) {
             document.getElementById('mailbox-spam-count').classList.add('text-bg-primary');
             document.getElementById('mailbox-spam-count').classList.remove('text-bg-dark');
         }
-        if(data.trashHasNew){
+        if (data.trashHasNew) {
             document.getElementById('mailbox-trash-count').classList.add('text-bg-primary');
             document.getElementById('mailbox-trash-count').classList.remove('text-bg-dark');
         }
@@ -529,7 +533,8 @@ document.querySelectorAll('[open-msg-view]')
     .forEach(btn => {
         btn.addEventListener("click", (event) => {
             let msgId = btn.getAttribute('open-msg-view');
-            openwMsgView(msgId, false, true);
+            //openwMsgView(msgId, false, true);
+            window.location.hash = "view-msg:" + msgId;
         });
     });
 
@@ -627,5 +632,5 @@ document.querySelectorAll('.hamburger--btn')
 
 
 initNavbar();
-history.replaceState({ page: 'index' }, '');
+window.location.hash = "index";
 loadSidebarStats();
