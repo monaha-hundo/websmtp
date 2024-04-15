@@ -1,4 +1,3 @@
-﻿@model websmtp.Services.Models.ListResult
 <nav class="sidebar border-right d-none d-xl-block">
     <a id="logo--link" href="/inbox"
         class="h2 py-2 d-flex align-items-center justify-content-center text-decoration-none">
@@ -21,7 +20,7 @@
                 id="btn-mailbox-inbox" href="/inbox">
                 <i class="bi bi-inbox"></i>
                 <span class="ms-2 ">Inbox</span>
-                <span class='badge ms-auto text-bg-@(Model.New > 0 ? "primary":"dark")'>@Model.New</span>
+                <span class='badge ms-auto text-bg-dark d-none' id="mailbox-inbox-count">0</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
@@ -29,7 +28,7 @@
                 id="btn-mailbox-all" href="/all">
                 <i class="bi bi-inboxes"></i>
                 <span class="ms-2">All Mail</span>
-                <span class='badge ms-auto text-bg-@(Model.AllHasNew ? "primary":"dark")'>@Model.Total</span>
+                <span class='badge ms-auto text-bg-dark d-none' id="mailbox-all-count">0</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
@@ -37,7 +36,7 @@
                 id="btn-mailbox-fav" href="/favorites">
                 <i class="bi bi-star"></i>
                 <span class="ms-2">Favorites</span>
-                <span class='badge ms-auto text-bg-dark'>@Model.Favs</span>
+                <span class='badge ms-auto text-bg-dark d-none'  id="mailbox-favs-count">0</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
@@ -45,8 +44,8 @@
                 id="btn-mailbox-spam" href="/spam">
                 <i class="bi bi-virus2"></i>
                 <span class="ms-2">Spam</span>
-                <span id="sidebar--spam--count"
-                    class='badge ms-auto text-bg-@(Model.SpamHasNew ? "primary":"dark")'>@Model.Spam</span>
+                <span
+                    class='badge ms-auto text-bg-dark d-none'  id="mailbox-spam-count">0</span>
             </a>
         </div>
         <div class="nav-item mb-2 d-flex">
@@ -61,8 +60,8 @@
                 id="btn-mailbox-trash" href="/trash">
                 <i class="bi bi-trash"></i>
                 <span class="ms-2">Trash</span>
-                <span id="sidebar--trash--count"
-                    class='badge ms-auto text-bg-@(Model.TrashHasNew ? "primary":"dark")'>@Model.Deleted</span>
+                <span
+                    class='badge ms-auto text-bg-dark d-none'  id="mailbox-trash-count">0</span>
             </a>
         </div>
         <hr>

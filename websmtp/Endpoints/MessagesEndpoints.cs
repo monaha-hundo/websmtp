@@ -1,12 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MimeKit;
-using websmtp.Database;
-using websmtp.Database.Models;
 
 namespace websmtp;
 
 public static partial class MessagesEndpoints
 {
+    public static IResult Stats(
+    [FromServices] IReadableMessageStore messages,
+    [FromServices] IConfiguration config
+    )
+    {
+        var stats = messages.Stats();
+        return Results.Json(stats);
+    }
+
     public static IResult GetMessage(
     [FromRoute] Guid msgId,
     [FromServices] IReadableMessageStore messages,

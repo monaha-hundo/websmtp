@@ -182,6 +182,8 @@ public static class Startup
 
     public static void MapEndpoints(WebApplication app)
     {
+        app.MapPost("/api/messages/stats/", MessagesEndpoints.Stats).RequireAuthorization();
+        
         // Messages actions
         app.MapPost("/api/messages/train/", MessagesEndpoints.Train).RequireAuthorization();
 

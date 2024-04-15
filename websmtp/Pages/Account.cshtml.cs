@@ -17,8 +17,6 @@ namespace MyApp.Namespace
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly DataContext _data;
 
-        public ListResult Listing { get; set; } = new ListResult();
-
         public User Profile { get; set; } = null!;
 
         [FromQuery] public int UserId { get; set; }
@@ -45,7 +43,6 @@ namespace MyApp.Namespace
             UserId = userIdToFetch;
 
             Profile = _data.Users.Include(u => u.Identities).Include(u => u.Mailboxes).Single(u => u.Id == userIdToFetch);
-            Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
         }
     }
 }

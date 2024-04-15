@@ -5,7 +5,7 @@
 }
 
 @section Head {
-    <link rel="stylesheet" href="~/css/view.css" />
+    <link rel="stylesheet" href="~/css/view.css" asp-append-version="true"/>
 }
 
 <input id="msg--id" type="hidden" value="@Model.MsgId" />
@@ -72,7 +72,9 @@
         <div class="d-flex justify-content-between">
             <div class="my-2">
                 <span class="fw-bold d-inline-block mw-75px ">Subject:</span>
-                <span class="h3">@Model.Message.Subject</span>
+                <span class="card badge fs-6">
+                    @Model.Message.Subject
+                </span>
             </div>
         </div>
 
@@ -190,7 +192,7 @@
                 <div class="accordion-item">
                     <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
                         <div class="accordion-body">
-                            <pre class="whitespace--brsp text-white">@Model.Message.Headers</pre>
+                            <pre class="whitespace--brsp text-white mb-0">@Model.Message.Headers</pre>
                         </div>
                     </div>
                 </div>
@@ -209,5 +211,5 @@
 
 @section Scripts {
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"> </script>
-    <script src="~/js/view.js"> </script>
+    <script src="~/js/view.js" asp-append-version="true"> </script>
 }

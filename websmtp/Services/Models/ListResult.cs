@@ -3,13 +3,11 @@ namespace websmtp.Services.Models;
 public class ListResult
 {
     public int Count { get; set; }
-    public int New { get; set; }
-    public int Spam { get; set; }
-    public int Deleted { get; set; }
-    public int Total { get; set; }
-    public int Favs { get; set; }
-    public bool AllHasNew { get; set; }
-    public bool SpamHasNew { get; set; }
-    public bool TrashHasNew { get; set; }
     public List<MessageInfo> Messages { get; set; } = [];
+
+    public ListResult(List<MessageInfo> messages)
+    {
+        Count = messages.Count;
+        Messages = messages;
+    }
 }

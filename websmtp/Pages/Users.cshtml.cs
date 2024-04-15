@@ -31,7 +31,6 @@ public class UsersModel : PageModel
     [FromQuery] public int? CurrentPage { get; set; }
     [FromQuery] public int? PerPage { get; set; }
     [FromQuery] public string Filter { get; set; } = string.Empty;
-    public ListResult Listing { get; set; } = new ListResult();
 
     public UsersModel(IHttpContextAccessor httpContextAccessor,
         DataContext data,
@@ -47,7 +46,6 @@ public class UsersModel : PageModel
         CurrentPage ??= 1;
         PerPage ??= 25;
         var userId = _httpContextAccessor.GetUserId();
-        Listing = _messageStore.Latest(1, 1, true, false, false, false, false, string.Empty);
         
         var userCount = string.IsNullOrWhiteSpace(Filter)
             ? _data.Users.Count()

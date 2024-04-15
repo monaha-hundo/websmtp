@@ -369,7 +369,7 @@ async function newMessage(to) {
     try {
         cancel = await closeNewMsgWindow();
     } catch (error) {
-        
+
     }
     if (cancel) return;
 
@@ -485,6 +485,46 @@ const handleMarkSelectedAsUnread = async () => {
     await markMessagesAsUnread(selectedMsgIds);
 };
 
+async function loadSidebarStats() {
+    var success = false;
+    const response = await fetch(`/api/messages/stats/`, {
+        method: 'post',
+    });
+    success = response.status == 200;
+    if (success) {
+        const data = await response.json();
+        document.getElementById('mailbox-inbox-count').innerText = data.inbox;
+        document.getElementById('mailbox-all-count').innerText = data.all;
+        document.getElementById('mailbox-favs-count').innerText = data.favs;
+        document.getElementById('mailbox-spam-count').innerText = data.spam;
+        document.getElementById('mailbox-trash-count').innerText = data.trash;
+        document.getElementById('mailbox-inbox-count').classList.remove('d-none');
+        document.getElementById('mailbox-all-count').classList.remove('d-none');
+        document.getElementById('mailbox-favs-count').classList.remove('d-none');
+        document.getElementById('mailbox-spam-count').classList.remove('d-none');
+        document.getElementById('mailbox-trash-count').classList.remove('d-none');
+
+        if(parseInt(data.inbox)>0){
+            document.getElementById('mailbox-inbox-count').classList.add('text-bg-primary');
+            document.getElementById('mailbox-inbox-count').classList.remove('text-bg-dark');
+        }
+        if(data.allHasNew){
+            document.getElementById('mailbox-all-count').classList.add('text-bg-primary');
+            document.getElementById('mailbox-all-count').classList.remove('text-bg-dark');
+        }
+        if(data.spamHasNew){
+            document.getElementById('mailbox-spam-count').classList.add('text-bg-primary');
+            document.getElementById('mailbox-spam-count').classList.remove('text-bg-dark');
+        }
+        if(data.trashHasNew){
+            document.getElementById('mailbox-trash-count').classList.add('text-bg-primary');
+            document.getElementById('mailbox-trash-count').classList.remove('text-bg-dark');
+        }
+    }
+    return { marked: success };
+}
+
+
 document.querySelectorAll('[open-msg-view]')
     .forEach(btn => {
         btn.addEventListener("click", (event) => {
@@ -588,3 +628,4 @@ document.querySelectorAll('.hamburger--btn')
 
 initNavbar();
 history.replaceState({ page: 'index' }, '');
+loadSidebarStats();

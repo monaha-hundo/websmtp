@@ -5,7 +5,6 @@ using websmtp.Database.Models;
 using websmtp.Services.Models;
 
 namespace websmtp.services;
-
 public class ReadableMessageStore : IReadableMessageStore
 {
     private readonly ILogger<WritableMessageStore> _logger;
@@ -23,7 +22,7 @@ public class ReadableMessageStore : IReadableMessageStore
     }
 
 
-    public ListResult Latest(int page, int perPage, bool onlyNew, bool showTrash, bool showSpam, bool onlySared, bool showSent, string filter)
+    public StatsResult Stats()
     {
         using var scope = _services.CreateScope();
         using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
@@ -36,76 +35,71 @@ public class ReadableMessageStore : IReadableMessageStore
         if (!_dataContext.Messages.Any())
         {
 
-            return new ListResult
+            return new StatsResult
             {
-                Count = 0,
-                New = 0,
-                Spam = 0,
-                Deleted = 0,
-                Total = 0,
+                Inbox = 0,
+                All = 0,
                 Favs = 0,
+                Spam = 0,
+                Trash = 0,
                 AllHasNew = false,
                 SpamHasNew = false,
                 TrashHasNew = false,
-                Messages = []
             };
         }
 
         var basicMsgQuery = _dataContext.Messages.Where(msg => msg.UserId == userId);
 
-        var newCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && !msg.Read && !msg.IsSpam);
+        var inboxCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && !msg.Read && !msg.IsSpam);
 
         var allMailCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && !msg.IsSpam);
-        var AllHasNew = newCount > 0;
+        var AllHasNew = inboxCount > 0;
 
         var spamnCount = basicMsgQuery.Count(msg => !msg.Sent && !msg.Deleted && msg.IsSpam);
         var spamHasNew = basicMsgQuery.Any(msg => !msg.Sent && !msg.Read && !msg.Deleted && msg.IsSpam);
 
         var trashCount = basicMsgQuery.Count(msg => !msg.Sent && msg.Deleted);
-        var trashHasNew = basicMsgQuery.Any(msg => !msg.Sent && msg.Deleted);
+        var trashHasNew = basicMsgQuery.Any(msg => !msg.Sent && msg.Deleted && !msg.Read);
 
         var favsCount = basicMsgQuery.Count(msg => !msg.Sent && msg.Stared && !msg.Deleted && !msg.IsSpam);
 
-        var query = basicMsgQuery
-            .AsNoTracking()
-            .AsSplitQuery();
-
-        if (showSent)
+        return new StatsResult
         {
-            query = query.Where(msg => msg.Sent);
-        }
-        else
+            Inbox = inboxCount,
+            All = allMailCount,
+            Favs = favsCount,
+            Spam = spamnCount,
+            Trash = trashCount,
+            AllHasNew = AllHasNew,
+            SpamHasNew = spamHasNew,
+            TrashHasNew = trashHasNew,
+        };
+    }
+
+
+    public ListResult List(int page, int perPage, string filter, ListType listType)
+    {
+        using var scope = _services.CreateScope();
+        using var _dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        _dataContext.ChangeTracker.LazyLoadingEnabled = false;
+        _dataContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+
+        var userId = _httpContextAccessor.GetUserId();
+
+        var basicQuery = _dataContext.Messages.Where(msg => msg.UserId == userId)
+                            .AsNoTracking()
+                            .AsSplitQuery();
+
+        var query = listType switch
         {
-            query = query.Where(msg => !msg.Sent);
-        }
-
-        if (showTrash)
-        {
-            query = query.Where(msg => msg.Deleted);
-        }
-        else
-        {
-            query = query.Where(msg => !msg.Deleted);
-
-            if (!showSpam)
-            {
-                query = query.Where(msg => !msg.IsSpam);
-            }
-            else
-            {
-                query = query.Where(msg => msg.IsSpam);
-            }
-
-            if (onlyNew)
-            {
-                query = query.Where(msg => !msg.Read);
-            }
-
-            if (onlySared)
-            {
-                query = query.Where(msg => msg.Stared);
-            }
-        }
+            ListType.Inbox => basicQuery.Where(msg => !msg.Sent && !msg.Deleted && !msg.IsSpam && !msg.Read),
+            ListType.All => basicQuery.Where(msg => !msg.Sent && !msg.Deleted && !msg.IsSpam),
+            ListType.Favorites => basicQuery.Where(msg => msg.Stared),
+            ListType.Sent => basicQuery.Where(msg => msg.Sent),
+            ListType.Spam => basicQuery.Where(msg => !msg.Sent && msg.IsSpam),
+            ListType.Trash => basicQuery.Where(msg => msg.Deleted),
+            _ => throw new Exception("Invalid list type")
+        };
 
         if (!string.IsNullOrWhiteSpace(filter))
         {
@@ -113,9 +107,9 @@ public class ReadableMessageStore : IReadableMessageStore
             foreach (var token in tokens)
             {
                 query = query.Where(msg => msg.Subject.Contains(token)
-                                        || msg.To.Contains(token)
-                                        || msg.From.Contains(token)
-                                        || (msg.TextContent != null && msg.TextContent.Contains(token)));
+                    || msg.To.Contains(token)
+                    || msg.From.Contains(token)
+                    || (msg.TextContent != null && msg.TextContent.Contains(token)));
             }
         }
 
@@ -123,38 +117,10 @@ public class ReadableMessageStore : IReadableMessageStore
             .OrderByDescending(msg => msg.ReceivedOn)
             .Skip((page - 1) * perPage)
             .Take(perPage)
-            .Select(msg => new MessageInfo
-            {
-                Id = msg.Id,
-                AttachementsCount = msg.AttachementsCount,
-                From = msg.From,
-                Stared = msg.Stared,
-                Read = msg.Read,
-                Deleted = msg.Deleted,
-                IsSpam = msg.IsSpam,
-                //Headers = msg.Headers,
-                ReceivedOn = msg.ReceivedOn,
-                Subject = msg.Subject,
-                To = msg.To,
-                Cc = msg.Cc,
-                Bcc = msg.Bcc,
-                Importance = msg.Importance,
-            })
+            .Select(msg => new MessageInfo(msg))
             .ToList();
 
-        return new ListResult
-        {
-            Count = messages.Count,
-            New = newCount,
-            Spam = spamnCount,
-            Deleted = trashCount,
-            Total = allMailCount,
-            Favs = favsCount,
-            AllHasNew = AllHasNew,
-            SpamHasNew = spamHasNew,
-            TrashHasNew = trashHasNew,
-            Messages = messages
-        };
+        return new ListResult(messages);
     }
 
     public long Count(bool onlyNew)
