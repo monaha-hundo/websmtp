@@ -24,7 +24,18 @@ public static partial class MessagesEndpoints
         if (!string.IsNullOrWhiteSpace(message.HtmlContent))
         {
             var contentBytes = Convert.FromBase64String(message.HtmlContent);
-            var html = System.Text.Encoding.Default.GetString(contentBytes);
+            var htmlContent = System.Text.Encoding.Default.GetString(contentBytes);
+            var html = $"""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>{message.Subject}</title>
+                </head>
+                <body>{htmlContent}</body>
+                </html>
+            """;
             var mimeType = displayHtml ? "text/html" : "text/plain";
             return Results.Content(html, mimeType);
         }

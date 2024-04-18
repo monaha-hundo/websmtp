@@ -50,7 +50,7 @@ public class LoginModel : PageModel
         }
 
         await _http.SignInAsync(user);
-        return Redirect("/inbox");
+        return Redirect("/inbox#index");
     }
 
     private (bool, User?) CheckPassword()

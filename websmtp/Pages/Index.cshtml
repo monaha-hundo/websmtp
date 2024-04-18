@@ -62,7 +62,7 @@
                     class='list-group-item list-group-item-action border-left-none px-1 py-2 @(message.Read ? "" : "unread")'
                     msg-id="@message.Id">
                     <div class="row align-items-center  g-0 px-2 flex-lg-nowrap">
-                        <div class="col-12 col-lg-2 d-flex align-items-center">
+                        <div class="col-12 col-lg-3 d-flex align-items-center mb-1 mb-md-0">
                             <span class="me-3" id="msg--list-checkbox_@message.Id" msg-id="@message.Id" checked="false"
                                 tabindex="0">
                                 <i class="bi bi-square"></i>
@@ -151,7 +151,7 @@
     </section>
 
     <section id="msg" class="d-none">
-        <div id="msg-view-container" class="position-relative d-none">
+        <div id="msg-view-container" class="position-relative h-100 d-none">
 
         </div>
     </section>

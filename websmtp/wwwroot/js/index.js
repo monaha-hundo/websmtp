@@ -82,8 +82,10 @@ function initNavbar() {
     }
 }
 window.addEventListener('hashchange', (event) => {
-    const { oldURL, newURL } = event;
-    console.log({ oldUrl: oldURL, newURL, hash: window.location.hash });
+    hashChanged();
+});
+
+function hashChanged() {
     if (window.location.hash == "#index") {
         console.log('hash: index, closing message view');
         closeMsgView();
@@ -92,12 +94,12 @@ window.addEventListener('hashchange', (event) => {
         let msgId = window.location.hash.split(':')[1];
         let raw = window.location.hash.split(':')[2] == 'raw';
         console.log('hash: view-msg, opening message view, raw:' + raw);
-        closeMsgView();
+        //closeMsgView();
         openwMsgView(msgId, raw, true);
     } else {
         console.log('hash: doing nothing');
     }
-});
+}
 var previousListingScrollPos = 0;
 async function openwMsgView(msgId, showRaw, pushState) {
 
@@ -176,6 +178,7 @@ async function markMessagesAsRead(msgsIds) {
             const checkMarkEl = document.querySelector(selector);
             checkMarkEl.classList.remove('unread');
         }
+        loadSidebarStats();
     }
     return { marked: success };
 }
@@ -197,6 +200,7 @@ async function markMessagesAsUnread(msgsIds) {
             const checkMarkEl = document.querySelector(selector);
             checkMarkEl.classList.add('unread');
         }
+        loadSidebarStats();
     }
     return { marked: success };
 }
@@ -213,6 +217,9 @@ async function starMessages(msgsIds) {
         body: JSON.stringify(msgsIds)
     });
     const success = response.status == 200;
+    if(success){
+        loadSidebarStats();
+    }
     return success;
 }
 
@@ -225,6 +232,9 @@ async function unstarMessages(msgsIds) {
         body: JSON.stringify(msgsIds)
     });
     const success = response.status == 200;
+    if(success){
+        loadSidebarStats();
+    }
     return success;
 }
 
@@ -246,7 +256,7 @@ async function undeleteMessages(msgsIds) {
                 const selector = `[msg-id='${msgId}']`;
                 const checkMarkEl = document.querySelector(selector);
                 checkMarkEl.parentElement.removeChild(checkMarkEl);
-                updateTrashCount(-1);
+                loadSidebarStats();
             }
             //closeMsgView();
         } else {
@@ -287,7 +297,7 @@ async function deleteMessages(msgsIds) {
                 const selector = `[msg-id='${msgId}']`;
                 const checkMarkEl = document.querySelector(selector);
                 checkMarkEl.parentElement.removeChild(checkMarkEl);
-                updateTrashCount(1);
+                loadSidebarStats();
             }
             //closeMsgView();
         } else {
@@ -326,6 +336,8 @@ async function trainSpam(msgsIds, spam) {
                 title: `Error`,
                 text: 'Could not process request.'
             });
+        } else {
+            loadSidebarStats();
         }
         return success;
     };
@@ -632,5 +644,9 @@ document.querySelectorAll('.hamburger--btn')
 
 
 initNavbar();
-window.location.hash = "index";
+if (window.location.hash == '') {
+    window.location.hash = '#index';
+}
+console.log();
+hashChanged();
 loadSidebarStats();

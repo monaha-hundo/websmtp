@@ -124,22 +124,12 @@ function showRawMsg() {
     window.parent.openRawMsg(msgId);
 }
 
-var viewResizeInterval = setInterval(() => {
-    let height = document.documentElement.scrollHeight;
-    if (height == 0) return;
-    window.parent.document.querySelector('#msg-view').style.height = height + 'px';
-}, 100);
+document.getElementById('html-content').contentWindow.addEventListener('DOMContentLoaded', () => {
+    resizeIframe();
+ });
 
-var innerViewResizeInterval = setInterval(() => {
+function resizeIframe() {
     let iframeEl = document.getElementById('html-content');
-    if (iframeEl == null) return;
     let height = iframeEl.contentDocument.documentElement.scrollHeight;
-    if (height == 0) return;
     iframeEl.height = height;
-}, 100);
-
-document.addEventListener('unload', () => {
-    console.log('clearing intervals');
-    clearInterval(viewResizeInterval);
-    clearInterval(innerViewResizeInterval);
-});
+}
