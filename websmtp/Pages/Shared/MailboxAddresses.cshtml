@@ -6,7 +6,7 @@
         var result = regex.Matches(singleOrigin);
         if (result.Count == 0)
         {
-            <span class="text-decoration-none badge card fs-6 me-2"
+            <span class="text-decoration-none fs-6 me-2 text-wrap"
                 >@singleOrigin</span>
         }
         else
@@ -14,8 +14,8 @@
 
             var name = result[0].Groups[1];
             var email = result[0].Groups[2];
-            <span class="text-decoration-none badge card fs-6 me-2"  title="@email"
-                >@name &lt;@email&gt; </span>
+            <span class="text-decoration-none fs-6 me-2 text-wrap"  title="@email"
+                >@name </span>
         }
     }
 }
